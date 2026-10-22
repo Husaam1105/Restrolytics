@@ -12,9 +12,7 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS
   SELECT EXISTS (SELECT 1 FROM public.platform_staff WHERE user_id = auth.uid())
 $$;
 
-INSERT INTO public.platform_staff (user_id)
-SELECT id FROM auth.users WHERE lower(email) = 'musaib.syid@gmail.com'
-ON CONFLICT DO NOTHING;
+-- Platform staff are granted per environment (see docs/setup.md), never seeded here.
 
 -- Let Restrolytics staff see restaurant names and members
 CREATE POLICY "Platform staff read restaurants" ON public.restaurants FOR SELECT TO authenticated USING (public.is_platform_staff());

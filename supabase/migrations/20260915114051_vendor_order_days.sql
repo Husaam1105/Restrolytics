@@ -1,7 +1,5 @@
 ALTER TABLE public.vendors ADD COLUMN IF NOT EXISTS order_days smallint[] NOT NULL DEFAULT '{}';
 
-UPDATE public.vendors SET order_days = '{1,5}' WHERE portal_type = 'woocommerce' AND name ILIKE 'Depot Deliveries';
-
 WITH latest AS (
   SELECT i.inventory_item_id AS item_id,
          (array_agg(o.ordered_at ORDER BY o.ordered_at DESC))[1] AS ordered_at,

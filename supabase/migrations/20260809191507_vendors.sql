@@ -25,8 +25,6 @@ ALTER TABLE public.vendors ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Owners manage their vendors" ON public.vendors FOR ALL TO authenticated
 USING (EXISTS (SELECT 1 FROM public.restaurants r WHERE r.id = vendors.restaurant_id AND r.owner_id = auth.uid()))
 WITH CHECK (EXISTS (SELECT 1 FROM public.restaurants r WHERE r.id = vendors.restaurant_id AND r.owner_id = auth.uid()));
-CREATE POLICY "Authenticated users can read demo vendors" ON public.vendors FOR SELECT TO authenticated
-USING (restaurant_id = '11111111-1111-1111-1111-111111111111'::uuid);
 
 CREATE TRIGGER update_vendors_updated_at BEFORE UPDATE ON public.vendors
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -61,8 +59,6 @@ ALTER TABLE public.vendor_orders ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Owners manage their vendor orders" ON public.vendor_orders FOR ALL TO authenticated
 USING (EXISTS (SELECT 1 FROM public.restaurants r WHERE r.id = vendor_orders.restaurant_id AND r.owner_id = auth.uid()))
 WITH CHECK (EXISTS (SELECT 1 FROM public.restaurants r WHERE r.id = vendor_orders.restaurant_id AND r.owner_id = auth.uid()));
-CREATE POLICY "Authenticated users can read demo vendor orders" ON public.vendor_orders FOR SELECT TO authenticated
-USING (restaurant_id = '11111111-1111-1111-1111-111111111111'::uuid);
 
 CREATE TRIGGER update_vendor_orders_updated_at BEFORE UPDATE ON public.vendor_orders
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -84,8 +80,6 @@ ALTER TABLE public.vendor_order_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Owners manage their vendor order items" ON public.vendor_order_items FOR ALL TO authenticated
 USING (EXISTS (SELECT 1 FROM public.restaurants r WHERE r.id = vendor_order_items.restaurant_id AND r.owner_id = auth.uid()))
 WITH CHECK (EXISTS (SELECT 1 FROM public.restaurants r WHERE r.id = vendor_order_items.restaurant_id AND r.owner_id = auth.uid()));
-CREATE POLICY "Authenticated users can read demo vendor order items" ON public.vendor_order_items FOR SELECT TO authenticated
-USING (restaurant_id = '11111111-1111-1111-1111-111111111111'::uuid);
 
 -- Inventory item extensions
 ALTER TABLE public.inventory_items
@@ -99,22 +93,3 @@ ALTER TABLE public.inventory_items
 
 CREATE UNIQUE INDEX inventory_items_restaurant_name_key
   ON public.inventory_items (restaurant_id, lower(name));
-
--- Demo data
-INSERT INTO public.vendors (id, restaurant_id, name, website_url, portal_type, login_url, orders_url, order_cadence_days, sync_status, notes)
-VALUES
-  ('22222222-2222-2222-2222-222222222201', '11111111-1111-1111-1111-111111111111', 'Depot Deliveries', 'https://www.depotdeliveries.com', 'woocommerce', 'https://www.depotdeliveries.com/my-account/', 'https://www.depotdeliveries.com/my-account/orders/', 1, 'not_configured', 'Daily produce and dry goods.'),
-  ('22222222-2222-2222-2222-222222222202', '11111111-1111-1111-1111-111111111111', 'Sysco', 'https://www.sysco.com', 'manual', NULL, NULL, 7, 'not_configured', 'Weekly bulk order.');
-
-INSERT INTO public.vendor_orders (id, restaurant_id, vendor_id, external_order_id, ordered_at, status, total, source)
-VALUES
-  ('33333333-3333-3333-3333-333333333301', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222201', 'DD-10241', now() - interval '1 day', 'completed', 412.55, 'portal'),
-  ('33333333-3333-3333-3333-333333333302', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222201', 'DD-10198', now() - interval '4 days', 'completed', 388.10, 'portal'),
-  ('33333333-3333-3333-3333-333333333303', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222202', 'SY-88120', now() - interval '6 days', 'completed', 1204.00, 'manual');
-
-INSERT INTO public.vendor_order_items (restaurant_id, vendor_order_id, name, quantity, unit_price)
-VALUES
-  ('11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333301', 'Roma Tomatoes (25 lb case)', 4, 28.50),
-  ('11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333301', 'Yellow Onions (50 lb bag)', 2, 32.00),
-  ('11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333302', 'Roma Tomatoes (25 lb case)', 3, 28.50),
-  ('11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333303', 'Mozzarella (5 lb block)', 10, 24.75);
