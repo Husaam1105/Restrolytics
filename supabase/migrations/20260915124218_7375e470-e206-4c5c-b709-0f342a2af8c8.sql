@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.my_employee_ids() FROM anon;

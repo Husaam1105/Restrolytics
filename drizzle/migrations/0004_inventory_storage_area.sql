@@ -1,0 +1,1 @@
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS storage_area text NOT NULL DEFAULT 'Dry storage';

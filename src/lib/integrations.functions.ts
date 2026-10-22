@@ -1,0 +1,94 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+export const listPlatformConnections = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { ensureOwnedRestaurant } = await import("./integrations.server");
+    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+    const { data, error } = await context.supabase
+      .from("platform_connections")
+      .select("id, platform, status, account_label, last_synced_at, last_error")
+      .eq("restaurant_id", restaurant.id);
+    if (error) throw error;
+    return { restaurantId: restaurant.id, restaurantName: restaurant.name, connections: data ?? [] };
+  });
+
+export const connectPlatform = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { platform: string; credentials: Record<string, string> }) => input)
+  .handler(async ({ data, context }) => {
+    const { ensureOwnedRestaurant, validateCredentials, accountLabelFor } = await import("./integrations.server");
+    const { cleaned } = validateCredentials(data.platform, data.credentials);
+    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+
+    const { data: connection, error } = await context.supabase
+      .from("platform_connections")
+      .upsert(
+        {
+          restaurant_id: restaurant.id,
+          platform: data.platform,
+          status: "connected",
+          account_label: accountLabelFor(data.platform, cleaned),
+          last_error: null,
+        },
+        { onConflict: "restaurant_id,platform" },
+      )
+      .select("id, platform, status, account_label, last_synced_at, last_error")
+      .single();
+    if (error) throw error;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: secretError } = await supabaseAdmin.from("platform_connection_secrets").upsert(
+      {
+        connection_id: connection.id,
+        credentials: cleaned,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "connection_id" },
+    );
+    if (secretError) throw secretError;
+
+    return connection;
+  });
+
+export const disconnectPlatform = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { connectionId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("platform_connections")
+      .delete()
+      .eq("id", data.connectionId);
+    if (error) throw error;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("platform_connection_secrets").delete().eq("connection_id", data.connectionId);
+    return { success: true };
+  });
+
+export const syncPlatform = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { connectionId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { data: connection, error } = await context.supabase
+      .from("platform_connections")
+      .select("id, platform, restaurant_id")
+      .eq("id", data.connectionId)
+      .single();
+    if (error) throw error;
+
+    const { runPlatformSync } = await import("./platform-sync.server");
+    const result = await runPlatformSync(context.supabase, connection);
+
+    await context.supabase
+      .from("platform_connections")
+      .update({
+        status: result.ok ? "connected" : "error",
+        last_synced_at: result.ok ? new Date().toISOString() : null,
+        last_error: result.ok ? null : result.message,
+      })
+      .eq("id", connection.id);
+
+    return result;
+  });

@@ -1,0 +1,1 @@
+ALTER TABLE public.shift_task_completions ADD COLUMN IF NOT EXISTS completed_by_email text;

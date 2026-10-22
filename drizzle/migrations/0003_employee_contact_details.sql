@@ -1,0 +1,2 @@
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS email text, ADD COLUMN IF NOT EXISTS address text, ADD COLUMN IF NOT EXISTS username text;
+CREATE UNIQUE INDEX IF NOT EXISTS employees_username_key ON public.employees (lower(username)) WHERE username IS NOT NULL;

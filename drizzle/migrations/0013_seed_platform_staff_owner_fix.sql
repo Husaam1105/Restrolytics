@@ -1,0 +1,1 @@
+INSERT INTO public.platform_staff (user_id) VALUES ('2007d553-35cf-4fb3-bd14-d9a3d6763030') ON CONFLICT DO NOTHING;

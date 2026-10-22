@@ -1,0 +1,111 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789646863429,
+      "tag": "0000_create_day_issues",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789647942947,
+      "tag": "0001_create_staff_schedules",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789649102437,
+      "tag": "0002_create_catering",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790446134706,
+      "tag": "0003_employee_contact_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790690988143,
+      "tag": "0004_inventory_storage_area",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790691337797,
+      "tag": "0005_storage_locations_and_counts",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790694520115,
+      "tag": "0006_platform_report_imports",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790694945322,
+      "tag": "0007_sales_fee_breakdown",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790713540460,
+      "tag": "0008_pos_sales_summaries",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790713985737,
+      "tag": "0009_item_outages",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790714473889,
+      "tag": "0010_copilot_threads",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790719850077,
+      "tag": "0011_restrolytics_manager",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790720021969,
+      "tag": "0012_seed_platform_staff_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790720038893,
+      "tag": "0013_seed_platform_staff_owner_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791419016182,
+      "tag": "0014_task_completion_photos",
+      "breakpoints": true
+    }
+  ]
+}
