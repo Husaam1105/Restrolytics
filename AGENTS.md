@@ -1,13 +1,6 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+# Restrolytics: working agreements
+
+Product rules that the code relies on. Keep them true when you change things.
 
 - Keep payroll employee-centric: each employee owns their hours, rate, payout status, notes, and login link, because this mirrors the restaurant's per-person payroll workbook.
 - Combined payroll date ranges are read-only summaries across weekly pay sheets; editing and payout actions stay within a single week to preserve each employee's audit trail.

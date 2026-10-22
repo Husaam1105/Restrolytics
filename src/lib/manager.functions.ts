@@ -45,8 +45,8 @@ export const iqManagerAssist = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     if (!(await isPlatformStaff(context.supabase as never))) throw new Error("Only Restrolytics staff can use this.");
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) throw new Error("AI is not configured");
+    const { aiErrorMessage, getChatModel, isAiConfigured } = await import("./ai.server");
+    if (!isAiConfigured()) throw new Error("IQ isn't set up for this workspace yet.");
     const sb = context.supabase;
     const [{ data: rest }, { data: tasks }, { data: notes }] = await Promise.all([
       sb.from("restaurants").select("name").eq("id", data.restaurantId).maybeSingle(),
@@ -73,29 +73,12 @@ TASKS: ${JSON.stringify(tasks ?? [])}
 NOTES: ${JSON.stringify(notes ?? [])}
 CONVERSATION: ${JSON.stringify(messages)}`;
 
-    const { createOpenAI } = await import("@ai-sdk/openai");
-    const { streamText } = await import("ai");
-    const { createLovableAiGatewayRunIdFetch } = await import("./run-id.server");
-    const runIdFetch = createLovableAiGatewayRunIdFetch();
-    const provider = createOpenAI({
-      baseURL: "https://ai.gateway.lovable.dev/v1",
-      apiKey,
-      headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-      fetch: runIdFetch.fetch,
-    });
+    const { generateText } = await import("ai");
     try {
-      const result = streamText({
-        model: provider.responses("openai/gpt-6-astra"),
-        prompt,
-        providerOptions: {
-          openai: { forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] },
-        },
-      });
-      return { text: (await result.text).trim() };
+      const result = await generateText({ model: getChatModel(), prompt });
+      return { text: result.text.trim() };
     } catch (e) {
-      const status = (e as { statusCode?: number })?.statusCode;
-      if (status === 402) throw new Error("AI credits have run out. Add credits in Settings → Plans & credits.");
-      if (status === 429) throw new Error("Too many requests right now. Please wait a moment.");
-      throw new Error("IQ couldn't help right now. Please try again.");
+      throw new Error(aiErrorMessage(e, "IQ couldn't help right now. Please try again."));
     }
   });
+
