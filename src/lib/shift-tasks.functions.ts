@@ -283,13 +283,25 @@ export const getShiftSettings = createServerFn({ method: "GET" })
 
 export const saveShiftSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { timezone: string; openTime: string; closeTime: string }) => input)
+  .inputValidator((input: { timezone: string; openTime: string; closeTime: string }) => {
+    const timezone = input.timezone.trim();
+    // An unknown zone used to fall back to UTC silently and shift every day.
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+    } catch {
+      throw new Error(`"${timezone}" isn't a timezone we recognise. Pick one from the list.`);
+    }
+    if (!/^\d{1,2}:\d{2}$/.test(input.openTime.trim()) || !/^\d{1,2}:\d{2}$/.test(input.closeTime.trim())) {
+      throw new Error("Use times like 11:00 and 22:00.");
+    }
+    return { timezone, openTime: input.openTime.trim(), closeTime: input.closeTime.trim() };
+  })
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
 
     const next: ShiftSettings = {
-      timezone: data.timezone.trim() || DEFAULT_SHIFT_SETTINGS.timezone,
+      timezone: data.timezone || DEFAULT_SHIFT_SETTINGS.timezone,
       openTime: normalizeTime(data.openTime, DEFAULT_SHIFT_SETTINGS.openTime),
       closeTime: normalizeTime(data.closeTime, DEFAULT_SHIFT_SETTINGS.closeTime),
     };

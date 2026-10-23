@@ -59,6 +59,10 @@ Then sign in, create the first restaurant, and invite its owner from **Settings 
 | IQ Copilot, Manager Assist, invoice reader | `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL_CHAT`, `AI_MODEL_VISION` | Leave `AI_PROVIDER` empty and these features show "not set up yet" instead of failing. |
 | Daily vendor order sync | `VENDOR_SYNC_SECRET` | Generate with `openssl rand -hex 32`. Have your scheduler call `POST /api/public/hooks/vendor-sync` with `Authorization: Bearer <secret>`. |
 
+## Hosting notes
+
+- **Outbound requests:** the vendor-sync scraper only fetches public `https://` hostnames (no IP literals or internal names, redirects re-checked and capped). A hostname that resolves to a private IP can't be detected that way, so if your host allows it, block outbound traffic from the app server to private address ranges (10/8, 172.16/12, 192.168/16, 169.254/16, 127/8).
+
 ## Moving data from the old Lovable Cloud project
 
 Two options, depending on what Lovable gives you access to:

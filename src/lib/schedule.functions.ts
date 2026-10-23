@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import { localNow, parseShiftSettings } from "./operating-day";
@@ -15,6 +16,30 @@ export type ScheduleShiftInput = {
   endTime?: string | null;
   note?: string | null;
 };
+
+const clockTime = z
+  .string()
+  .trim()
+  .regex(/^([01]?\d|2[0-3]):[0-5]\d$/, "Use a time like 09:30 or 17:00.")
+  .nullish()
+  .or(z.literal(""));
+
+const shiftSchema = z
+  .object({
+    id: z.string().uuid().nullish(),
+    employeeId: z.string().uuid("Pick an employee."),
+    shiftDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date."),
+    area: z.enum(["foh", "boh", "both"]),
+    shift: z.enum(["opening", "mid", "closing", "all-day"]),
+    startTime: clockTime,
+    endTime: clockTime,
+    note: z.string().trim().max(500).nullish(),
+  })
+  // An end time earlier than the start is an overnight shift (e.g. 17:00 to 01:00), which is fine.
+  .refine((v) => !v.startTime || !v.endTime || v.startTime !== v.endTime, {
+    message: "The shift can't start and end at the same time.",
+    path: ["endTime"],
+  });
 
 export const getSchedule = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -85,12 +110,10 @@ export const getSchedule = createServerFn({ method: "GET" })
 
 export const saveScheduleShift = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: ScheduleShiftInput) => input)
+  .inputValidator((input: ScheduleShiftInput) => shiftSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    if (!data.employeeId) throw new Error("Pick an employee");
-    if (!data.shiftDate) throw new Error("Pick a date");
 
     const row = {
       restaurant_id: restaurant.id,
@@ -98,18 +121,20 @@ export const saveScheduleShift = createServerFn({ method: "POST" })
       shift_date: data.shiftDate,
       area: data.area,
       shift: data.shift,
-      start_time: data.startTime?.trim() ? data.startTime.trim() : null,
-      end_time: data.endTime?.trim() ? data.endTime.trim() : null,
-      note: data.note?.trim() ? data.note.trim() : null,
+      start_time: data.startTime || null,
+      end_time: data.endTime || null,
+      note: data.note || null,
     };
 
     if (data.id) {
-      const { error } = await context.supabase
+      const { data: updated, error } = await context.supabase
         .from("staff_schedules")
         .update(row)
         .eq("id", data.id)
-        .eq("restaurant_id", restaurant.id);
+        .eq("restaurant_id", restaurant.id)
+        .select("id");
       if (error) throw error;
+      if (!updated?.length) throw new Error("That shift no longer exists.");
     } else {
       const { error } = await context.supabase
         .from("staff_schedules")

@@ -18,6 +18,10 @@ import { formatTime } from "@/lib/operating-day";
 import { BarChart3, CalendarDays, CheckCircle2, Clock3 } from "lucide-react";
 import { PageContainer, PageHeader } from "@/components/page";
 
+/** Every IANA timezone the browser knows, for the service-hours picker. */
+const TIMEZONES: string[] =
+  typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "Europe/London", "UTC"];
+
 export const Route = createFileRoute("/_authenticated/shifts")({
   component: ShiftsPage,
   head: () => ({
@@ -132,10 +136,22 @@ function ShiftsPage() {
               <Label htmlFor="timezone">Time zone</Label>
               <Input
                 id="timezone"
+                list="timezone-options"
+                autoComplete="off"
+                spellCheck={false}
                 value={timezone}
-                placeholder="America/New_York"
+                placeholder="Start typing a city, e.g. New_York"
                 onChange={(e) => setTimezone(e.target.value)}
+                aria-describedby="timezone-hint"
               />
+              <datalist id="timezone-options">
+                {TIMEZONES.map((zone) => (
+                  <option key={zone} value={zone} />
+                ))}
+              </datalist>
+              <p id="timezone-hint" className="text-xs text-muted-foreground">
+                Pick from the list. Every report and checklist uses this to decide what &quot;today&quot; is.
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">

@@ -1,5 +1,48 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isPublicHttpsUrl } from "./safe-url";
+
+const optionalText = (max: number) => z.string().trim().max(max).optional();
+const fetchableUrl = z
+  .string()
+  .trim()
+  .optional()
+  .refine((v) => !v || isPublicHttpsUrl(v), "Use the vendor's public https:// web address.");
+
+const vendorSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().trim().min(1, "Vendor name is required.").max(120),
+  websiteUrl: z.string().trim().max(500).optional().refine((v) => !v || /^https?:\/\//i.test(v), "Start the website with https://"),
+  portalType: z.enum(["manual", "woocommerce"]),
+  loginUrl: fetchableUrl,
+  ordersUrl: fetchableUrl,
+  contactEmail: z.string().trim().max(254).optional().refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Enter a valid email."),
+  orderCadenceDays: z.coerce.number().int().min(1).max(365),
+  orderDays: z.array(z.number().int().min(0).max(6)).max(7).optional(),
+  autoSync: z.boolean(),
+  notes: optionalText(2000),
+});
+
+const amount = (label: string, max = 1_000_000) =>
+  z.coerce.number({ invalid_type_error: `${label} must be a number.` }).min(0, `${label} can't be negative.`).max(max);
+
+const itemSchema = z.object({
+  id: z.string().uuid().optional(),
+  vendorId: z.string().uuid(),
+  name: z.string().trim().min(1, "Item name is required.").max(160),
+  unit: z.string().trim().max(30),
+  currentStock: amount("Current stock"),
+  parLevel: amount("Par level"),
+  reorderLevel: amount("Reorder level"),
+  costPerUnit: amount("Cost per unit", 100_000),
+  qualityRating: z.coerce.number().int().min(1).max(5).nullable(),
+  reorderIntervalDays: z.coerce.number().int().min(1).max(365),
+  lastOrderedAt: z.string().nullish(),
+  lastOrderedQuantity: z.coerce.number().min(0).nullish(),
+  notes: optionalText(2000),
+  storageArea: optionalText(80),
+});
 
 export const listVendors = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -98,25 +141,24 @@ export const saveVendor = createServerFn({ method: "POST" })
       orderDays?: number[];
       autoSync: boolean;
       notes?: string;
-    }) => input,
+    }) => vendorSchema.parse(input),
   )
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    if (!data.name.trim()) throw new Error("Vendor name is required.");
 
     const payload = {
       restaurant_id: restaurant.id,
-      name: data.name.trim(),
-      website_url: data.websiteUrl?.trim() || null,
+      name: data.name,
+      website_url: data.websiteUrl || null,
       portal_type: data.portalType,
-      login_url: data.loginUrl?.trim() || null,
-      orders_url: data.ordersUrl?.trim() || null,
-      contact_email: data.contactEmail?.trim() || null,
-      order_cadence_days: Math.max(1, Number(data.orderCadenceDays) || 7),
-      order_days: (data.orderDays ?? []).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6),
+      login_url: data.loginUrl || null,
+      orders_url: data.ordersUrl || null,
+      contact_email: data.contactEmail || null,
+      order_cadence_days: data.orderCadenceDays,
+      order_days: [...new Set(data.orderDays ?? [])],
       auto_sync: data.autoSync,
-      notes: data.notes?.trim() || null,
+      notes: data.notes || null,
     };
 
     const query = data.id
@@ -233,28 +275,36 @@ export const saveInventoryItem = createServerFn({ method: "POST" })
       lastOrderedQuantity?: number | null;
       notes?: string;
       storageArea?: string;
-    }) => input,
+    }) => itemSchema.parse(input),
   )
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    if (!data.name.trim()) throw new Error("Item name is required.");
+    // The vendor must be one of this restaurant's vendors.
+    const { data: vendor, error: vendorError } = await context.supabase
+      .from("vendors")
+      .select("id")
+      .eq("id", data.vendorId)
+      .eq("restaurant_id", restaurant.id)
+      .maybeSingle();
+    if (vendorError) throw vendorError;
+    if (!vendor) throw new Error("That vendor isn't in this restaurant.");
 
     const payload = {
       restaurant_id: restaurant.id,
       vendor_id: data.vendorId,
-      name: data.name.trim(),
-      unit: data.unit.trim() || "unit",
-      current_stock: Number(data.currentStock) || 0,
-      par_level: Number(data.parLevel) || 0,
-      reorder_level: Number(data.reorderLevel) || 0,
-      cost_per_unit: Number(data.costPerUnit) || 0,
+      name: data.name,
+      unit: data.unit || "unit",
+      current_stock: data.currentStock,
+      par_level: data.parLevel,
+      reorder_level: data.reorderLevel,
+      cost_per_unit: data.costPerUnit,
       quality_rating: data.qualityRating,
-      reorder_interval_days: Math.max(1, Number(data.reorderIntervalDays) || 7),
+      reorder_interval_days: data.reorderIntervalDays,
       last_ordered_at: data.lastOrderedAt || null,
       last_ordered_quantity: data.lastOrderedQuantity ?? null,
-      notes: data.notes?.trim() || null,
-      storage_area: data.storageArea?.trim() || "Dry storage",
+      notes: data.notes || null,
+      storage_area: data.storageArea || "Dry storage",
     };
 
     const query = data.id

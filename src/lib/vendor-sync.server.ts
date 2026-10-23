@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { itemNameKey } from "./item-match";
+import { isPublicHttpsUrl } from "./safe-url";
 
 type Cookies = Map<string, string>;
 
@@ -26,7 +27,20 @@ function cookieHeader(jar: Cookies) {
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
-async function jarFetch(url: string, jar: Cookies, init?: RequestInit) {
+const MAX_REDIRECTS = 5;
+
+/**
+ * Fetch with a cookie jar. Every URL, including each redirect hop, must be a
+ * public https address, so a vendor site can't bounce the server into a
+ * private network, and redirect chains are capped.
+ */
+async function jarFetch(url: string, jar: Cookies, init?: RequestInit, hops = 0): Promise<Response> {
+  if (!isPublicHttpsUrl(url)) {
+    throw new Error("The vendor portal address must be a public https:// website.");
+  }
+  if (hops > MAX_REDIRECTS) {
+    throw new Error("The vendor site redirected too many times.");
+  }
   const response = await fetch(url, {
     ...init,
     redirect: "manual",
@@ -41,7 +55,7 @@ async function jarFetch(url: string, jar: Cookies, init?: RequestInit) {
 
   const location = response.headers.get("location");
   if (response.status >= 300 && response.status < 400 && location) {
-    return jarFetch(new URL(location, url).toString(), jar, { method: "GET" });
+    return jarFetch(new URL(location, url).toString(), jar, { method: "GET" }, hops + 1);
   }
   return response;
 }
@@ -196,6 +210,10 @@ export async function runVendorSync(admin: SupabaseClient, vendor: VendorRow) {
   }
   if (!vendor.login_url || !vendor.orders_url) {
     return { ok: false, message: "Add the vendor's login and orders page URLs first.", newOrders: 0, updatedItems: 0 };
+  }
+  // Vendors saved before URL validation existed are re-checked here.
+  if (!isPublicHttpsUrl(vendor.login_url) || !isPublicHttpsUrl(vendor.orders_url)) {
+    return { ok: false, message: "Edit this vendor: its portal addresses must be public https:// websites.", newOrders: 0, updatedItems: 0 };
   }
 
   const { data: creds } = await admin
