@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "/": {
+      "targetKind": "existing-ui",
+      "projectId": "f51f6b50-63c0-4674-99e0-799837e9868a",
+      "baselineDraftId": "dac5a5f1-e55a-48c3-a012-130fd1303f4b",
+      "activeDraftId": "dac5a5f1-e55a-48c3-a012-130fd1303f4b",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [
+        "b556e25b-db3d-416e-ab45-e2e91b6377be",
+        "public-brand-restrolytics-mark.svg"
+      ],
+      "brandAssets": {
+        "logo": {
+          "assetKey": "public-brand-restrolytics-mark.svg",
+          "url": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/f51f6b50-63c0-4674-99e0-799837e9868a/brand-assets/public-brand-restrolytics-mark.svg/restrolytics-mark.svg",
+          "sourcePath": "public/brand/restrolytics-mark.svg"
+        }
+      },
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "src/styles.css",
+        "src/routes/index.tsx",
+        "src/components/marketing/landing.tsx",
+        "src/components/marketing/ticket-rail.tsx",
+        "src/components/marketing/site-header.tsx",
+        "src/components/marketing/site-footer.tsx",
+        "src/components/brand-mark.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/accordion.tsx",
+        "src/lib/utils.ts"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "832703de08fc005d4617f9d79904b28c77bd52316b36039e1e8ff972d03b580c",
+        "src/styles.css": "be8db07549b26938eec7d60d998a8157b4df060314d09a07c83114cda7cc67d4",
+        "src/routes/index.tsx": "1a9b99431869c3f132880e3b9cca644b44afcbdc3f35e68de80d8660788f7847",
+        "src/components/marketing/landing.tsx": "f2424fce148a30396e3c4f620761733df23410cf73bc1ffdb2c4ca747638749c",
+        "src/components/marketing/ticket-rail.tsx": "ab20ee35542828f0abee5f133cb66b8e9b13bcf72fd7ab08f617e63843e4cf3e",
+        "src/components/marketing/site-header.tsx": "3d035a6f2d9f2722fbe3658b7494b3f40cf94fd533473e1bcdf066f7ad068a35",
+        "src/components/marketing/site-footer.tsx": "9a196412b4bc22d7f46d640f385e0819300771589c376a1cf48bca8c79a5eccf",
+        "src/components/brand-mark.tsx": "7ec33043ad1cd2d40556b4c48624ef5f34b3821dc676c4550709d054e34119bf",
+        "src/components/ui/button.tsx": "77d3ea204bc6a5cfb904cebce15a010b1733a2569627ebe19e726a50ff2c3f22",
+        "src/components/ui/accordion.tsx": "0903efcd7b746eef0a10c954a541b0dfa7aa1172f3c380a1a88f4e19a317fda3",
+        "src/lib/utils.ts": "995a1bc75616e4cbee00ba856a0b0c871a5e8c8ebd0a15ec8d60cd7e317ffb9c"
+      },
+      "components": [],
+      "drafts": {
+        "dac5a5f1-e55a-48c3-a012-130fd1303f4b": {
+          "title": "Current landing (baseline, imported from the real render)",
+          "visualDirection": "ticket rail: spruce ink + lagoon + saffron",
+          "currentVersion": 2
+        },
+        "031e578c-44f3-40a8-8244-efc9b0d49f27": {
+          "title": "Restrolytics Landing - Charcoal & Paprika",
+          "visualDirection": "charcoal ink + paprika accent + basil, ticket rail kept",
+          "parentDraftId": "dac5a5f1-e55a-48c3-a012-130fd1303f4b",
+          "currentVersion": 1
+        },
+        "3b114545-e185-4fde-8cf1-a5a5b7f4f1c8": {
+          "title": "Restrolytics Landing - Daylight",
+          "visualDirection": "light-led hero, product report + IQ answer as key visual (src/components/marketing/hero-daylight.tsx)",
+          "parentDraftId": "dac5a5f1-e55a-48c3-a012-130fd1303f4b",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-10-23T10:46:50.483959+00:00"
+    }
+  }
+}

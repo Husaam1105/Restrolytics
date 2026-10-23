@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { deleteCount, getCount, getStorageOverview, saveCount } from "@/lib/storage.functions";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/inventory/count/$countId")({
   component: CountPage,
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/inventory/count/$countId")
 const key = (loc: string, item: string) => `${loc}:${item}`;
 
 function CountPage() {
+  const confirm = useConfirm();
   const { countId } = Route.useParams();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -154,7 +156,9 @@ function CountPage() {
             <span className="font-semibold">${total.toFixed(2)}</span>
           </p>
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" aria-label="Delete count" onClick={() => confirm("Delete this count?") && remove.mutate()}>
+            <Button variant="ghost" size="icon" aria-label="Delete count" onClick={async () => {
+                if (await confirm({ title: "Delete this count?", description: "The counted quantities are discarded. On-hand stock doesn't change.", confirmLabel: "Delete count", destructive: true })) remove.mutate();
+              }}>
               <Trash2 className="h-4 w-4" />
             </Button>
             {!done && (
@@ -164,7 +168,9 @@ function CountPage() {
                 </Button>
                 <Button
                   disabled={submit.isPending || lines.length === 0}
-                  onClick={() => confirm("Complete count and update on-hand stock?") && submit.mutate(true)}
+                  onClick={async () => {
+                    if (await confirm({ title: "Complete this count?", description: "On-hand stock for every counted item is updated, adding up all of its storage areas.", confirmLabel: "Complete count" })) submit.mutate(true);
+                  }}
                 >
                   <CheckCircle2 className="mr-2 h-4 w-4" /> Complete count
                 </Button>

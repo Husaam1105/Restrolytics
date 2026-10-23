@@ -88,7 +88,7 @@ export function Sources() {
   );
 }
 
-function DayReportPreview() {
+export function DayReportPreview() {
   const channels = [
     ["Toast POS", 3842, 64],
     ["Uber Eats", 1204, 20],

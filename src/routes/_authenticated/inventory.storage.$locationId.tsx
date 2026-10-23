@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { deleteLocation, getStorageOverview, saveLocation, setLocationItems, startCount } from "@/lib/storage.functions";
 import { listVendors } from "@/lib/inventory.functions";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/inventory/storage/$locationId")({
   component: LocationPage,
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/_authenticated/inventory/storage/$locatio
 });
 
 function LocationPage() {
+  const confirm = useConfirm();
   const { locationId } = Route.useParams();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -150,7 +152,9 @@ function LocationPage() {
             variant="ghost"
             size="icon"
             aria-label="Delete location"
-            onClick={() => confirm(`Delete ${loc.name}? Items stay in inventory.`) && remove.mutate()}
+            onClick={async () => {
+              if (await confirm({ title: `Delete ${loc.name}?`, description: "Items stay in inventory; only this storage area and its count history go.", confirmLabel: "Delete area", destructive: true })) remove.mutate();
+            }}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { usePrompt } from "@/components/confirm-dialog";
 
 export type Me = { userId: string; name: string; isPlatformStaff: boolean };
 
@@ -207,10 +208,23 @@ export function TasksPanel({ restaurantId, me, canAssign }: { restaurantId: stri
     },
     onError: (e) => toast.error((e as Error).message),
   });
+  const prompt = usePrompt();
+  const completeTask = async (t: { id: string; status: string }) => {
+    let note: string | null = null;
+    if (t.status === "open") {
+      note = await prompt({
+        title: "Mark task done",
+        label: "Note for the manager (optional)",
+        placeholder: "What was done, or anything they should know",
+        confirmLabel: "Mark done",
+      });
+      if (note === null) return;
+    }
+    toggle.mutate({ ...t, note: note || null });
+  };
   const toggle = useMutation({
-    mutationFn: async (t: { id: string; status: string }) => {
-      let note: string | null = null;
-      if (t.status === "open") note = window.prompt("Add a note about this task (optional)") || null;
+    mutationFn: async (t: { id: string; status: string; note: string | null }) => {
+      const note = t.note;
       const done = t.status === "open";
       const { error } = await supabase
         .from("manager_tasks")
@@ -255,7 +269,7 @@ export function TasksPanel({ restaurantId, me, canAssign }: { restaurantId: stri
           const overdue = t.status === "open" && t.due_date && t.due_date < today;
           return (
             <div key={t.id} className="flex items-start gap-3 rounded-lg border bg-card p-3">
-              <button type="button" onClick={() => toggle.mutate(t)} aria-label={t.status === "open" ? "Mark done" : "Reopen"} className="mt-0.5">
+              <button type="button" onClick={() => void completeTask(t)} aria-label={t.status === "open" ? "Mark done" : "Reopen"} className="mt-0.5">
                 {t.status === "done" ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Circle className="h-5 w-5 text-muted-foreground" />}
               </button>
               <div className="min-w-0 flex-1">
@@ -317,9 +331,18 @@ export function NotesPanel({ restaurantId, me, canReview }: { restaurantId: stri
     },
     onError: (e) => toast.error((e as Error).message),
   });
+  const prompt = usePrompt();
+  const reviewNote = async (n: { id: string; status: "reviewed" | "resolved" }) => {
+    const note = await prompt({
+      title: n.status === "resolved" ? "Resolve note" : "Mark note reviewed",
+      label: "Reply to the author (optional)",
+      confirmLabel: n.status === "resolved" ? "Resolve" : "Mark reviewed",
+    });
+    if (note === null) return;
+    review.mutate({ ...n, note: note || null });
+  };
   const review = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "reviewed" | "resolved" }) => {
-      const note = window.prompt("Reply to the author (optional)") || null;
+    mutationFn: async ({ id, status, note }: { id: string; status: "reviewed" | "resolved"; note: string | null }) => {
       const { error } = await supabase
         .from("manager_notes")
         .update({ status, review_note: note, reviewed_by: me.userId, reviewed_at: new Date().toISOString() })
@@ -362,9 +385,9 @@ export function NotesPanel({ restaurantId, me, canReview }: { restaurantId: stri
             {canReview && n.status !== "resolved" ? (
               <div className="mt-2 flex gap-2">
                 {n.status === "open" ? (
-                  <Button size="sm" variant="outline" onClick={() => review.mutate({ id: n.id, status: "reviewed" })}>Mark reviewed</Button>
+                  <Button size="sm" variant="outline" onClick={() => void reviewNote({ id: n.id, status: "reviewed" })}>Mark reviewed</Button>
                 ) : null}
-                <Button size="sm" variant="outline" onClick={() => review.mutate({ id: n.id, status: "resolved" })}>Resolve</Button>
+                <Button size="sm" variant="outline" onClick={() => void reviewNote({ id: n.id, status: "resolved" })}>Resolve</Button>
               </div>
             ) : null}
           </div>
