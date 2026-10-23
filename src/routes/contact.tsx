@@ -70,26 +70,26 @@ function ContactPage() {
             it while you watch, so you see your own numbers instead of a demo.
           </p>
           <dl className="mt-10 space-y-5">
-            <div className="flex gap-3">
-              <Mail className="mt-0.5 size-5 text-link" aria-hidden="true" />
-              <div>
-                <dt className="text-sm text-muted-foreground">Email</dt>
-                <dd>
-                  <a
-                    href={`mailto:${EMAIL}`}
-                    className="font-semibold underline-offset-4 hover:underline"
-                  >
-                    {EMAIL}
-                  </a>
-                </dd>
-              </div>
+            <div className="relative pl-8">
+              <dt className="text-sm text-muted-foreground">
+                <Mail className="absolute top-0.5 left-0 size-5 text-link" aria-hidden="true" />
+                Email
+              </dt>
+              <dd>
+                <a
+                  href={`mailto:${EMAIL}`}
+                  className="font-semibold underline-offset-4 hover:underline"
+                >
+                  {EMAIL}
+                </a>
+              </dd>
             </div>
-            <div className="flex gap-3">
-              <Phone className="mt-0.5 size-5 text-link" aria-hidden="true" />
-              <div>
-                <dt className="text-sm text-muted-foreground">Already a customer?</dt>
-                <dd>Message your Restrolytics manager from IQ Copilot in the app.</dd>
-              </div>
+            <div className="relative pl-8">
+              <dt className="text-sm text-muted-foreground">
+                <Phone className="absolute top-0.5 left-0 size-5 text-link" aria-hidden="true" />
+                Already a customer?
+              </dt>
+              <dd>Message your Restrolytics manager from IQ Copilot in the app.</dd>
             </div>
           </dl>
         </div>

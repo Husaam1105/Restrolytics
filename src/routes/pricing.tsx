@@ -145,12 +145,12 @@ function PricingPage() {
                 <h2 id="complete-heading" className="text-headline mt-5">
                   Complete Package
                 </h2>
-                <p className="mt-3 text-primary-foreground/80">Everything above in one bundle.</p>
+                <p className="mt-3 text-primary-foreground/95">Everything above in one bundle.</p>
                 <p className="mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="text-figure text-6xl">$999</span>
-                  <span className="text-primary-foreground/80">per month, per location</span>
+                  <span className="text-primary-foreground/95">per month, per location</span>
                 </p>
-                <p className="mt-3 text-sm text-primary-foreground/80">
+                <p className="mt-3 text-sm text-primary-foreground/95">
                   Regular combined price <s>$1,118</s>. You save $119 every month.
                 </p>
                 <Button

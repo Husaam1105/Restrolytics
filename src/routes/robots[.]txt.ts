@@ -4,8 +4,8 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/robots.txt")({
   server: {
     handlers: {
-      GET: async () => {
-        const { siteUrl } = await import("@/lib/site-url.server");
+      GET: async ({ request }) => {
+        const { crawlerBaseUrl } = await import("@/lib/site-url.server");
         const body = [
           "User-agent: *",
           "Allow: /",
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/robots.txt")({
           "Disallow: /dashboard",
           "Disallow: /auth",
           "",
-          `Sitemap: ${siteUrl()}/sitemap.xml`,
+          `Sitemap: ${crawlerBaseUrl(request)}/sitemap.xml`,
           "",
         ].join("\n");
         return new Response(body, {

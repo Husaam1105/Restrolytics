@@ -34,7 +34,14 @@ export default defineConfig(({ command }) => ({
     // inlineDynamicImports keeps the server in one bundle: split SSR chunks
     // import each other and crash at startup ("createCsrfMiddleware is not a function").
     ...(command === "build"
-      ? [nitro({ defaultPreset: "node-server", inlineDynamicImports: true })]
+      ? [
+          nitro({
+            defaultPreset: "node-server",
+            inlineDynamicImports: true,
+            // Serve .br/.gz copies of static assets built ahead of time.
+            compressPublicAssets: { gzip: true, brotli: true },
+          }),
+        ]
       : []),
     viteReact(),
   ],

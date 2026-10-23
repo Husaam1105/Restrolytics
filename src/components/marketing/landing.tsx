@@ -110,12 +110,12 @@ export function Sources() {
         </div>
         <dl className="grid gap-x-10 sm:grid-cols-2">
           {SOURCES.map(({ icon: Icon, name, detail }) => (
-            <div key={name} className="flex gap-4 border-t py-5">
-              <Icon className="mt-0.5 size-5 shrink-0 text-link" aria-hidden="true" />
-              <div>
-                <dt className="font-semibold">{name}</dt>
-                <dd className="mt-1 text-sm text-muted-foreground">{detail}</dd>
-              </div>
+            <div key={name} className="relative border-t py-5 pl-9">
+              <dt className="font-semibold">
+                <Icon className="absolute top-5.5 left-0 size-5 text-link" aria-hidden="true" />
+                {name}
+              </dt>
+              <dd className="mt-1 text-sm text-muted-foreground">{detail}</dd>
             </div>
           ))}
         </dl>
@@ -208,14 +208,14 @@ export function Operations() {
             </h2>
             <dl className="mt-10 space-y-8">
               {AREAS.map(({ icon: Icon, title, text }) => (
-                <div key={title} className="grid grid-cols-[2.5rem_1fr] gap-4">
-                  <span className="grid size-10 place-items-center rounded-xl bg-card text-link shadow-[var(--shadow-ring),var(--shadow-xs)]">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <dt className="font-display text-lg font-bold [font-stretch:85%]">{title}</dt>
-                    <dd className="mt-1 max-w-md text-muted-foreground">{text}</dd>
-                  </div>
+                <div key={title} className="relative pl-14">
+                  <dt className="font-display text-lg font-bold [font-stretch:85%]">
+                    <span className="absolute top-0 left-0 grid size-10 place-items-center rounded-xl bg-card text-link shadow-[var(--shadow-ring),var(--shadow-xs)]">
+                      <Icon className="size-5" aria-hidden="true" />
+                    </span>
+                    {title}
+                  </dt>
+                  <dd className="mt-1 max-w-md text-muted-foreground">{text}</dd>
                 </div>
               ))}
             </dl>
@@ -352,7 +352,7 @@ export function ClosingCta() {
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <div className="max-w-xl">
           <h2 className="text-headline">See your own restaurant in it.</h2>
-          <p className="mt-4 text-primary-foreground/75">
+          <p className="mt-4 text-primary-foreground/95">
             Thirty minutes on a call. Bring last week's Toast export and we'll load it while you
             watch.
           </p>

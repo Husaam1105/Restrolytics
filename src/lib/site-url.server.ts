@@ -8,3 +8,17 @@ export function siteUrl() {
   if (process.env["NODE_ENV"] !== "production") return "http://localhost:8080";
   throw new Error("SITE_URL is not set. Add it to the server environment.");
 }
+
+/**
+ * Base URL for crawler files (robots.txt, sitemap.xml). Falls back to the
+ * request's origin when SITE_URL is missing, since these links are never
+ * emailed and a 500 would hide the whole site from search engines.
+ */
+export function crawlerBaseUrl(request: Request) {
+  try {
+    return siteUrl();
+  } catch {
+    console.warn("[site-url] SITE_URL is not set; using the request origin for crawler files.");
+    return new URL(request.url).origin;
+  }
+}

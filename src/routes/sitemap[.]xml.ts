@@ -12,9 +12,9 @@ const PAGES = [
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async () => {
-        const { siteUrl } = await import("@/lib/site-url.server");
-        const base = siteUrl();
+      GET: async ({ request }) => {
+        const { crawlerBaseUrl } = await import("@/lib/site-url.server");
+        const base = crawlerBaseUrl(request);
         const urls = PAGES.map(
           (p) =>
             `  <url><loc>${base}${p.path}</loc><changefreq>monthly</changefreq><priority>${p.priority}</priority></url>`,

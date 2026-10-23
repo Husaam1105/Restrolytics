@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 
 import appCss from "../styles.css?url";
 import { reportError } from "@/lib/error-reporting";
-import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -126,18 +125,26 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
+  // Loaded after hydration so the Supabase SDK stays out of the public pages' first paint.
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
-        router.invalidate();
-        if (event !== "SIGNED_OUT") {
-          queryClient.invalidateQueries();
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+    void import("@/integrations/supabase/client").then(({ supabase }) => {
+      if (cancelled) return;
+      const { data } = supabase.auth.onAuthStateChange((event) => {
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+          router.invalidate();
+          if (event !== "SIGNED_OUT") {
+            queryClient.invalidateQueries();
+          }
         }
-      }
+      });
+      unsubscribe = () => data.subscription.unsubscribe();
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }, [queryClient, router]);
 
   return (
