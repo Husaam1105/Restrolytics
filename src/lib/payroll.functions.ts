@@ -90,7 +90,7 @@ export const getEmployees = createServerFn({ method: "GET" })
     const { data: employees, error } = await context.supabase
       .from("employees")
       .select(
-        "id, user_id, full_name, area, position, hourly_rate, pay_method, tip_eligible, active, phone, notes",
+        "id, user_id, username, full_name, area, position, hourly_rate, pay_method, tip_eligible, active, phone, notes",
       )
       .eq("restaurant_id", restaurant.id)
       .order("full_name");
@@ -110,6 +110,7 @@ export const getEmployees = createServerFn({ method: "GET" })
       employees: (employees ?? []).map((e) => ({
         id: e.id,
         userId: e.user_id,
+        username: e.username,
         fullName: e.full_name,
         area: e.area as PayArea,
         position: e.position,
