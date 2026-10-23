@@ -2,14 +2,16 @@ import { cn } from "@/lib/utils";
 
 /**
  * Restrolytics mark: a kitchen order ticket (torn bottom edge) holding three
- * rising bars. The ticket is the restaurant; the bars are the analytics.
+ * rising bars. The ticket is the restaurant; the bars are the analytics, and
+ * the tallest one is highlighted, the way today's bar is on the dashboard.
+ * In dark mode the whole ticket is the highlighter.
  */
 export function BrandGlyph({ className }: { className?: string | undefined }) {
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-8 shrink-0", className)}>
       <path
         d="M6 4.5A2.5 2.5 0 0 1 8.5 2h15A2.5 2.5 0 0 1 26 4.5V28l-2.5-1.75L21 28l-2.5-1.75L16 28l-2.5-1.75L11 28l-2.5-1.75L6 28Z"
-        className="fill-primary"
+        className="fill-primary dark:fill-highlight"
       />
       <rect
         x="10"
@@ -17,7 +19,7 @@ export function BrandGlyph({ className }: { className?: string | undefined }) {
         width="3"
         height="6"
         rx="1"
-        className="fill-primary-foreground opacity-55"
+        className="fill-primary-foreground opacity-50"
       />
       <rect
         x="14.5"
@@ -25,9 +27,16 @@ export function BrandGlyph({ className }: { className?: string | undefined }) {
         width="3"
         height="10"
         rx="1"
-        className="fill-primary-foreground opacity-75"
+        className="fill-primary-foreground opacity-80"
       />
-      <rect x="19" y="8" width="3" height="14" rx="1" className="fill-primary-foreground" />
+      <rect
+        x="19"
+        y="8"
+        width="3"
+        height="14"
+        rx="1"
+        className="fill-highlight dark:fill-primary-foreground"
+      />
     </svg>
   );
 }

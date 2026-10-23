@@ -298,7 +298,7 @@ function SummaryView({ s }: { s: ToastSummary }) {
                     formatter={(value: number) => money(value)}
                     cursor={{ fill: "var(--muted)" }}
                   />
-                  <Bar dataKey="total" fill="var(--color-chart-2)" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="total" fill="var(--color-chart-1)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -435,7 +435,7 @@ function ProductMixView({ p }: { p: ToastProductMix }) {
                     formatter={(value: number) => money(value)}
                     cursor={{ fill: "var(--muted)" }}
                   />
-                  <Bar dataKey="net" fill="var(--color-chart-3)" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="net" fill="var(--color-chart-1)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -542,7 +542,7 @@ function RemovedItemsView({ r, from, to }: { r: ToastRemovedItems; from: string;
                     }
                     cursor={{ fill: "var(--muted)" }}
                   />
-                  <Bar dataKey="amount" fill="var(--color-chart-4)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="amount" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

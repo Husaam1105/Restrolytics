@@ -21,48 +21,34 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { TicketRail } from "./ticket-rail";
 
 export function Hero() {
   return (
     <section className="relative overflow-hidden border-b bg-background">
-      <div className="mx-auto grid max-w-7xl items-center gap-14 px-4 pt-14 pb-20 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.05fr] lg:px-8 lg:pt-24 lg:pb-28">
-        <div className="max-w-xl">
-          <h1 className="text-display text-foreground">
+      <div className="mx-auto max-w-7xl px-4 pt-14 pb-12 sm:px-6 sm:pt-20 lg:px-8 lg:pt-24 lg:pb-16">
+        <div className="grid items-end gap-8 lg:grid-cols-[1.25fr_1fr]">
+          <h1 className="text-display max-w-3xl text-foreground">
             The whole night, added up before you lock the door.
           </h1>
-          <p className="text-lead mt-7 max-w-md">
-            Restrolytics brings your Toast and delivery-app sales, labor, stock counts and
-            checklists into one place. IQ, the built-in copilot, reads all of it and tells you what
-            to fix for tomorrow.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button size="lg" asChild>
-              <Link to="/contact">Book a walkthrough</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/pricing">See pricing</Link>
-            </Button>
+          <div className="max-w-md lg:pb-2">
+            <p className="text-lead">
+              Every ticket from Toast, Uber Eats, DoorDash and catering lands on one rail, sorted by
+              your business day. IQ, the built-in copilot, reads the close-out and tells you what to
+              fix for tomorrow.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Button size="lg" asChild>
+                <Link to="/contact">Book a walkthrough</Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/pricing">See pricing</Link>
+              </Button>
+            </div>
           </div>
         </div>
-
-        <div className="relative rounded-[2rem] bg-brand-soft p-5 pb-20 sm:p-8 sm:pb-20 lg:pb-14">
-          <DayReportPreview />
-          <figure
-            aria-label="Example IQ answer"
-            className="surface-raised absolute right-3 -bottom-6 w-[min(22rem,88%)] p-4 sm:-right-4 lg:-right-8"
-          >
-            <p className="ml-auto w-fit rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm text-primary-foreground">
-              What should I fix for tomorrow?
-            </p>
-            <p className="mt-3 rounded-2xl rounded-bl-md bg-muted px-3.5 py-2.5 text-sm">
-              Garlic fries were 86'd on Uber Eats from 8:40. Add a case to Friday's order, and move
-              one close shift to 5 PM.
-            </p>
-            <figcaption className="mt-2 text-xs text-muted-foreground">
-              Example answer from IQ
-            </figcaption>
-          </figure>
-        </div>
+        <TicketRail className="mt-14 lg:mt-20" />
+        <p className="text-xs text-muted-foreground">Example tickets from one evening.</p>
       </div>
     </section>
   );
@@ -257,7 +243,7 @@ export function IqSection() {
             <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground">
               Why was labor so high on Tuesday?
             </p>
-            <div className="max-w-[92%] space-y-3 rounded-2xl rounded-bl-md bg-muted px-4 py-3">
+            <div className="max-w-[92%] space-y-3 rounded-2xl rounded-bl-md bg-ledger-soft px-4 py-3">
               <p>
                 Labor was <strong>31% of sales</strong> on Tuesday, against 19% on a normal Tuesday.
                 Four people were on the line from 2 to 5 PM while sales in that window were $410.
@@ -281,7 +267,7 @@ export function ManagerSection() {
     <section className="border-b bg-background py-20 lg:py-24">
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <div className="flex max-w-2xl gap-5">
-          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-soft text-link">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-ledger-soft text-ledger">
             <Headset className="size-6" aria-hidden="true" />
           </span>
           <div>

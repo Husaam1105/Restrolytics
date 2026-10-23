@@ -43,7 +43,10 @@ const PAIRS: Pair[] = [
   // Soft badges
   ["success", "success-soft", 4.5],
   ["destructive", "destructive-soft", 4.5],
-  ["link", "brand-soft", 4.5],
+  ["link", "ledger-soft", 4.5],
+  ["foreground", "brand-soft", 4.5],
+  ["ledger-foreground", "ledger", 4.5],
+  ["foreground", "sidebar-accent", 4.5],
 ];
 
 // Pairs that only exist on dark marketing bands, checked in light mode only.

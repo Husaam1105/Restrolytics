@@ -6,21 +6,29 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Restrolytics design tokens ("Magenta Sorbet"). All colors are oklch; run
+ * Restrolytics design tokens ("Highlighter"). All colors are oklch; run
  * `npm run check:contrast` after changing any of them.
  *
- * Palette logic
- * - Soft and premium, light-led: a blush-white canvas, plum ink for text, and
- *   one vivid raspberry-magenta accent for actions, focus and key data.
- *   Restaurant tech is crowded with orange (Toast, 7shifts); magenta is ours.
- * - Pastel panels (`brand-soft`) carry the warmth instead of gradients.
- * - Semantic hues are reserved: red ~32 (destructive), amber ~75 (warning),
- *   green ~152 (success). Destructive is pushed toward red-orange to stay clear
- *   of the magenta, and every status is paired with an icon or label.
- * - The one dark section on marketing pages uses deep plum ink.
+ * Palette logic: a manager marking up the night's printout.
+ * - Paper: near-white, faintly warm, like receipt stock. Cards are white.
+ * - Ink: near-neutral black for text and primary buttons. The UI is mostly
+ *   ink on paper, so colour always means something.
+ * - Highlighter (`brand`, `highlight`): fluorescent yellow, used for the one
+ *   thing that matters on a screen: today's figure, the active page, the
+ *   close-out ticket. Never for text; text on it is always ink.
+ * - Ledger green (`ledger`, `link`, `ring`): annotations, in the green of
+ *   green-bar printer paper and account books. Links, focus, IQ Copilot's
+ *   notes, "due" tags and earlier-period bars. A splash, not a fill. It sits
+ *   next to the yellow on the colour wheel, so the pair stays calm.
+ * - Red pen (`destructive`) is for errors only. Success shares the ledger
+ *   green (good news is written in the books), warning is orange-amber (kept well away from the highlighter's lemon yellow); every
+ *   status is paired with an icon or label.
+ * - Dark mode is the same printout under a desk lamp: ink canvas, paper
+ *   buttons, the highlighter glowing.
  *
  * Type: Archivo (variable weight + width). Display text uses the condensed
- * widths; body text stays at normal width. Numbers are tabular everywhere.
+ * widths, which read like kitchen tickets and end-of-night reports; body text
+ * stays at normal width. Numbers are tabular everywhere.
  */
 
 @theme inline {
@@ -87,6 +95,9 @@
   --color-ink-foreground: var(--ink-foreground);
   --color-ink-muted: var(--ink-muted);
   --color-highlight: var(--highlight);
+  --color-ledger: var(--ledger);
+  --color-ledger-foreground: var(--ledger-foreground);
+  --color-ledger-soft: var(--ledger-soft);
   --color-surface-subtle: var(--surface-subtle);
 }
 
@@ -102,71 +113,76 @@
 
   --ease-out-quart: cubic-bezier(0.2, 0, 0, 1);
 
-  /* Canvas: blush-white paper, plum ink */
-  --background: oklch(0.993 0.004 350);
-  --surface-subtle: oklch(0.975 0.012 350);
-  --foreground: oklch(0.22 0.03 340);
+  /* Canvas: receipt paper, ink */
+  --background: oklch(0.979 0.004 100);
+  --surface-subtle: oklch(0.962 0.005 100);
+  --foreground: oklch(0.21 0.006 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.03 340);
+  --card-foreground: oklch(0.21 0.006 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.03 340);
+  --popover-foreground: oklch(0.21 0.006 260);
 
-  /* Magenta: primary actions */
-  --primary: oklch(0.52 0.2 352);
-  --primary-foreground: oklch(0.99 0.005 350);
-  --secondary: oklch(0.96 0.015 350);
-  --secondary-foreground: oklch(0.32 0.06 345);
-  --muted: oklch(0.965 0.012 350);
-  --muted-foreground: oklch(0.48 0.03 340);
-  --accent: oklch(0.95 0.03 350);
-  --accent-foreground: oklch(0.38 0.15 352);
+  /* Ink: primary actions */
+  --primary: oklch(0.21 0.006 260);
+  --primary-foreground: oklch(0.99 0.003 100);
+  --secondary: oklch(0.955 0.005 100);
+  --secondary-foreground: oklch(0.25 0.008 260);
+  --muted: oklch(0.958 0.004 100);
+  --muted-foreground: oklch(0.47 0.01 260);
+  --accent: oklch(0.95 0.006 100);
+  --accent-foreground: oklch(0.21 0.006 260);
 
-  /* Brand accent and soft pastel panels */
-  --brand: oklch(0.57 0.21 352);
-  --brand-foreground: oklch(0.99 0.005 350);
-  --brand-soft: oklch(0.955 0.03 350);
-  --link: oklch(0.5 0.2 352);
-  --ring: oklch(0.6 0.2 352);
+  /* Highlighter: the one thing that matters */
+  --brand: oklch(0.925 0.17 104);
+  --brand-foreground: oklch(0.21 0.006 260);
+  --brand-soft: oklch(0.975 0.065 104);
+  --highlight: oklch(0.925 0.17 104);
 
-  /* Ink bands (one dark accent section on marketing pages) */
-  --ink: oklch(0.25 0.06 345);
-  --ink-foreground: oklch(0.98 0.008 350);
-  --ink-muted: oklch(0.82 0.03 350);
-  --highlight: oklch(0.87 0.08 350);
+  /* Ledger green: annotations, links, focus */
+  --ledger: oklch(0.47 0.095 157);
+  --ledger-foreground: oklch(0.99 0.003 100);
+  --ledger-soft: oklch(0.95 0.03 157);
+  --link: oklch(0.45 0.095 157);
+  --ring: oklch(0.55 0.11 157);
 
-  /* Semantic (kept away from the brand hue; always paired with an icon or label) */
-  --destructive: oklch(0.55 0.2 32);
-  --destructive-foreground: oklch(0.99 0.005 32);
-  --destructive-soft: oklch(0.96 0.025 40);
-  --success: oklch(0.52 0.12 152);
+  /* Ink bands (dark sections on marketing pages) */
+  --ink: oklch(0.21 0.006 260);
+  --ink-foreground: oklch(0.98 0.004 100);
+  --ink-muted: oklch(0.8 0.006 260);
+
+  /* Semantic (always paired with an icon or label) */
+  --destructive: oklch(0.54 0.2 27);
+  --destructive-foreground: oklch(0.99 0.005 27);
+  --destructive-soft: oklch(0.96 0.022 27);
+  --success: oklch(0.47 0.095 157);
   --success-foreground: oklch(0.99 0.01 152);
   --success-soft: oklch(0.96 0.03 152);
-  --warning: oklch(0.79 0.15 75);
-  --warning-foreground: oklch(0.27 0.06 60);
-  --warning-soft: oklch(0.965 0.04 85);
+  --warning: oklch(0.76 0.15 62);
+  --warning-foreground: oklch(0.26 0.06 50);
+  --warning-soft: oklch(0.965 0.035 70);
 
-  --border: oklch(0.915 0.014 350);
-  --input: oklch(0.885 0.018 350);
+  --border: oklch(0.912 0.005 100);
+  --input: oklch(0.875 0.007 100);
 
-  /* Charts: categorical, fixed order (magenta, ultramarine, amber, teal, violet).
-     Validated with the dataviz palette validator (lightness band, chroma floor,
-     CVD and normal-vision separation, 3:1 on the card) in both modes. */
-  --chart-1: oklch(0.55 0.21 352);
+  /* Charts: categorical, fixed order (ledger green, blue, raspberry, amber, violet).
+     Validated with the dataviz palette validator in both modes. The "today"
+     bar on single-series charts is ink with a highlighter cap instead. */
+  --chart-1: oklch(0.5 0.115 157);
   --chart-2: oklch(0.5 0.16 255);
-  --chart-3: oklch(0.66 0.14 62);
-  --chart-4: oklch(0.58 0.11 180);
+  --chart-3: oklch(0.55 0.18 355);
+  --chart-4: oklch(0.66 0.14 62);
   --chart-5: oklch(0.45 0.14 315);
 
-  /* App sidebar: light, with a magenta active marker */
-  --sidebar: oklch(0.982 0.008 350);
-  --sidebar-foreground: oklch(0.25 0.03 340);
-  --sidebar-muted-foreground: oklch(0.48 0.03 340);
-  --sidebar-primary: oklch(0.52 0.2 352);
-  --sidebar-primary-foreground: oklch(0.99 0.005 350);
-  --sidebar-accent: oklch(0.95 0.03 350);
-  --sidebar-accent-foreground: oklch(0.34 0.13 352);
-  --sidebar-border: oklch(0.92 0.014 350);
-  --sidebar-ring: oklch(0.6 0.2 352);
+  /* App sidebar: paper, highlighted active page with an ink marker */
+  --sidebar: oklch(0.969 0.004 100);
+  --sidebar-foreground: oklch(0.23 0.006 260);
+  --sidebar-muted-foreground: oklch(0.47 0.01 260);
+  --sidebar-primary: oklch(0.21 0.006 260);
+  --sidebar-primary-foreground: oklch(0.99 0.003 100);
+  --sidebar-accent: oklch(0.955 0.09 104);
+  --sidebar-accent-foreground: oklch(0.21 0.006 260);
+  --sidebar-border: oklch(0.915 0.005 100);
+  --sidebar-ring: oklch(0.55 0.11 157);
 }
 
 .dark {
@@ -175,57 +191,66 @@
   --shadow-md: 0 1px 2px oklch(0 0 0 / 30%), 0 6px 16px -6px oklch(0 0 0 / 45%);
   --shadow-lg: 0 2px 4px oklch(0 0 0 / 30%), 0 18px 40px -16px oklch(0 0 0 / 60%);
   --shadow-ring: 0 0 0 1px oklch(1 0 0 / 8%);
-  --background: oklch(0.17 0.02 340);
-  --surface-subtle: oklch(0.15 0.018 340);
-  --foreground: oklch(0.96 0.008 350);
-  --card: oklch(0.21 0.022 340);
-  --card-foreground: oklch(0.96 0.008 350);
-  --popover: oklch(0.23 0.024 340);
-  --popover-foreground: oklch(0.96 0.008 350);
+  --background: oklch(0.175 0.005 260);
+  --surface-subtle: oklch(0.155 0.005 260);
+  --foreground: oklch(0.96 0.004 100);
+  --card: oklch(0.215 0.006 260);
+  --card-foreground: oklch(0.96 0.004 100);
+  --popover: oklch(0.235 0.006 260);
+  --popover-foreground: oklch(0.96 0.004 100);
 
-  --primary: oklch(0.74 0.16 352);
-  --primary-foreground: oklch(0.18 0.04 345);
-  --secondary: oklch(0.26 0.025 340);
-  --secondary-foreground: oklch(0.93 0.01 350);
-  --muted: oklch(0.25 0.022 340);
-  --muted-foreground: oklch(0.74 0.025 340);
-  --accent: oklch(0.29 0.05 350);
-  --accent-foreground: oklch(0.96 0.008 350);
+  --primary: oklch(0.96 0.004 100);
+  --primary-foreground: oklch(0.2 0.006 260);
+  --secondary: oklch(0.26 0.007 260);
+  --secondary-foreground: oklch(0.94 0.004 100);
+  --muted: oklch(0.25 0.006 260);
+  --muted-foreground: oklch(0.73 0.008 260);
+  --accent: oklch(0.28 0.008 260);
+  --accent-foreground: oklch(0.96 0.004 100);
 
-  --brand: oklch(0.74 0.16 352);
-  --brand-foreground: oklch(0.18 0.04 345);
-  --brand-soft: oklch(0.27 0.06 350);
-  --link: oklch(0.8 0.13 352);
-  --ring: oklch(0.72 0.16 352);
+  --brand: oklch(0.9 0.17 104);
+  --brand-foreground: oklch(0.2 0.006 260);
+  --brand-soft: oklch(0.3 0.06 104);
+  --highlight: oklch(0.9 0.17 104);
 
-  --destructive: oklch(0.7 0.17 32);
-  --destructive-foreground: oklch(0.18 0.03 32);
-  --destructive-soft: oklch(0.28 0.06 32);
+  --ledger: oklch(0.74 0.12 157);
+  --ledger-foreground: oklch(0.18 0.03 157);
+  --ledger-soft: oklch(0.27 0.045 157);
+  --link: oklch(0.8 0.11 157);
+  --ring: oklch(0.72 0.12 157);
+
+  --ink: oklch(0.13 0.005 260);
+  --ink-foreground: oklch(0.96 0.004 100);
+  --ink-muted: oklch(0.75 0.008 260);
+
+  --destructive: oklch(0.7 0.17 27);
+  --destructive-foreground: oklch(0.18 0.03 27);
+  --destructive-soft: oklch(0.28 0.06 27);
   --success: oklch(0.72 0.14 152);
   --success-foreground: oklch(0.18 0.03 152);
   --success-soft: oklch(0.26 0.05 152);
-  --warning: oklch(0.8 0.14 78);
-  --warning-foreground: oklch(0.22 0.05 60);
-  --warning-soft: oklch(0.28 0.05 75);
+  --warning: oklch(0.78 0.14 62);
+  --warning-foreground: oklch(0.22 0.05 50);
+  --warning-soft: oklch(0.28 0.05 62);
 
-  --border: oklch(0.31 0.022 340);
-  --input: oklch(0.37 0.025 340);
+  --border: oklch(0.3 0.006 260);
+  --input: oklch(0.36 0.007 260);
 
-  --chart-1: oklch(0.66 0.19 352);
-  --chart-2: oklch(0.6 0.15 255);
-  --chart-3: oklch(0.67 0.13 62);
-  --chart-4: oklch(0.63 0.11 180);
+  --chart-1: oklch(0.66 0.13 157);
+  --chart-2: oklch(0.62 0.15 255);
+  --chart-3: oklch(0.65 0.17 355);
+  --chart-4: oklch(0.67 0.13 62);
   --chart-5: oklch(0.56 0.14 315);
 
-  --sidebar: oklch(0.15 0.018 340);
-  --sidebar-foreground: oklch(0.94 0.01 350);
-  --sidebar-muted-foreground: oklch(0.72 0.025 340);
-  --sidebar-primary: oklch(0.74 0.16 352);
-  --sidebar-primary-foreground: oklch(0.18 0.04 345);
-  --sidebar-accent: oklch(0.24 0.03 345);
-  --sidebar-accent-foreground: oklch(0.96 0.008 350);
-  --sidebar-border: oklch(0.26 0.022 340);
-  --sidebar-ring: oklch(0.72 0.16 352);
+  --sidebar: oklch(0.155 0.005 260);
+  --sidebar-foreground: oklch(0.94 0.004 100);
+  --sidebar-muted-foreground: oklch(0.72 0.008 260);
+  --sidebar-primary: oklch(0.96 0.004 100);
+  --sidebar-primary-foreground: oklch(0.2 0.006 260);
+  --sidebar-accent: oklch(0.3 0.06 104);
+  --sidebar-accent-foreground: oklch(0.97 0.03 104);
+  --sidebar-border: oklch(0.26 0.006 260);
+  --sidebar-ring: oklch(0.72 0.12 157);
 }
 
 @layer base {
@@ -378,5 +403,51 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Ticket rail: kitchen tickets hang slightly askew and drop onto the rail once. */
+.ticket-drop {
+  rotate: var(--tilt, 0deg);
+  transform-origin: top center;
+}
+
+/* Torn bottom edge, like a printed kitchen ticket. */
+.ticket-paper {
+  --tear: 7px;
+  mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--tear)) no-repeat,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom /
+      calc(var(--tear) * 2) var(--tear) repeat-x;
+}
+
+/* A highlighter stroke behind a figure or phrase. */
+@utility mark-highlight {
+  background-image: linear-gradient(
+    transparent 58%,
+    var(--color-highlight) 58%,
+    var(--color-highlight) 92%,
+    transparent 92%
+  );
+  box-decoration-break: clone;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ticket-drop {
+    animation: ticket-drop 520ms var(--ease-out-quart) both;
+    animation-delay: var(--delay, 0ms);
+  }
+}
+
+@keyframes ticket-drop {
+  from {
+    opacity: 0;
+    translate: 0 -14px;
+    rotate: 0deg;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    rotate: var(--tilt, 0deg);
   }
 }

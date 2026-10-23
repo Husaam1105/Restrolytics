@@ -121,6 +121,7 @@ function ManagerDashboard({ data }: { data: Stats }) {
           label="Sales today"
           value={formatCurrency(data.todayRevenue)}
           icon={<Receipt />}
+          variant="ticket"
           note={`${formatCurrency(data.todayTips)} in tips`}
         />
         <StatCard
@@ -158,6 +159,35 @@ function ManagerDashboard({ data }: { data: Stats }) {
 const salesChartConfig = {
   total: { label: "Sales", color: "var(--color-chart-1)" },
 } satisfies ChartConfig;
+
+type BarShape = { x?: number; y?: number; width?: number; height?: number };
+
+/** Earlier days: pale ledger green, so today stands out. */
+function PastBar({ x = 0, y = 0, width = 0, height = 0 }: BarShape) {
+  if (height <= 0) return <g />;
+  return (
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      rx={4}
+      fill="color-mix(in oklab, var(--color-total) 34%, var(--color-card))"
+    />
+  );
+}
+
+/** Today's bar: ink, with a highlighter stroke across the top. */
+function TodayBar({ x = 0, y = 0, width = 0, height = 0 }: BarShape) {
+  if (height <= 0) return <g />;
+  const cap = Math.min(6, height);
+  return (
+    <g>
+      <rect x={x} y={y} width={width} height={height} rx={4} fill="var(--color-foreground)" />
+      <rect x={x} y={y} width={width} height={cap} rx={3} fill="var(--color-highlight)" />
+    </g>
+  );
+}
 
 function SalesChart() {
   const query = useQuery({
@@ -210,11 +240,19 @@ function SalesChart() {
                       <ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />
                     }
                   />
+                  {/* Past days in pale ledger green; today is the one marked up. */}
                   <Bar
                     dataKey="total"
-                    fill="var(--color-total)"
                     radius={[4, 4, 0, 0]}
                     maxBarSize={44}
+                    shape={(props: unknown) => {
+                      const bar = props as BarShape & { index?: number };
+                      return bar.index === chart.points.length - 1 ? (
+                        <TodayBar {...bar} />
+                      ) : (
+                        <PastBar {...bar} />
+                      );
+                    }}
                   />
                 </BarChart>
               </ChartContainer>

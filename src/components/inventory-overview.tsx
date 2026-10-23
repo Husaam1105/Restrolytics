@@ -245,7 +245,7 @@ export function InventoryOverview({
                   formatter={(v: number) => money(v)}
                   cursor={{ fill: "var(--color-muted)" }}
                 />
-                <Bar dataKey="value" fill="var(--color-chart-2)" radius={[5, 5, 0, 0]} />
+                <Bar dataKey="value" fill="var(--color-chart-1)" radius={[5, 5, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

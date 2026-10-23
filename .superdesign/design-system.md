@@ -17,13 +17,18 @@ Tone: plain, specific, kitchen vernacular (tickets, 86'd, close-out, par). No hy
 Public: `/` landing, `/pricing`, `/contact` (walkthrough request), `/privacy`, `/terms`.
 App: dashboard, sales, inventory, shifts/checklists, timeclock, employees, payroll, IQ Copilot, settings.
 
-## Visual direction ("Magenta Sorbet", chosen 2026-10-23)
-Soft, premium and light-led. Restaurant tech is crowded with orange (Toast, 7shifts), so the brand owns raspberry-magenta.
-- Palette (oklch): blush-white canvas 0.993 0.004 350, plum ink text 0.22 0.03 340, primary magenta 0.52 0.2 352, brand accent 0.57 0.21 352, pastel panels 0.955 0.03 350, deep plum ink band 0.25 0.06 345 for the one dark marketing section. Semantic: destructive 0.55 0.2 32 (pushed toward red-orange, away from magenta), warning 0.79 0.15 75, success 0.52 0.12 152.
+## Visual direction ("Highlighter", chosen 2026-10-23)
+A manager marking up the night's printout. Every visual idea comes from real restaurant objects: kitchen tickets on a steel rail, the close-out printout, a highlighter, green-bar ledger paper.
+- Paper canvas oklch(0.979 0.004 100) (#F9F8F5), white cards.
+- Ink oklch(0.21 0.006 260) (#17181B) for text and primary buttons. The UI is mostly ink on paper, so colour always means something.
+- Highlighter yellow oklch(0.925 0.17 104) (#FAEB4E): only for the one thing that matters on a screen (today's figure, the active page, the close-out ticket, today's chart bar cap). Text on it is always ink.
+- Ledger green oklch(0.47 0.095 157) (#216A45): annotations. Links, focus rings, IQ Copilot's notes, "due" tags, earlier-period chart bars, positive notes.
+- Errors: red oklch(0.54 0.2 27) with an icon. Warning: orange-amber, kept away from the lemon yellow.
+- Rejected: blue as the accent (fought the yellow), magenta, orange (Toast/7shifts), spruce/teal.
+- Signature: the ticket rail hero (order tickets with torn bottom edges clipped to a stainless rail, ending in the yellow close-out ticket with IQ's note in ledger green). The dashboard's "Sales today" is the same close-out ticket.
 - Type: Archivo Variable only. Headlines condensed (72-82% width), heavy, tight leading; body normal width 16px; numbers tabular.
-- Hero: light. Headline left; the real product (example end-of-day report + an IQ answer) on a pink pastel panel on the right.
-- Surfaces: white cards, radius 16px, layered soft shadows instead of borders; buttons radius 10px, 40-44px tall. Light app sidebar with a magenta active marker.
-- Avoid: all-caps eyebrow labels, arrows appended to button text, middle-dot meta strings, gradient washes, dark full-page themes by default.
+- Dark mode: the same printout under a desk lamp. Ink canvas, paper buttons, highlighter glowing; tickets stay paper.
+- Avoid: all-caps eyebrow labels, arrows appended to button text, middle-dot meta strings, gradient washes, more than one highlighted thing per view.
 
 ## Motion
 One orchestrated entrance at most. Hover/press feedback is instant (<=150ms), press scales to 0.96. Respect reduced motion.
