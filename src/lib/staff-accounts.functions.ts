@@ -57,6 +57,8 @@ export const createStaffLogin = createServerFn({ method: "POST" })
       password: data.password,
       email_confirm: true,
       user_metadata: { full_name: employee.full_name },
+      // Server-only (users can't edit app_metadata): which restaurant owns this login.
+      app_metadata: { staff_login: true, home_restaurant_id: restaurant.id },
     });
     if (createError || !created.user) {
       if (createError?.message.toLowerCase().includes("already")) {
@@ -115,14 +117,18 @@ export const resetStaffPassword = createServerFn({ method: "POST" })
     if (!user.user.email?.endsWith(`@${STAFF_EMAIL_DOMAIN}`)) {
       throw new Error("This person signs in with their own email. They can reset it from the sign-in page.");
     }
+    const home = (user.user.app_metadata as { home_restaurant_id?: string } | undefined)?.home_restaurant_id;
+    if (home !== restaurant.id) {
+      throw new Error("This login was created by another restaurant, so only they can reset it.");
+    }
 
-    // Only plain staff accounts: never anyone who is an owner or manager anywhere.
+    // A username login belongs to exactly one restaurant, as staff.
     const { data: roles, error: rolesError } = await supabaseAdmin
       .from("restaurant_members")
       .select("restaurant_id, role")
       .eq("user_id", employee.user_id);
     if (rolesError) throw rolesError;
-    if (!roles?.some((r) => r.restaurant_id === restaurant.id) || roles.some((r) => r.role !== "staff")) {
+    if (roles?.length !== 1 || roles[0]!.restaurant_id !== restaurant.id || roles[0]!.role !== "staff") {
       throw new Error("You can only reset passwords for staff logins on this team.");
     }
 

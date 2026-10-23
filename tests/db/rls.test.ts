@@ -142,6 +142,16 @@ describe("inventory", () => {
   });
 });
 
+describe("staff username logins", () => {
+  it("cannot be invited by another restaurant", async () => {
+    await expect(
+      asUser(db, OTHER_OWNER, () =>
+        db.exec(`INSERT INTO restaurant_invites (restaurant_id, email, role) VALUES ('${R2}', 'sam@kaizr.staff', 'staff')`),
+      ),
+    ).rejects.toThrow(/restaurant_invites_no_staff_logins/);
+  });
+});
+
 describe("invite-only", () => {
   it("staff (and strangers) cannot create restaurants; owners can add another", async () => {
     await expect(

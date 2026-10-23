@@ -1,82 +1,63 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Mail, Plus, Trash2, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { Mail, Plus, UserMinus, UserPlus, X } from "lucide-react";
+import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { useConfirm } from "@/components/confirm-dialog";
+import { PageContainer, PageHeader, SectionHeader } from "@/components/page";
+import { QueryBoundary } from "@/components/states";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   cancelInvite,
   createRestaurant,
   getTeam,
-  getWorkspace,
   inviteMember,
   removeMember,
   updateMemberRole,
   type MemberRole,
 } from "@/lib/tenant.functions";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { requireManagerRoute } from "@/lib/workspace";
+import { requireManagerRoute, workspaceQuery } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/settings/access")({
   beforeLoad: requireManagerRoute,
   component: TeamPage,
-  head: () => ({
-    meta: [
-      { title: "Team & access — Restaurant CRM" },
-      {
-        name: "description",
-        content:
-          "Invite owners, managers and staff to a restaurant and control what each person can see.",
-      },
-      { property: "og:title", content: "Team & access — Restaurant CRM" },
-      {
-        property: "og:description",
-        content: "Invite your team and control access per restaurant.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Team access · Restrolytics" }] }),
 });
 
-const ROLE_LABEL: Record<MemberRole, string> = {
-  owner: "Owner",
-  manager: "Manager",
-  staff: "Staff",
-};
+const ROLE_LABEL: Record<MemberRole, string> = { owner: "Owner", manager: "Manager", staff: "Staff" };
 
 const ROLE_HELP: Record<MemberRole, string> = {
-  owner: "Full access, including team and restaurant settings",
-  manager: "Inventory, vendors, sales, checklists and inviting staff",
-  staff: "Views the restaurant and completes checklist items",
+  owner: "Everything, including team access and restaurant settings.",
+  manager: "Sales, inventory, payroll and checklists. Can invite staff.",
+  staff: "Their own hours, pay, schedule and checklists. No sales or other people's pay.",
 };
+
+/** Staff username logins are stored as <username>@kaizr.staff; show the username. */
+function displayLogin(email: string | null) {
+  if (!email) return "Team member";
+  return email.endsWith("@kaizr.staff") ? email.replace("@kaizr.staff", "") : email;
+}
 
 function TeamPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const confirm = useConfirm();
 
   const fetchTeam = useServerFn(getTeam);
-  const fetchWorkspace = useServerFn(getWorkspace);
   const invite = useServerFn(inviteMember);
   const cancel = useServerFn(cancelInvite);
   const changeRole = useServerFn(updateMemberRole);
   const remove = useServerFn(removeMember);
   const addRestaurant = useServerFn(createRestaurant);
 
-  const { data: team } = useQuery({ queryKey: ["team"], queryFn: () => fetchTeam() });
-  const { data: workspace } = useQuery({ queryKey: ["workspace"], queryFn: () => fetchWorkspace() });
+  const teamQuery = useQuery({ queryKey: ["team"], queryFn: () => fetchTeam() });
+  const { data: workspace } = useQuery(workspaceQuery);
 
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<MemberRole>("staff");
@@ -92,14 +73,21 @@ function TeamPage() {
     onSuccess: async (result) => {
       setEmail("");
       await refresh();
-      toast.success(`${result.email} can now sign in and will land in this restaurant.`);
+      toast.success(
+        result.emailSent
+          ? `Invite sent to ${result.email}. They'll set a password from the email.`
+          : `${result.email} is invited. If they already have an account, they'll see this restaurant next time they sign in.`,
+      );
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
   const cancelMutation = useMutation({
     mutationFn: (inviteId: string) => cancel({ data: { inviteId } }),
-    onSuccess: refresh,
+    onSuccess: async () => {
+      await refresh();
+      toast.success("Invite cancelled");
+    },
     onError: (error: Error) => toast.error(error.message),
   });
 
@@ -107,7 +95,7 @@ function TeamPage() {
     mutationFn: (input: { memberId: string; role: MemberRole }) => changeRole({ data: input }),
     onSuccess: async () => {
       await refresh();
-      toast.success("Role updated");
+      toast.success("Role changed");
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -132,193 +120,233 @@ function TeamPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const isOwner = team?.role === "owner";
-  const canManage = team?.role === "owner" || team?.role === "manager";
-  const assignableRoles: MemberRole[] = isOwner ? ["staff", "manager", "owner"] : ["staff"];
+  const submitInvite = (e: FormEvent) => {
+    e.preventDefault();
+    inviteMutation.mutate();
+  };
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Team &amp; access</h1>
-        <p className="text-sm text-muted-foreground">
-          {team?.restaurantName
-            ? `People with access to ${team.restaurantName}. Everyone only sees the restaurants they belong to.`
-            : "People with access to this restaurant."}
-        </p>
-      </div>
+    <PageContainer size="narrow">
+      <PageHeader
+        context="Settings"
+        title="Team access"
+        description="Everyone only sees the restaurants they belong to. Staff without email get a username login from the Employees page."
+      />
 
-      {canManage && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <UserPlus className="h-4 w-4" /> Invite someone
-            </CardTitle>
-            <CardDescription>
-              They sign up with this email address and are added to this restaurant automatically.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="invite-email">Email</Label>
-                <Input
-                  id="invite-email"
-                  type="email"
-                  placeholder="cook@restaurant.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2 sm:w-48">
-                <Label>Role</Label>
-                <Select value={role} onValueChange={(value) => setRole(value as MemberRole)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assignableRoles.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {ROLE_LABEL[r]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                disabled={!email.trim() || inviteMutation.isPending}
-                onClick={() => inviteMutation.mutate()}
-              >
-                {inviteMutation.isPending ? "Inviting…" : "Send invite"}
-              </Button>
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">{ROLE_HELP[role]}</p>
-          </CardContent>
-        </Card>
-      )}
+      <QueryBoundary query={teamQuery} errorTitle="The team didn't load">
+        {(team) => {
+          const isOwner = team.role === "owner";
+          const assignable: MemberRole[] = isOwner ? ["staff", "manager", "owner"] : ["staff"];
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">People</CardTitle>
-          <CardDescription>{team?.members.length ?? 0} with access</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {(team?.members ?? []).map((member) => (
-            <div
-              key={member.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">
-                  {member.email ?? "Team member"}
-                  {member.userId === team?.myUserId && (
-                    <span className="ml-2 text-xs text-muted-foreground">(you)</span>
-                  )}
-                </p>
-                <p className="text-xs text-muted-foreground">{ROLE_HELP[member.role]}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {isOwner && member.userId !== team?.myUserId ? (
-                  <Select
-                    value={member.role}
-                    onValueChange={(value) =>
-                      roleMutation.mutate({ memberId: member.id, role: value as MemberRole })
-                    }
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(["staff", "manager", "owner"] as MemberRole[]).map((r) => (
-                        <SelectItem key={r} value={r}>
-                          {ROLE_LABEL[r]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <span className="rounded bg-muted px-2 py-1 text-xs">
-                    {ROLE_LABEL[member.role]}
-                  </span>
-                )}
-                {canManage && member.userId !== team?.myUserId && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeMutation.mutate(member.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+          const changeMemberRole = async (memberId: string, who: string, next: MemberRole) => {
+            if (
+              next === "owner" &&
+              !(await confirm({
+                title: `Make ${who} an owner?`,
+                description: "Owners can change everyone's access, including yours, and delete the restaurant.",
+                confirmLabel: "Make owner",
+              }))
+            ) {
+              return;
+            }
+            roleMutation.mutate({ memberId, role: next });
+          };
+
+          const removePerson = async (memberId: string, who: string) => {
+            if (
+              await confirm({
+                title: `Remove ${who} from ${team.restaurantName}?`,
+                description: "They lose access straight away. Their hours and pay history stay on file.",
+                confirmLabel: "Remove access",
+                destructive: true,
+              })
+            ) {
+              removeMutation.mutate(memberId);
+            }
+          };
+
+          return (
+            <>
+              <section className="surface space-y-4 p-5 sm:p-6" aria-labelledby="invite-heading">
+                <SectionHeader title={<span id="invite-heading">Invite someone by email</span>} />
+                <form onSubmit={submitInvite} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <div className="flex-1 space-y-1.5">
+                    <Label htmlFor="invite-email">Email</Label>
+                    <Input
+                      id="invite-email"
+                      type="email"
+                      autoComplete="off"
+                      placeholder="name@restaurant.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:w-44">
+                    <Label htmlFor="invite-role">Role</Label>
+                    <Select value={role} onValueChange={(v) => setRole(v as MemberRole)}>
+                      <SelectTrigger id="invite-role">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {assignable.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {ROLE_LABEL[r]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" disabled={!email.includes("@") || inviteMutation.isPending}>
+                    <UserPlus />
+                    {inviteMutation.isPending ? "Sending…" : "Send invite"}
                   </Button>
-                )}
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+                </form>
+                <p className="text-sm text-muted-foreground">{ROLE_HELP[role]}</p>
+              </section>
 
-      {canManage && (team?.invites.length ?? 0) > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Mail className="h-4 w-4" /> Waiting to join
-            </CardTitle>
-            <CardDescription>They join as soon as they sign in with that email.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {(team?.invites ?? []).map((pending) => (
-              <div
-                key={pending.id}
-                className="flex items-center justify-between gap-3 rounded-md border p-3"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{pending.email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Invited as {ROLE_LABEL[pending.role]}
-                  </p>
+              <section className="surface overflow-hidden" aria-labelledby="people-heading">
+                <div className="p-5 pb-2 sm:p-6 sm:pb-2">
+                  <SectionHeader
+                    title={<span id="people-heading">People with access</span>}
+                    description={`${team.members.length} ${team.members.length === 1 ? "person" : "people"}`}
+                    actions={
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to="/employees">Employees and username logins</Link>
+                      </Button>
+                    }
+                  />
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => cancelMutation.mutate(pending.id)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+                <ul className="divide-y">
+                  {team.members.map((member) => {
+                    const who = displayLogin(member.email);
+                    const isMe = member.userId === team.myUserId;
+                    return (
+                      <li key={member.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-6">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">
+                            {who}
+                            {isMe ? <span className="ml-2 text-xs font-normal text-muted-foreground">You</span> : null}
+                            {member.email?.endsWith("@kaizr.staff") ? (
+                              <Badge variant="secondary" className="ml-2 align-middle">
+                                Username login
+                              </Badge>
+                            ) : null}
+                          </p>
+                          <p className="text-sm text-muted-foreground">{ROLE_HELP[member.role]}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isOwner && !isMe ? (
+                            <Select value={member.role} onValueChange={(v) => void changeMemberRole(member.id, who, v as MemberRole)}>
+                              <SelectTrigger className="w-32" aria-label={`Role for ${who}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(["staff", "manager", "owner"] as MemberRole[]).map((r) => (
+                                  <SelectItem key={r} value={r}>
+                                    {ROLE_LABEL[r]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge variant="outline">{ROLE_LABEL[member.role]}</Badge>
+                          )}
+                          {!isMe && (isOwner || member.role === "staff") ? (
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`Remove ${who}`}
+                              onClick={() => void removePerson(member.id, who)}
+                            >
+                              <UserMinus className="text-destructive" />
+                            </Button>
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
 
-      <Separator />
+              {team.invites.length > 0 ? (
+                <section className="surface overflow-hidden" aria-labelledby="pending-heading">
+                  <div className="p-5 pb-2 sm:p-6 sm:pb-2">
+                    <SectionHeader
+                      title={
+                        <span id="pending-heading" className="inline-flex items-center gap-2">
+                          <Mail className="size-4" aria-hidden="true" />
+                          Waiting to join
+                        </span>
+                      }
+                      description="They join as soon as they set a password or sign in with that email."
+                    />
+                  </div>
+                  <ul className="divide-y">
+                    {team.invites.map((pending) => (
+                      <li key={pending.id} className="flex items-center justify-between gap-3 px-5 py-3 sm:px-6">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{pending.email}</p>
+                          <p className="text-sm text-muted-foreground">Invited as {ROLE_LABEL[pending.role].toLowerCase()}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            if (
+                              await confirm({
+                                title: `Cancel the invite for ${pending.email}?`,
+                                description: "Their invite link stops working. You can invite them again later.",
+                                confirmLabel: "Cancel invite",
+                                cancelLabel: "Keep invite",
+                                destructive: true,
+                              })
+                            ) {
+                              cancelMutation.mutate(pending.id);
+                            }
+                          }}
+                        >
+                          <X />
+                          Cancel invite
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Plus className="h-4 w-4" /> Add another restaurant
-          </CardTitle>
-          <CardDescription>
-            You currently have access to {workspace?.restaurants.length ?? 0}. Each one keeps its own
-            inventory, vendors, sales and checklists.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex-1 space-y-2">
-            <Label htmlFor="new-restaurant">Restaurant name</Label>
-            <Input
-              id="new-restaurant"
-              placeholder="Second Avenue Grill"
-              value={newRestaurant}
-              onChange={(e) => setNewRestaurant(e.target.value)}
-            />
-          </div>
-          <Button
-            variant="outline"
-            disabled={!newRestaurant.trim() || restaurantMutation.isPending}
-            onClick={() => restaurantMutation.mutate()}
-          >
-            {restaurantMutation.isPending ? "Adding…" : "Add restaurant"}
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+              {workspace?.canCreateRestaurant ? (
+                <section className="surface space-y-4 p-5 sm:p-6" aria-labelledby="add-restaurant-heading">
+                  <SectionHeader
+                    title={<span id="add-restaurant-heading">Add another restaurant</span>}
+                    description={`You have ${workspace.restaurants.length}. Each keeps its own sales, stock, team and checklists.`}
+                  />
+                  <form
+                    className="flex flex-col gap-3 sm:flex-row sm:items-end"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      restaurantMutation.mutate();
+                    }}
+                  >
+                    <div className="flex-1 space-y-1.5">
+                      <Label htmlFor="new-restaurant">Restaurant name</Label>
+                      <Input
+                        id="new-restaurant"
+                        placeholder="Second Avenue Grill"
+                        value={newRestaurant}
+                        onChange={(e) => setNewRestaurant(e.target.value)}
+                      />
+                    </div>
+                    <Button type="submit" variant="outline" disabled={!newRestaurant.trim() || restaurantMutation.isPending}>
+                      <Plus />
+                      {restaurantMutation.isPending ? "Adding…" : "Add restaurant"}
+                    </Button>
+                  </form>
+                </section>
+              ) : null}
+            </>
+          );
+        }}
+      </QueryBoundary>
+    </PageContainer>
   );
 }

@@ -183,6 +183,11 @@ export const inviteMember = createServerFn({ method: "POST" })
 
     const email = data.email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Enter a valid email address.");
+    // Username logins (@kaizr.staff) are created per restaurant on the Employees
+    // page and must never be claimable by another restaurant through an invite.
+    if (email.endsWith("@kaizr.staff")) {
+      throw new Error("That's a staff username login. Create logins for your own staff on the Employees page.");
+    }
     if (restaurant.role === "manager" && data.role !== "staff") {
       throw new Error("Managers can only invite staff.");
     }
@@ -199,7 +204,27 @@ export const inviteMember = createServerFn({ method: "POST" })
     );
     if (error) throw error;
 
-    return { ok: true, email };
+    // People without an account get Supabase's invite email, which brings them
+    // to /auth/reset to set a password; the invite is claimed on first sign-in.
+    // Existing accounts just see the restaurant next time they sign in.
+    let emailSent = false;
+    try {
+      const { getRequest } = await import("@tanstack/react-start/server");
+      const origin = new URL(getRequest().url).origin;
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        redirectTo: `${origin}/auth/reset`,
+        data: { invited_to: restaurant.name },
+      });
+      emailSent = !inviteError;
+      if (inviteError && !inviteError.message.toLowerCase().includes("already")) {
+        console.error("inviteMember: invite email failed", inviteError.message);
+      }
+    } catch (sendError) {
+      console.error("inviteMember: invite email failed", sendError);
+    }
+
+    return { ok: true, email, emailSent };
   });
 
 export const cancelInvite = createServerFn({ method: "POST" })
@@ -207,11 +232,12 @@ export const cancelInvite = createServerFn({ method: "POST" })
   .inputValidator((input: { inviteId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
-    await requireManager(context.supabase, context.userId);
+    const restaurant = await requireManager(context.supabase, context.userId);
     const { error } = await context.supabase
       .from("restaurant_invites")
       .delete()
-      .eq("id", data.inviteId);
+      .eq("id", data.inviteId)
+      .eq("restaurant_id", restaurant.id);
     if (error) throw error;
     return { ok: true };
   });

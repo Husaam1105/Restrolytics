@@ -1,12 +1,11 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
+
 import { supabase } from "@/integrations/supabase/client";
+import { AuthField, AuthShell } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   beforeLoad: async () => {
@@ -16,103 +15,108 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Sign in — Restrolytics" },
+      { title: "Sign in · Restrolytics" },
       { name: "description", content: "Sign in to your Restrolytics restaurant workspace." },
-      { property: "og:title", content: "Sign in — Restrolytics" },
-      { property: "og:description", content: "Sign in to your Restrolytics restaurant workspace." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
     ],
   }),
 });
 
+/** Staff without email sign in with a username; it maps to <username>@kaizr.staff. */
+function toLoginEmail(login: string) {
+  const value = login.trim().toLowerCase();
+  return value.includes("@") ? value : `${value}@kaizr.staff`;
+}
+
 function AuthPage() {
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
+  const signIn = async (e: FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    const login = email.trim().toLowerCase();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: login.includes("@") ? login : `${login}@kaizr.staff`,
-      password,
-    });
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: toLoginEmail(login), password });
     setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    if (signInError) {
+      setError(
+        signInError.message.toLowerCase().includes("invalid")
+          ? "That username or email and password don't match. Check for typos, or reset your password."
+          : signInError.message,
+      );
     }
-    toast.success("Signed in successfully");
+    // On success the auth listener in __root refreshes the router and beforeLoad sends you to /dashboard.
   };
 
-  const handleGoogleSignIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+  const google = async () => {
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/dashboard` },
     });
-    if (error) {
-      toast.error(error.message);
-    }
+    if (oauthError) toast.error(oauthError.message);
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface-subtle px-4">
-      <Card className="w-full max-w-md shadow-[var(--shadow-premium)]">
-        <CardHeader className="text-center">
-          <CardTitle className="font-display text-2xl">Restrolytics</CardTitle>
-          <CardDescription>Sign in to manage your restaurant.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleEmailSignIn} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email or username</Label>
-              <Input
-                id="email"
-                type="text"
-                autoComplete="username"
-                placeholder="you@restaurant.com or first name"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in…" : "Sign in"}
-            </Button>
-          </form>
-
-          <div className="relative">
-            <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-              or
-            </span>
-          </div>
-
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-            Continue with Google
-          </Button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Restrolytics is invite-only right now.{" "}
-            <Link to="/signup" className="text-primary hover:underline">
-              Request access
-            </Link>
+    <AuthShell
+      title="Sign in"
+      description="Use your email, or the username your manager gave you."
+      footer={
+        <>
+          New restaurant? Restrolytics is invite-only.{" "}
+          <Link to="/contact" className="font-medium text-link underline-offset-4 hover:underline">
+            Book a walkthrough
+          </Link>
+          .
+        </>
+      }
+    >
+      <form onSubmit={signIn} className="space-y-4" noValidate>
+        <AuthField id="login" label="Email or username">
+          <Input
+            id="login"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+            value={login}
+            onChange={(e) => setLogin(e.target.value)}
+          />
+        </AuthField>
+        <AuthField id="password" label="Password">
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </AuthField>
+        {error ? (
+          <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
+            {error}
           </p>
-        </CardContent>
-      </Card>
-    </div>
+        ) : null}
+        <Button type="submit" size="lg" className="w-full" disabled={loading || !login.trim() || !password}>
+          {loading ? "Signing in…" : "Sign in"}
+        </Button>
+        <div className="text-right">
+          <Link to="/auth/forgot" className="text-sm font-medium text-link underline-offset-4 hover:underline">
+            Forgot your password?
+          </Link>
+        </div>
+      </form>
+
+      <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        or
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <Button variant="outline" size="lg" className="w-full" onClick={google}>
+        Continue with Google
+      </Button>
+    </AuthShell>
   );
 }

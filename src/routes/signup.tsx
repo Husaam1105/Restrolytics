@@ -1,7 +1,8 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+
 import { supabase } from "@/integrations/supabase/client";
+import { AuthShell } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
@@ -11,39 +12,42 @@ export const Route = createFileRoute("/signup")({
   component: SignupPage,
   head: () => ({
     meta: [
-      { title: "Request access — Restrolytics" },
-      { name: "description", content: "Restrolytics is currently invite-only. Sign in if you already have access." },
-      { property: "og:title", content: "Request access — Restrolytics" },
-      { property: "og:description", content: "Restrolytics is currently invite-only. Sign in if you already have access." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { title: "Get access · Restrolytics" },
+      { name: "description", content: "Restrolytics is invite-only. Here's how to get in." },
     ],
   }),
 });
 
 function SignupPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Restrolytics is invite-only right now</CardTitle>
-          <CardDescription>
-            We're opening access gradually. If your restaurant has been invited, sign in with the
-            account we created for you.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button className="w-full" asChild>
-            <Link to="/auth">Sign in</Link>
-          </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            Want early access for your restaurant?{" "}
-            <a href="mailto:hello@restrolytics.com" className="text-primary hover:underline">
-              Contact us
-            </a>
+    <AuthShell
+      title="Restrolytics is invite-only"
+      description="We set up every restaurant with its owner, so your numbers are right from day one."
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link to="/auth" className="font-medium text-link underline-offset-4 hover:underline">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      <ol className="space-y-4">
+        <li className="surface p-4">
+          <p className="font-semibold">Invited by your team?</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Open the invite email and use its link to set your password. No email? Your manager can create a username login
+            for you.
           </p>
-        </CardContent>
-      </Card>
-    </div>
+        </li>
+        <li className="surface p-4">
+          <p className="font-semibold">Running a restaurant?</p>
+          <p className="mt-1 text-sm text-muted-foreground">Book a 30-minute walkthrough and we'll set up your account with you.</p>
+          <Button className="mt-3" asChild>
+            <Link to="/contact">Book a walkthrough</Link>
+          </Button>
+        </li>
+      </ol>
+    </AuthShell>
   );
 }

@@ -220,6 +220,12 @@ CREATE POLICY "managers update invites" ON public.restaurant_invites
     OR (public.can_manage_restaurant(restaurant_id) AND role = 'staff')
   );
 
+-- Username logins (@kaizr.staff) belong to the restaurant that created them and
+-- can never be invited (and so claimed) by another restaurant.
+ALTER TABLE public.restaurant_invites DROP CONSTRAINT IF EXISTS restaurant_invites_no_staff_logins;
+ALTER TABLE public.restaurant_invites
+  ADD CONSTRAINT restaurant_invites_no_staff_logins CHECK (lower(email) NOT LIKE '%@kaizr.staff');
+
 -- ---------------------------------------------------------------------------
 -- 4b. Restrolytics is invite-only. New restaurants are created by
 --     Restrolytics staff, or by an existing owner adding another location.

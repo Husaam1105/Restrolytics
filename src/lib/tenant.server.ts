@@ -84,6 +84,8 @@ export async function claimPendingInvites(userId: string, email: string | undefi
   if (!email) return 0;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const normalized = email.trim().toLowerCase();
+  // Username logins only ever join the restaurant that created them.
+  if (normalized.endsWith("@kaizr.staff")) return 0;
 
   const { data: invites } = await supabaseAdmin
     .from("restaurant_invites")

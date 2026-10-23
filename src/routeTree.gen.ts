@@ -24,6 +24,8 @@ import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedShiftsRouteImport } from './routes/_authenticated/shifts'
 import { Route as AuthenticatedTimeclockRouteImport } from './routes/_authenticated/timeclock'
 import { Route as ApiCopilotRouteImport } from './routes/api/copilot'
+import { Route as AuthForgotRouteImport } from './routes/auth_.forgot'
+import { Route as AuthResetRouteImport } from './routes/auth_.reset'
 import { Route as AuthenticatedBohIndexRouteImport } from './routes/_authenticated/boh.index'
 import { Route as AuthenticatedBohClosingRouteImport } from './routes/_authenticated/boh.closing'
 import { Route as AuthenticatedBohOpeningRouteImport } from './routes/_authenticated/boh.opening'
@@ -120,6 +122,16 @@ const AuthenticatedTimeclockRoute = AuthenticatedTimeclockRouteImport.update({
 const ApiCopilotRoute = ApiCopilotRouteImport.update({
   id: '/api/copilot',
   path: '/api/copilot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthForgotRoute = AuthForgotRouteImport.update({
+  id: '/auth_/forgot',
+  path: '/auth/forgot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetRoute = AuthResetRouteImport.update({
+  id: '/auth_/reset',
+  path: '/auth/reset',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedBohIndexRoute = AuthenticatedBohIndexRouteImport.update({
@@ -262,6 +274,8 @@ export interface FileRoutesByFullPath {
   '/shifts': typeof AuthenticatedShiftsRoute
   '/timeclock': typeof AuthenticatedTimeclockRoute
   '/api/copilot': typeof ApiCopilotRoute
+  '/auth/forgot': typeof AuthForgotRoute
+  '/auth/reset': typeof AuthResetRoute
   '/boh/closing': typeof AuthenticatedBohClosingRoute
   '/boh/opening': typeof AuthenticatedBohOpeningRoute
   '/copilot/$threadId': typeof AuthenticatedCopilotThreadIdRoute
@@ -299,6 +313,8 @@ export interface FileRoutesByTo {
   '/shifts': typeof AuthenticatedShiftsRoute
   '/timeclock': typeof AuthenticatedTimeclockRoute
   '/api/copilot': typeof ApiCopilotRoute
+  '/auth/forgot': typeof AuthForgotRoute
+  '/auth/reset': typeof AuthResetRoute
   '/boh/closing': typeof AuthenticatedBohClosingRoute
   '/boh/opening': typeof AuthenticatedBohOpeningRoute
   '/copilot/$threadId': typeof AuthenticatedCopilotThreadIdRoute
@@ -339,6 +355,8 @@ export interface FileRoutesById {
   '/_authenticated/shifts': typeof AuthenticatedShiftsRoute
   '/_authenticated/timeclock': typeof AuthenticatedTimeclockRoute
   '/api/copilot': typeof ApiCopilotRoute
+  '/auth_/forgot': typeof AuthForgotRoute
+  '/auth_/reset': typeof AuthResetRoute
   '/_authenticated/boh/closing': typeof AuthenticatedBohClosingRoute
   '/_authenticated/boh/opening': typeof AuthenticatedBohOpeningRoute
   '/_authenticated/copilot/$threadId': typeof AuthenticatedCopilotThreadIdRoute
@@ -379,6 +397,8 @@ export interface FileRouteTypes {
     | '/shifts'
     | '/timeclock'
     | '/api/copilot'
+    | '/auth/forgot'
+    | '/auth/reset'
     | '/boh/closing'
     | '/boh/opening'
     | '/copilot/$threadId'
@@ -416,6 +436,8 @@ export interface FileRouteTypes {
     | '/shifts'
     | '/timeclock'
     | '/api/copilot'
+    | '/auth/forgot'
+    | '/auth/reset'
     | '/boh/closing'
     | '/boh/opening'
     | '/copilot/$threadId'
@@ -455,6 +477,8 @@ export interface FileRouteTypes {
     | '/_authenticated/shifts'
     | '/_authenticated/timeclock'
     | '/api/copilot'
+    | '/auth_/forgot'
+    | '/auth_/reset'
     | '/_authenticated/boh/closing'
     | '/_authenticated/boh/opening'
     | '/_authenticated/copilot/$threadId'
@@ -487,6 +511,8 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   SignupRoute: typeof SignupRoute
   ApiCopilotRoute: typeof ApiCopilotRoute
+  AuthForgotRoute: typeof AuthForgotRoute
+  AuthResetRoute: typeof AuthResetRoute
   ApiPublicHooksVendorSyncRoute: typeof ApiPublicHooksVendorSyncRoute
 }
 
@@ -595,6 +621,20 @@ declare module '@tanstack/react-router' {
       path: '/api/copilot'
       fullPath: '/api/copilot'
       preLoaderRoute: typeof ApiCopilotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth_/forgot': {
+      id: '/auth_/forgot'
+      path: '/auth/forgot'
+      fullPath: '/auth/forgot'
+      preLoaderRoute: typeof AuthForgotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth_/reset': {
+      id: '/auth_/reset'
+      path: '/auth/reset'
+      fullPath: '/auth/reset'
+      preLoaderRoute: typeof AuthResetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/boh/': {
@@ -842,6 +882,8 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   SignupRoute: SignupRoute,
   ApiCopilotRoute: ApiCopilotRoute,
+  AuthForgotRoute: AuthForgotRoute,
+  AuthResetRoute: AuthResetRoute,
   ApiPublicHooksVendorSyncRoute: ApiPublicHooksVendorSyncRoute,
 }
 export const routeTree = rootRouteImport
