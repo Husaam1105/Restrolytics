@@ -176,7 +176,7 @@ DROP POLICY IF EXISTS "members update completions" ON public.shift_task_completi
 CREATE POLICY "authors or managers update completions" ON public.shift_task_completions
   FOR UPDATE TO authenticated
   USING (completed_by = auth.uid() OR public.can_manage_restaurant(restaurant_id))
-  WITH CHECK (public.is_restaurant_member(restaurant_id));
+  WITH CHECK (completed_by = auth.uid() OR public.can_manage_restaurant(restaurant_id));
 
 -- ---------------------------------------------------------------------------
 -- 4. Invites can be re-sent / re-roled by managers.
@@ -259,31 +259,62 @@ BEGIN
     RAISE EXCEPTION 'This count is already completed.';
   END IF;
 
+  -- Only lines whose location and item belong to this count's restaurant.
   INSERT INTO public.item_locations (restaurant_id, location_id, inventory_item_id, last_count, last_counted_at)
-  SELECT l.restaurant_id, l.location_id, l.inventory_item_id, l.quantity, now()
+  SELECT c.restaurant_id, l.location_id, l.inventory_item_id, l.quantity, now()
     FROM public.inventory_count_lines l
-   WHERE l.count_id = _count_id
+    JOIN public.storage_locations sl ON sl.id = l.location_id AND sl.restaurant_id = c.restaurant_id
+    JOIN public.inventory_items ii ON ii.id = l.inventory_item_id AND ii.restaurant_id = c.restaurant_id
+   WHERE l.count_id = _count_id AND l.restaurant_id = c.restaurant_id
   ON CONFLICT (location_id, inventory_item_id)
-  DO UPDATE SET last_count = EXCLUDED.last_count, last_counted_at = EXCLUDED.last_counted_at;
+  DO UPDATE SET last_count = EXCLUDED.last_count, last_counted_at = EXCLUDED.last_counted_at
+   WHERE public.item_locations.restaurant_id = c.restaurant_id;
 
   UPDATE public.inventory_items i
      SET current_stock = s.qty
     FROM (
       SELECT il.inventory_item_id, SUM(COALESCE(il.last_count, 0)) AS qty
         FROM public.item_locations il
-       WHERE il.inventory_item_id IN (SELECT inventory_item_id FROM public.inventory_count_lines WHERE count_id = _count_id)
+       WHERE il.restaurant_id = c.restaurant_id
+         AND il.inventory_item_id IN (SELECT inventory_item_id FROM public.inventory_count_lines WHERE count_id = _count_id)
        GROUP BY il.inventory_item_id
     ) s
    WHERE i.id = s.inventory_item_id AND i.restaurant_id = c.restaurant_id;
 
   SELECT COALESCE(SUM(quantity * unit_cost), 0) INTO total
-    FROM public.inventory_count_lines WHERE count_id = _count_id;
+    FROM public.inventory_count_lines WHERE count_id = _count_id AND restaurant_id = c.restaurant_id;
 
   UPDATE public.inventory_counts
      SET status = 'completed', completed_at = now(), total_value = total
    WHERE id = _count_id;
   RETURN total;
 END $$;
+-- Foreign keys only prove a row exists, not whose it is. Rows that link a
+-- location and an item must stay inside one restaurant.
+CREATE OR REPLACE FUNCTION public.guard_same_restaurant_links()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.storage_locations WHERE id = NEW.location_id AND restaurant_id = NEW.restaurant_id)
+     OR NOT EXISTS (SELECT 1 FROM public.inventory_items WHERE id = NEW.inventory_item_id AND restaurant_id = NEW.restaurant_id)
+  THEN
+    RAISE EXCEPTION 'Linked rows must belong to the same restaurant' USING ERRCODE = '42501';
+  END IF;
+  -- NEW.count_id only exists on count lines; plpgsql doesn't short-circuit, so branch.
+  IF TG_TABLE_NAME = 'inventory_count_lines' THEN
+    IF NOT EXISTS (SELECT 1 FROM public.inventory_counts
+                    WHERE id = (to_jsonb(NEW) ->> 'count_id')::uuid AND restaurant_id = NEW.restaurant_id) THEN
+      RAISE EXCEPTION 'Linked rows must belong to the same restaurant' USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS inventory_count_lines_same_restaurant ON public.inventory_count_lines;
+CREATE TRIGGER inventory_count_lines_same_restaurant BEFORE INSERT OR UPDATE ON public.inventory_count_lines
+  FOR EACH ROW EXECUTE FUNCTION public.guard_same_restaurant_links();
+DROP TRIGGER IF EXISTS item_locations_same_restaurant ON public.item_locations;
+CREATE TRIGGER item_locations_same_restaurant BEFORE INSERT OR UPDATE ON public.item_locations
+  FOR EACH ROW EXECUTE FUNCTION public.guard_same_restaurant_links();
+
 REVOKE EXECUTE ON FUNCTION public.complete_inventory_count(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.complete_inventory_count(uuid) TO authenticated;
 

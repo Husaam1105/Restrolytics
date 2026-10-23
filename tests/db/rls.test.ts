@@ -136,7 +136,33 @@ describe("inventory", () => {
   });
 });
 
+describe("cross-tenant links", () => {
+  it("a count line cannot point at another restaurant's location", async () => {
+    await db.exec(`INSERT INTO storage_locations (id, restaurant_id, name) VALUES ('50000000-0000-0000-0000-000000000009', '${R2}', 'B freezer')`);
+    const { rows: items } = await db.query<{ id: string }>(`SELECT id FROM inventory_items WHERE name = 'Oil'`);
+    await db.exec(`INSERT INTO inventory_counts (id, restaurant_id) VALUES ('60000000-0000-0000-0000-000000000002', '${R1}')`);
+    await expect(
+      asUser(db, STAFF, () =>
+        db.exec(`INSERT INTO inventory_count_lines (restaurant_id, count_id, location_id, inventory_item_id, quantity)
+                 VALUES ('${R1}', '60000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000009', '${items[0]!.id}', 1)`),
+      ),
+    ).rejects.toThrow(/same restaurant/);
+  });
+});
+
 describe("checklists", () => {
+  it("an author cannot reassign their completion to someone else", async () => {
+    await db.exec(`
+      INSERT INTO shift_tasks (id, restaurant_id, area, shift, title) VALUES ('70000000-0000-0000-0000-000000000002', '${R1}', 'foh', 'closing', 'Lock up');
+      INSERT INTO shift_task_completions (restaurant_id, task_id, completed_by) VALUES ('${R1}', '70000000-0000-0000-0000-000000000002', '${STAFF}');
+    `);
+    await expect(
+      asUser(db, STAFF, () =>
+        db.exec(`UPDATE shift_task_completions SET completed_by = '${OWNER}' WHERE task_id = '70000000-0000-0000-0000-000000000002'`),
+      ),
+    ).rejects.toThrow(/row-level security/);
+  });
+
   it("a member cannot delete someone else's completion", async () => {
     await db.exec(`
       INSERT INTO shift_tasks (id, restaurant_id, area, shift, title) VALUES ('${TASK}', '${R1}', 'foh', 'opening', 'Unlock');
