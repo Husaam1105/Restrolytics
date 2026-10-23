@@ -23,9 +23,9 @@ export function BrandMark({
   wordmarkClassName,
   glyphClassName,
 }: {
-  className?: string;
-  wordmarkClassName?: string;
-  glyphClassName?: string;
+  className?: string | undefined;
+  wordmarkClassName?: string | undefined;
+  glyphClassName?: string | undefined;
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
