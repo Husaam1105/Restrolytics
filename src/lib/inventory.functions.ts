@@ -4,8 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const listVendors = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+    const { resolveActiveRestaurant } = await import("./tenant.server");
+    const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
 
     const { data: vendors, error } = await context.supabase
       .from("vendors")
@@ -101,9 +101,9 @@ export const saveVendor = createServerFn({ method: "POST" })
     }) => input,
   )
   .handler(async ({ data, context }) => {
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
     if (!data.name.trim()) throw new Error("Vendor name is required.");
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
 
     const payload = {
       restaurant_id: restaurant.id,
@@ -120,7 +120,7 @@ export const saveVendor = createServerFn({ method: "POST" })
     };
 
     const query = data.id
-      ? context.supabase.from("vendors").update(payload).eq("id", data.id).select("id").single()
+      ? context.supabase.from("vendors").update(payload).eq("id", data.id).eq("restaurant_id", restaurant.id).select("id").single()
       : context.supabase.from("vendors").insert(payload).select("id").single();
 
     const { data: saved, error } = await query;
@@ -132,7 +132,9 @@ export const deleteVendor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { vendorId: string }) => input)
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("vendors").delete().eq("id", data.vendorId);
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
+    const { error } = await context.supabase.from("vendors").delete().eq("id", data.vendorId).eq("restaurant_id", restaurant.id);
     if (error) throw error;
     return { success: true };
   });
@@ -141,12 +143,15 @@ export const saveVendorCredentials = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { vendorId: string; username: string; password: string }) => input)
   .handler(async ({ data, context }) => {
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
     if (!data.username.trim() || !data.password) throw new Error("Username and password are required.");
 
     const { data: vendor, error } = await context.supabase
       .from("vendors")
       .select("id")
       .eq("id", data.vendorId)
+      .eq("restaurant_id", restaurant.id)
       .single();
     if (error || !vendor) throw new Error("Vendor not found.");
 
@@ -164,7 +169,7 @@ export const saveVendorCredentials = createServerFn({ method: "POST" })
     await context.supabase
       .from("vendors")
       .update({ sync_status: "connected", last_error: null })
-      .eq("id", data.vendorId);
+      .eq("id", data.vendorId).eq("restaurant_id", restaurant.id);
 
     return { success: true };
   });
@@ -173,10 +178,13 @@ export const syncVendor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { vendorId: string }) => input)
   .handler(async ({ data, context }) => {
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
     const { data: vendor, error } = await context.supabase
       .from("vendors")
       .select("id, restaurant_id, name, portal_type, login_url, orders_url, order_cadence_days")
       .eq("id", data.vendorId)
+      .eq("restaurant_id", restaurant.id)
       .single();
     if (error || !vendor) throw new Error("Vendor not found.");
 
@@ -228,9 +236,9 @@ export const saveInventoryItem = createServerFn({ method: "POST" })
     }) => input,
   )
   .handler(async ({ data, context }) => {
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
     if (!data.name.trim()) throw new Error("Item name is required.");
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
 
     const payload = {
       restaurant_id: restaurant.id,
@@ -250,7 +258,7 @@ export const saveInventoryItem = createServerFn({ method: "POST" })
     };
 
     const query = data.id
-      ? context.supabase.from("inventory_items").update(payload).eq("id", data.id).select("id").single()
+      ? context.supabase.from("inventory_items").update(payload).eq("id", data.id).eq("restaurant_id", restaurant.id).select("id").single()
       : context.supabase.from("inventory_items").insert(payload).select("id").single();
 
     const { data: saved, error } = await query;
@@ -262,7 +270,9 @@ export const deleteInventoryItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { itemId: string }) => input)
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("inventory_items").delete().eq("id", data.itemId);
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
+    const { error } = await context.supabase.from("inventory_items").delete().eq("id", data.itemId).eq("restaurant_id", restaurant.id);
     if (error) throw error;
     return { success: true };
   });

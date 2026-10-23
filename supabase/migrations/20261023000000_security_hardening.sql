@@ -40,6 +40,36 @@ BEGIN
 END $$;
 
 -- ---------------------------------------------------------------------------
+-- Rows that reference an employee (and a pay period) must reference one from
+-- the same restaurant. Foreign keys alone only prove the row exists.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.guard_employee_same_restaurant()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.employees WHERE id = NEW.employee_id AND restaurant_id = NEW.restaurant_id) THEN
+    RAISE EXCEPTION 'Employee belongs to a different restaurant' USING ERRCODE = '42501';
+  END IF;
+  IF TG_TABLE_NAME = 'payroll_lines' THEN
+    IF NOT EXISTS (SELECT 1 FROM public.payroll_periods
+                    WHERE id = (to_jsonb(NEW) ->> 'period_id')::uuid AND restaurant_id = NEW.restaurant_id) THEN
+      RAISE EXCEPTION 'Pay week belongs to a different restaurant' USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  RETURN NEW;
+END $$;
+
+DO $$
+DECLARE t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['time_entries','payroll_lines','staff_schedules'] LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS %1$s_employee_same_restaurant ON public.%1$I', t);
+    EXECUTE format(
+      'CREATE TRIGGER %1$s_employee_same_restaurant BEFORE INSERT OR UPDATE ON public.%1$I
+         FOR EACH ROW EXECUTE FUNCTION public.guard_employee_same_restaurant()', t);
+  END LOOP;
+END $$;
+
+-- ---------------------------------------------------------------------------
 -- 1a. Payroll: staff may only acknowledge a paid line, via RPC.
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "Staff acknowledge own pay" ON public.payroll_lines;

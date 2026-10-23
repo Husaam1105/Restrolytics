@@ -137,6 +137,16 @@ describe("inventory", () => {
 });
 
 describe("cross-tenant links", () => {
+  it("a manager cannot log hours against another restaurant's employee", async () => {
+    await db.exec(`INSERT INTO employees (id, restaurant_id, full_name) VALUES ('20000000-0000-0000-0000-000000000009', '${R2}', 'Other')`);
+    await expect(
+      asUser(db, OWNER, () =>
+        db.exec(`INSERT INTO time_entries (restaurant_id, employee_id, work_date, minutes, source)
+                 VALUES ('${R1}', '20000000-0000-0000-0000-000000000009', current_date, 60, 'manual')`),
+      ),
+    ).rejects.toThrow(/different restaurant/);
+  });
+
   it("a count line cannot point at another restaurant's location", async () => {
     await db.exec(`INSERT INTO storage_locations (id, restaurant_id, name) VALUES ('50000000-0000-0000-0000-000000000009', '${R2}', 'B freezer')`);
     const { rows: items } = await db.query<{ id: string }>(`SELECT id FROM inventory_items WHERE name = 'Oil'`);

@@ -4,8 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const listPlatformConnections = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+    const { resolveActiveRestaurant } = await import("./tenant.server");
+    const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("platform_connections")
       .select("id, platform, status, account_label, last_synced_at, last_error")
@@ -18,9 +18,10 @@ export const connectPlatform = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { platform: string; credentials: Record<string, string> }) => input)
   .handler(async ({ data, context }) => {
-    const { ensureOwnedRestaurant, validateCredentials, accountLabelFor } = await import("./integrations.server");
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
+    const { validateCredentials, accountLabelFor } = await import("./integrations.server");
     const { cleaned } = validateCredentials(data.platform, data.credentials);
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
 
     const { data: connection, error } = await context.supabase
       .from("platform_connections")
@@ -56,10 +57,12 @@ export const disconnectPlatform = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { connectionId: string }) => input)
   .handler(async ({ data, context }) => {
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
     const { error } = await context.supabase
       .from("platform_connections")
       .delete()
-      .eq("id", data.connectionId);
+      .eq("id", data.connectionId).eq("restaurant_id", restaurant.id);
     if (error) throw error;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -71,10 +74,13 @@ export const syncPlatform = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { connectionId: string }) => input)
   .handler(async ({ data, context }) => {
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
     const { data: connection, error } = await context.supabase
       .from("platform_connections")
       .select("id, platform, restaurant_id")
       .eq("id", data.connectionId)
+      .eq("restaurant_id", restaurant.id)
       .single();
     if (error) throw error;
 

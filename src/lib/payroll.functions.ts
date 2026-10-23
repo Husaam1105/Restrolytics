@@ -428,6 +428,15 @@ export const saveHours = createServerFn({ method: "POST" })
     const restaurant = await requireManager(context.supabase, context.userId);
     await assertWeekOpen(context.supabase, restaurant.id, data.workDate);
 
+    const { data: employee, error: employeeError } = await context.supabase
+      .from("employees")
+      .select("id")
+      .eq("id", data.employeeId)
+      .eq("restaurant_id", restaurant.id)
+      .maybeSingle();
+    if (employeeError) throw employeeError;
+    if (!employee) throw new Error("That employee isn't on this restaurant's team.");
+
     const { data: entries, error } = await context.supabase
       .from("time_entries")
       .select("id, minutes, source")

@@ -1,13 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { platformMeta } from "./platforms";
-import { resolveActiveRestaurant, type ActiveRestaurant } from "./tenant.server";
-
-export type OwnedRestaurant = ActiveRestaurant;
-
-/** The restaurant the signed-in user is currently working in. */
-export async function ensureOwnedRestaurant(supabase: SupabaseClient, userId: string) {
-  return resolveActiveRestaurant(supabase, userId);
-}
 
 export function validateCredentials(platform: string, credentials: Record<string, string>) {
   const meta = platformMeta(platform);

@@ -19,8 +19,8 @@ export const getShiftChecklist = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { area: TaskArea; shift: TaskShift }) => input)
   .handler(async ({ data, context }) => {
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+    const { resolveActiveRestaurant } = await import("./tenant.server");
+    const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
     const { supabase } = context;
 
     const select = () =>
@@ -119,8 +119,8 @@ export const addTaskNote = createServerFn({ method: "POST" })
     const note = data.note.trim();
     if (!note) throw new Error("Comment is required");
 
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+    const { resolveActiveRestaurant } = await import("./tenant.server");
+    const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
 
     const { error } = await context.supabase.from("shift_task_notes").insert({
       restaurant_id: restaurant.id,
@@ -139,8 +139,8 @@ export const setTaskCompletion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { taskId: string; completed: boolean; value?: string | null }) => input)
   .handler(async ({ data, context }) => {
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+    const { resolveActiveRestaurant } = await import("./tenant.server");
+    const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
     const date = operatingDate(parseShiftSettings(restaurant.settings));
 
     if (data.completed) {
@@ -180,8 +180,8 @@ export const uploadTaskPhoto = createServerFn({ method: "POST" })
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
     if (bytes.length > 10 * 1024 * 1024) throw new Error("That photo is larger than 10 MB.");
 
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+    const { resolveActiveRestaurant } = await import("./tenant.server");
+    const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
     const date = operatingDate(parseShiftSettings(restaurant.settings));
 
     const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
@@ -225,11 +225,11 @@ export const addShiftTask = createServerFn({ method: "POST" })
     }) => input,
   )
   .handler(async ({ data, context }) => {
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
     const title = data.title.trim();
     if (!title) throw new Error("Task name is required");
 
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
 
     const { data: last } = await context.supabase
       .from("shift_tasks")
@@ -262,10 +262,12 @@ export const removeShiftTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { taskId: string }) => input)
   .handler(async ({ data, context }) => {
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
     const { error } = await context.supabase
       .from("shift_tasks")
       .update({ active: false })
-      .eq("id", data.taskId);
+      .eq("id", data.taskId).eq("restaurant_id", restaurant.id);
     if (error) throw error;
     return { ok: true };
   });
@@ -273,8 +275,8 @@ export const removeShiftTask = createServerFn({ method: "POST" })
 export const getShiftSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+    const { resolveActiveRestaurant } = await import("./tenant.server");
+    const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
     const settings = parseShiftSettings(restaurant.settings);
     return { settings, phase: servicePhase(settings), date: operatingDate(settings) };
   });
@@ -283,8 +285,8 @@ export const saveShiftSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { timezone: string; openTime: string; closeTime: string }) => input)
   .handler(async ({ data, context }) => {
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
 
     const next: ShiftSettings = {
       timezone: data.timezone.trim() || DEFAULT_SHIFT_SETTINGS.timezone,
@@ -306,8 +308,8 @@ export const saveShiftSettings = createServerFn({ method: "POST" })
 export const getShiftProgress = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { ensureOwnedRestaurant } = await import("./integrations.server");
-    const restaurant = await ensureOwnedRestaurant(context.supabase, context.userId);
+    const { resolveActiveRestaurant } = await import("./tenant.server");
+    const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
     const settings = parseShiftSettings(restaurant.settings);
     const date = operatingDate(settings);
     const { supabase } = context;

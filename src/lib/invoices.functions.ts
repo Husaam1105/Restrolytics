@@ -7,7 +7,9 @@ export type ParsedInvoiceLine = { name: string; quantity: number; unitPrice: num
 export const parseInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { dataUrl: string; mimeType: string }) => input)
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
     if (!data.dataUrl.startsWith("data:")) throw new Error("Please choose a photo or PDF of the invoice.");
     if (data.dataUrl.length > 14_000_000) throw new Error("That file is too large. Try a smaller photo.");
 
@@ -29,6 +31,8 @@ export const saveInvoice = createServerFn({ method: "POST" })
     }) => input,
   )
   .handler(async ({ data, context }) => {
+    const { requireManager } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
     const lines = data.items
       .map((item) => ({
         name: item.name.trim(),
