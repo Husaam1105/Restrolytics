@@ -15,14 +15,6 @@ import {
   type TaskShift,
 } from "@/lib/shift-tasks.functions";
 
-function fileToDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("That photo could not be read."));
-    reader.readAsDataURL(file);
-  });
-}
 import { formatTime } from "@/lib/operating-day";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,6 +27,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { compressImage } from "@/lib/image";
 
 export function ShiftChecklist({
   area,
@@ -119,11 +112,11 @@ export function ShiftChecklist({
 
   const photoMutation = useMutation({
     mutationFn: async (vars: { taskId: string; file: File }) => {
-      const dataUrl = await fileToDataUrl(vars.file);
+      const { dataUrl } = await compressImage(vars.file);
       return uploadPhoto({ data: { taskId: vars.taskId, dataUrl, fileName: vars.file.name } });
     },
     onSuccess: () => {
-      toast.success("Photo added — task marked done");
+      toast.success("Photo added. Task marked done.");
       invalidate();
     },
     onError: (error: Error) => toast.error(error.message),

@@ -16,17 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { parseInvoice, saveInvoice, type ParsedInvoiceLine } from "@/lib/invoices.functions";
+import { compressImage } from "@/lib/image";
 
 type Props = { vendorId: string; vendorName: string; onSaved: () => void };
 
-function fileToDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("That file could not be read."));
-    reader.readAsDataURL(file);
-  });
-}
 
 export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
   const parseFn = useServerFn(parseInvoice);
@@ -55,9 +48,10 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
 
   const read = useMutation({
     mutationFn: async (file: File) => {
-      const dataUrl = await fileToDataUrl(file);
-      if (file.type.startsWith("image/")) setPreview(dataUrl);
-      return parseFn({ data: { dataUrl, mimeType: file.type || "image/jpeg" } });
+      // Invoices keep more detail than checklist photos so the line items stay readable.
+      const { dataUrl, type } = await compressImage(file, { maxSide: 2000, quality: 0.85 });
+      if (type.startsWith("image/")) setPreview(dataUrl);
+      return parseFn({ data: { dataUrl, mimeType: type || "image/jpeg" } });
     },
     onSuccess: (result) => {
       setLines(result.items);
