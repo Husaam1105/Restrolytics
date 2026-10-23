@@ -467,7 +467,7 @@ function Insights({ slug }: { slug: string }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              Ratings{data.averageRating !== null ? ` — ${data.averageRating.toFixed(1)} ★ avg` : ""}
+              Ratings{data.averageRating !== null ? `, averaging ${data.averageRating.toFixed(1)} out of 5` : ""}
             </CardTitle>
             <CardDescription>
               {data.ratingCount} order ratings. Low ratings (3 or below) are listed here.
@@ -481,14 +481,14 @@ function Insights({ slug }: { slug: string }) {
                 <div key={r.id} className="border-b pb-2 text-sm last:border-0">
                   <div className="flex justify-between gap-2">
                     <span className="text-muted-foreground">
-                      {r.rating_date} · #{r.order_id}
+                      {r.rating_date}, order #{r.order_id}
                     </span>
                     <span className="font-medium">{Number(r.rating_value)} ★</span>
                   </div>
                   <p>
                     {r.item_name ? `${r.item_name}` : "Whole order"}
-                    {r.tags ? ` — ${r.tags}` : ""}
-                    {r.comment ? ` — “${r.comment}”` : ""}
+                    {r.tags ? `. ${r.tags}` : ""}
+                    {r.comment ? `. “${r.comment}”` : ""}
                   </p>
                 </div>
               ))

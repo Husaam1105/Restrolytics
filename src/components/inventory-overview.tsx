@@ -118,7 +118,7 @@ export function InventoryOverview({
                     <Warehouse className="h-4 w-4 text-primary" /> {loc.name}
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {own.length} items · {money(own.reduce((s, i) => s + Number(i.current_stock) * Number(i.cost_per_unit), 0))}
+                    {own.length} items, {money(own.reduce((s, i) => s + Number(i.current_stock) * Number(i.cost_per_unit), 0))}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Last counted: {last?.completed_at ? new Date(last.completed_at).toLocaleDateString() : "never"}

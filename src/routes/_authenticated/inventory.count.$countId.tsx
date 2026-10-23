@@ -70,7 +70,7 @@ function CountPage() {
   const submit = useMutation({
     mutationFn: (complete: boolean) => save({ data: { countId, complete, note, lines } }),
     onSuccess: (_r, complete) => {
-      toast.success(complete ? "Count completed — on-hand stock updated" : "Draft saved");
+      toast.success(complete ? "Count completed. On-hand stock is updated." : "Draft saved");
       qc.invalidateQueries({ queryKey: ["count", countId] });
       qc.invalidateQueries({ queryKey: ["storage-overview"] });
       qc.invalidateQueries({ queryKey: ["vendors"] });
@@ -121,7 +121,7 @@ function CountPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{i.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      System: {Number(i.current_stock)} {i.unit} · ${Number(i.cost_per_unit).toFixed(2)}/{i.unit}
+                      On file: {Number(i.current_stock)} {i.unit} at ${Number(i.cost_per_unit).toFixed(2)}/{i.unit}
                     </p>
                   </div>
                   <Input
@@ -148,7 +148,7 @@ function CountPage() {
       <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-4 py-3">
           <p className="text-sm">
-            <span className="font-semibold">{lines.length}</span>/{expected} counted · Value{" "}
+            <span className="font-semibold">{lines.length}</span>/{expected} counted, worth{" "}
             <span className="font-semibold">${total.toFixed(2)}</span>
           </p>
           <div className="flex gap-2">

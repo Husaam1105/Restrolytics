@@ -262,7 +262,7 @@ function CateringPage() {
         <CardContent className="space-y-3">
           {(data?.orders.length ?? 0) === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No catering orders yet{canManage ? " — add the first one above." : "."}
+              No catering orders yet{canManage ? ". Add the first one above." : "."}
             </p>
           ) : null}
 
@@ -280,11 +280,14 @@ function CateringPage() {
                     ) : null}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {order.eventDate}
-                    {order.eventTime ? ` · ${order.eventTime}` : ""}
-                    {order.headcount ? ` · ${order.headcount} guests` : ""}
-                    {order.location ? ` · ${order.location}` : ""}
-                    {order.contact ? ` · ${order.contact}` : ""}
+                    {[
+                      order.eventTime ? `${order.eventDate} at ${order.eventTime}` : order.eventDate,
+                      order.headcount ? `${order.headcount} guests` : null,
+                      order.location,
+                      order.contact,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
                   </p>
                   {order.notes ? (
                     <p className="mt-1 text-xs text-muted-foreground">{order.notes}</p>
@@ -302,7 +305,7 @@ function CateringPage() {
                     <div key={p.id} className="flex items-center justify-between gap-2 text-xs">
                       <span>
                         {money(p.amount)} by {methodLabel(p.method).toLowerCase()} on {p.paidAt}
-                        {p.note ? ` · ${p.note}` : ""}
+                        {p.note ? `. ${p.note}` : ""}
                       </span>
                       {canManage && (
                         <Button

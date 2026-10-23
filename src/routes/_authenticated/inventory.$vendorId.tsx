@@ -222,10 +222,11 @@ function VendorPage() {
             ) : (
               "Manual vendor"
             )}
-            {" · "}
+            {". "}
             {describeSchedule(vendor)}
-            {" · last synced "}
+            {". Last synced "}
             {formatDate(vendor.last_synced_at)}
+            {"."}
           </p>
           {vendor.last_error && <p className="mt-1 text-xs text-destructive">{vendor.last_error}</p>}
         </div>

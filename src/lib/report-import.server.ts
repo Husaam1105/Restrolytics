@@ -202,7 +202,7 @@ export async function importReport(
         .filter((r) => r["Order ID"])
         .map((r) => {
           const issue = (r["Order Issue"] ?? "Issue").replace(/_/g, " ").toLowerCase();
-          const items = r["Items with error"] ? ` — ${r["Items with error"]}` : "";
+          const items = r["Items with error"] ? `: ${r["Items with error"]}` : "";
           const feedback = r["Customer Feedback"] ? ` (“${r["Customer Feedback"]}”)` : "";
           return {
             ...base,

@@ -33,10 +33,10 @@ export const Route = createFileRoute("/_authenticated/shifts")({
 });
 
 const groupLabels: Record<string, string> = {
-  "foh-opening": "FOH — Opening",
-  "foh-closing": "FOH — Closing",
-  "boh-opening": "BOH — Opening",
-  "boh-closing": "BOH — Closing",
+  "foh-opening": "Front of house opening",
+  "foh-closing": "Front of house closing",
+  "boh-opening": "Kitchen opening",
+  "boh-closing": "Kitchen closing",
 };
 
 function ShiftsPage() {
@@ -108,8 +108,8 @@ function ShiftsPage() {
         <CardHeader>
           <CardTitle>Service hours</CardTitle>
           <CardDescription>
-            Checklists belong to one business day and clear automatically after closing time — even
-            if you close after midnight.
+            Checklists belong to one business day and clear after closing time, even if you close
+            after midnight.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -160,8 +160,8 @@ function ShiftsPage() {
             </Button>
             {data ? (
               <span className="text-sm text-muted-foreground">
-                Open {formatTime(data.settings.openTime)} — close{" "}
-                {formatTime(data.settings.closeTime)} · business day {data.date}
+                Open {formatTime(data.settings.openTime)} to {formatTime(data.settings.closeTime)}. Business day{" "}
+                {data.date}.
               </span>
             ) : null}
           </div>
@@ -174,7 +174,7 @@ function ShiftsPage() {
           <CardDescription>
             {data
               ? data.phase === "before-open"
-                ? "Not open yet — opening tasks are waiting."
+                ? "Not open yet. The opening lists are waiting."
                 : data.phase === "open"
                   ? "Service is running."
                   : "Service is closed for the day."

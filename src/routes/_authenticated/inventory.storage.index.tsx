@@ -5,7 +5,7 @@ import { listVendors } from "@/lib/inventory.functions";
 import { InventoryNav, InventoryOverview } from "@/components/inventory-overview";
 import { PageContainer, PageHeader } from "@/components/page";
 
-const meta = "Walk-in, freezer, racks and fridges — what is kept where, in shelf order for counting.";
+const meta = "What lives in the walk-in, freezer, racks and fridges, listed in shelf order so counting goes fast.";
 export const Route = createFileRoute("/_authenticated/inventory/storage/")({
   component: StorageAreasPage,
   head: () => ({
