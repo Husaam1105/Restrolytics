@@ -32,7 +32,9 @@ export function EmptyState({
       </div>
       <div className="space-y-1">
         <p className="font-semibold">{title}</p>
-        {description ? <p className="mx-auto max-w-sm text-sm text-muted-foreground">{description}</p> : null}
+        {description ? (
+          <p className="mx-auto max-w-sm text-sm text-muted-foreground">{description}</p>
+        ) : null}
       </div>
       {action}
     </div>
@@ -51,7 +53,10 @@ export function ErrorState({
   onRetry?: () => void;
   className?: string;
 }) {
-  const message = error instanceof Error && error.message ? error.message : "Check your connection and try again.";
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : "Check your connection and try again.";
   return (
     <div
       role="alert"
@@ -107,7 +112,9 @@ export function QueryBoundary<T>({
 }) {
   if (query.isPending) return <>{loading ?? <LoadingState />}</>;
   if (query.isError || query.data === undefined) {
-    return <ErrorState title={errorTitle} error={query.error} onRetry={() => void query.refetch()} />;
+    return (
+      <ErrorState title={errorTitle} error={query.error} onRetry={() => void query.refetch()} />
+    );
   }
   if (isEmpty?.(query.data) && empty) return <>{empty}</>;
   return <>{children(query.data)}</>;

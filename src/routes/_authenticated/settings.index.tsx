@@ -43,7 +43,10 @@ const items = [
 function SettingsHome() {
   return (
     <PageContainer size="narrow">
-      <PageHeader title="Settings" description={<>Everything about people and connected accounts for this restaurant.</>} />
+      <PageHeader
+        title="Settings"
+        description={<>Everything about people and connected accounts for this restaurant.</>}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {items.map((item) => (

@@ -25,13 +25,7 @@ import {
   getCatering,
   saveCateringOrder,
 } from "@/lib/catering.functions";
-import {
-  CATERING_STATUSES,
-  PAYMENT_METHODS,
-  methodLabel,
-  money,
-  statusLabel,
-} from "@/lib/sales";
+import { CATERING_STATUSES, PAYMENT_METHODS, methodLabel, money, statusLabel } from "@/lib/sales";
 import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/sales/catering")({
@@ -281,7 +275,9 @@ function CateringPage() {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {[
-                      order.eventTime ? `${order.eventDate} at ${order.eventTime}` : order.eventDate,
+                      order.eventTime
+                        ? `${order.eventDate} at ${order.eventTime}`
+                        : order.eventDate,
                       order.headcount ? `${order.headcount} guests` : null,
                       order.location,
                       order.contact,
@@ -369,7 +365,8 @@ function CateringPage() {
                       if (
                         await confirm({
                           title: `Remove the ${order.customerName} catering order?`,
-                          description: "The order and every payment recorded against it are deleted.",
+                          description:
+                            "The order and every payment recorded against it are deleted.",
                           confirmLabel: "Remove order",
                           destructive: true,
                         })

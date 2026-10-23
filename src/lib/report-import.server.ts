@@ -149,7 +149,9 @@ export async function importReport(
           payout: num(r["Total payout"] ?? r["Total payout "]),
           fees,
           fee_breakdown: feeBreakdown,
-          promotions: num(r["Offers on items (incl. tax)"]) + num(r["Delivery Offer Redemptions (incl. tax)"]),
+          promotions:
+            num(r["Offers on items (incl. tax)"]) +
+            num(r["Delivery Offer Redemptions (incl. tax)"]),
           fulfillment: r["Dining Mode"] || null,
           payout_date: isoDate(r["Payout Date"]),
         };
@@ -180,7 +182,9 @@ export async function importReport(
             num(r["Delivery Network Fee"]) +
             num(r["Order Processing Fee"]) +
             num(r["Offer Redemption Fee"]),
-          promotions: num(r["Offers on items (incl. tax)"]) + num(r["Delivery Offer Redemptions (incl. tax)"]),
+          promotions:
+            num(r["Offers on items (incl. tax)"]) +
+            num(r["Delivery Offer Redemptions (incl. tax)"]),
           refunds: num(r["Chargeback Amount (incl. tax)"]),
           other: num(r["Other payments"]),
           total_payout: num(r["Total payout"]),
@@ -193,7 +197,11 @@ export async function importReport(
         .upsert(rows, { onConflict: "restaurant_id,platform,reference_id" });
       if (error) throw error;
     }
-    return { kind, imported: rows.length, label: `${rows.length} payout${rows.length === 1 ? "" : "s"}` };
+    return {
+      kind,
+      imported: rows.length,
+      label: `${rows.length} payout${rows.length === 1 ? "" : "s"}`,
+    };
   }
 
   if (kind === "errors") {
@@ -207,7 +215,8 @@ export async function importReport(
           return {
             ...base,
             external_id: `error:${r["Order ID"]}:${r["Order Issue"] ?? ""}`,
-            business_date: isoDate(r["Time Customer Ordered"]) ?? new Date().toISOString().slice(0, 10),
+            business_date:
+              isoDate(r["Time Customer Ordered"]) ?? new Date().toISOString().slice(0, 10),
             category: "refund",
             amount: num(r["Customer Refunded"]),
             description: `Uber Eats #${r["Order ID"]}: ${issue}${items}${feedback}. You were charged ${num(r["Chargeback Amount"]).toFixed(2)}.`,
@@ -223,7 +232,11 @@ export async function importReport(
         .upsert(rows, { onConflict: "restaurant_id,platform,external_id" });
       if (error) throw error;
     }
-    return { kind, imported: rows.length, label: `${rows.length} order error${rows.length === 1 ? "" : "s"}` };
+    return {
+      kind,
+      imported: rows.length,
+      label: `${rows.length} order error${rows.length === 1 ? "" : "s"}`,
+    };
   }
 
   // ratings / item ratings
@@ -233,7 +246,7 @@ export async function importReport(
       .map((r) => ({
         ...base,
         order_id: r["Order ID"]!,
-        item_name: kind === "item_ratings" ? r["Item Name"] ?? "" : "",
+        item_name: kind === "item_ratings" ? (r["Item Name"] ?? "") : "",
         rating_date: isoDate(r["Rating Date"]),
         rating_value: num(r["Rating Value"]),
         tags: r["Rating Tags"] ? r["Rating Tags"].replace(/_/g, " ") : null,

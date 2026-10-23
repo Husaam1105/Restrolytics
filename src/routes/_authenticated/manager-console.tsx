@@ -6,10 +6,21 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { MessageResponse } from "@/components/ai-elements/message";
-import { ChatPane, ensureThread, NotesPanel, TasksPanel } from "@/components/manager/manager-panels";
+import {
+  ChatPane,
+  ensureThread,
+  NotesPanel,
+  TasksPanel,
+} from "@/components/manager/manager-panels";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { getManagerContext, iqManagerAssist } from "@/lib/manager.functions";
@@ -21,7 +32,11 @@ export const Route = createFileRoute("/_authenticated/manager-console")({
   head: () => ({
     meta: [
       { title: "Manager console · Restrolytics" },
-      { name: "description", content: "Restrolytics staff console for live chat, task assignment and note review across restaurants." },
+      {
+        name: "description",
+        content:
+          "Restrolytics staff console for live chat, task assignment and note review across restaurants.",
+      },
     ],
   }),
   component: Console,
@@ -57,7 +72,8 @@ function Console() {
     },
   });
   useEffect(() => {
-    if (threads.data && !threads.data.some((t) => t.id === threadId)) setThreadId(threads.data[0]?.id ?? "");
+    if (threads.data && !threads.data.some((t) => t.id === threadId))
+      setThreadId(threads.data[0]?.id ?? "");
   }, [threads.data, threadId]);
 
   const suggest = useMutation({
@@ -76,7 +92,10 @@ function Console() {
   if (!ctx.data?.isPlatformStaff) {
     return (
       <PageContainer>
-        <EmptyState title="This console is for Restrolytics staff" description="If you need help, open Live manager under IQ Copilot." />
+        <EmptyState
+          title="This console is for Restrolytics staff"
+          description="If you need help, open Live manager under IQ Copilot."
+        />
       </PageContainer>
     );
   }
@@ -85,16 +104,42 @@ function Console() {
   return (
     <PageContainer>
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <PageHeader context="Restrolytics" title="Manager console" description="Chat with teams, assign tasks and review notes." />
+        <PageHeader
+          context="Restrolytics"
+          title="Manager console"
+          description="Chat with teams, assign tasks and review notes."
+        />
         <div className="flex gap-2">
-          <Select value={restaurantId} onValueChange={(v) => { setRestaurantId(v); setThreadId(""); setSummary(undefined); }}>
-            <SelectTrigger className="w-56"><SelectValue placeholder="Pick a restaurant" /></SelectTrigger>
+          <Select
+            value={restaurantId}
+            onValueChange={(v) => {
+              setRestaurantId(v);
+              setThreadId("");
+              setSummary(undefined);
+            }}
+          >
+            <SelectTrigger className="w-56">
+              <SelectValue placeholder="Pick a restaurant" />
+            </SelectTrigger>
             <SelectContent>
-              {ctx.data.restaurants.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+              {ctx.data.restaurants.map((r) => (
+                <SelectItem key={r.id} value={r.id}>
+                  {r.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => summarize.mutate()} disabled={!restaurantId || summarize.isPending}>
-            {summarize.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />} IQ summary
+          <Button
+            variant="outline"
+            onClick={() => summarize.mutate()}
+            disabled={!restaurantId || summarize.isPending}
+          >
+            {summarize.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Wand2 className="mr-2 h-4 w-4" />
+            )}{" "}
+            IQ summary
           </Button>
         </div>
       </div>
@@ -102,9 +147,13 @@ function Console() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-base">What needs attention</CardTitle>
-            <Button size="sm" variant="ghost" onClick={() => setSummary(undefined)}>Close</Button>
+            <Button size="sm" variant="ghost" onClick={() => setSummary(undefined)}>
+              Close
+            </Button>
           </CardHeader>
-          <CardContent className="text-sm"><MessageResponse>{summary}</MessageResponse></CardContent>
+          <CardContent className="text-sm">
+            <MessageResponse>{summary}</MessageResponse>
+          </CardContent>
         </Card>
       ) : null}
       {restaurantId ? (
@@ -122,24 +171,49 @@ function Console() {
                     key={t.id}
                     type="button"
                     onClick={() => setThreadId(t.id)}
-                    className={cn("rounded-md px-3 py-2 text-left text-sm hover:bg-muted", t.id === threadId && "bg-muted font-medium")}
+                    className={cn(
+                      "rounded-md px-3 py-2 text-left text-sm hover:bg-muted",
+                      t.id === threadId && "bg-muted font-medium",
+                    )}
                   >
-                    {t.kind === "team" ? "Team channel" : t.member_name ?? "Private chat"}
+                    {t.kind === "team" ? "Team channel" : (t.member_name ?? "Private chat")}
                   </button>
                 ))}
               </div>
               <div className="space-y-2">
                 <div className="flex justify-end">
-                  <Button size="sm" variant="outline" onClick={() => suggest.mutate()} disabled={!threadId || suggest.isPending}>
-                    {suggest.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />} IQ suggest reply
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => suggest.mutate()}
+                    disabled={!threadId || suggest.isPending}
+                  >
+                    {suggest.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Wand2 className="mr-2 h-4 w-4" />
+                    )}{" "}
+                    IQ suggest reply
                   </Button>
                 </div>
-                {threadId ? <ChatPane key={threadId} threadId={threadId} me={me} draft={draft} onDraftUsed={clearDraft} /> : null}
+                {threadId ? (
+                  <ChatPane
+                    key={threadId}
+                    threadId={threadId}
+                    me={me}
+                    draft={draft}
+                    onDraftUsed={clearDraft}
+                  />
+                ) : null}
               </div>
             </div>
           </TabsContent>
-          <TabsContent value="tasks"><TasksPanel key={restaurantId} restaurantId={restaurantId} me={me} canAssign /></TabsContent>
-          <TabsContent value="notes"><NotesPanel key={restaurantId} restaurantId={restaurantId} me={me} canReview /></TabsContent>
+          <TabsContent value="tasks">
+            <TasksPanel key={restaurantId} restaurantId={restaurantId} me={me} canAssign />
+          </TabsContent>
+          <TabsContent value="notes">
+            <NotesPanel key={restaurantId} restaurantId={restaurantId} me={me} canReview />
+          </TabsContent>
         </Tabs>
       ) : null}
     </PageContainer>

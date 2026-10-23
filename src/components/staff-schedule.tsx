@@ -17,11 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  deleteScheduleShift,
-  getSchedule,
-  saveScheduleShift,
-} from "@/lib/schedule.functions";
+import { deleteScheduleShift, getSchedule, saveScheduleShift } from "@/lib/schedule.functions";
 import {
   PAST_RANGES,
   RANGE_LABELS,
@@ -116,8 +112,14 @@ export function StaffSchedule() {
         {[
           { label: "Scheduled shifts", value: scheduledPeople },
           { label: "Days covered", value: coveredDays },
-          { label: "Front of house", value: (data?.shifts ?? []).filter((s) => s.area === "foh" || s.area === "both").length },
-          { label: "Kitchen", value: (data?.shifts ?? []).filter((s) => s.area === "boh" || s.area === "both").length },
+          {
+            label: "Front of house",
+            value: (data?.shifts ?? []).filter((s) => s.area === "foh" || s.area === "both").length,
+          },
+          {
+            label: "Kitchen",
+            value: (data?.shifts ?? []).filter((s) => s.area === "boh" || s.area === "both").length,
+          },
         ].map((stat) => (
           <StatCard key={stat.label} label={stat.label} value={stat.value} />
         ))}
@@ -128,7 +130,9 @@ export function StaffSchedule() {
             <div>
               <CardTitle>Who&apos;s working</CardTitle>
               <CardDescription>
-                {data ? `${RANGE_LABELS[range]}, ${formatDateRange(data.start, data.end)}` : "Loading…"}
+                {data
+                  ? `${RANGE_LABELS[range]}, ${formatDateRange(data.start, data.end)}`
+                  : "Loading…"}
               </CardDescription>
             </div>
             {data?.canManage ? (
@@ -305,7 +309,9 @@ export function StaffSchedule() {
                       </div>
                       <div className="flex min-h-24 flex-col gap-2 p-2">
                         {shifts.length === 0 ? (
-                          <p className="px-1 py-4 text-center text-xs text-muted-foreground">No one scheduled</p>
+                          <p className="px-1 py-4 text-center text-xs text-muted-foreground">
+                            No one scheduled
+                          </p>
                         ) : (
                           shifts.map((s) => (
                             <div key={s.id} className="surface p-3 text-sm">
@@ -313,7 +319,9 @@ export function StaffSchedule() {
                                 <div className="min-w-0">
                                   <p className="truncate font-medium">{s.name}</p>
                                   {s.position ? (
-                                    <p className="truncate text-xs text-muted-foreground">{s.position}</p>
+                                    <p className="truncate text-xs text-muted-foreground">
+                                      {s.position}
+                                    </p>
                                   ) : null}
                                 </div>
                                 {data.canManage ? (
@@ -337,7 +345,9 @@ export function StaffSchedule() {
                                   ? `${s.startTime?.slice(0, 5) ?? "—"} – ${s.endTime?.slice(0, 5) ?? "—"}`
                                   : "Time not set"}
                               </p>
-                              {s.note ? <p className="mt-1 text-xs text-muted-foreground">{s.note}</p> : null}
+                              {s.note ? (
+                                <p className="mt-1 text-xs text-muted-foreground">{s.note}</p>
+                              ) : null}
                             </div>
                           ))
                         )}

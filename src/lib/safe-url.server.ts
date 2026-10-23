@@ -18,7 +18,11 @@ class PrivateAddressError extends Error {
 function vettedLookup(
   hostname: string,
   options: { all?: boolean } & Record<string, unknown>,
-  callback: (err: NodeJS.ErrnoException | null, address: string | LookupAddress[], family?: number) => void,
+  callback: (
+    err: NodeJS.ErrnoException | null,
+    address: string | LookupAddress[],
+    family?: number,
+  ) => void,
 ) {
   dnsLookup(hostname, { all: true, verbatim: true }, (err, addresses) => {
     if (err) return callback(err, "");
@@ -43,9 +47,13 @@ const publicOnlyAgent = new Agent({
  * verified as public. Never follows redirects itself.
  */
 export async function publicOnlyFetch(url: string, init: RequestInit & { redirect: "manual" }) {
-  if (!isPublicHttpsUrl(url)) throw new Error("The vendor portal address must be a public https:// website.");
+  if (!isPublicHttpsUrl(url))
+    throw new Error("The vendor portal address must be a public https:// website.");
   try {
-    return (await undiciFetch(url, { ...(init as object), dispatcher: publicOnlyAgent } as never)) as unknown as Response;
+    return (await undiciFetch(url, {
+      ...(init as object),
+      dispatcher: publicOnlyAgent,
+    } as never)) as unknown as Response;
   } catch (error) {
     const cause = (error as { cause?: unknown }).cause;
     if (cause instanceof PrivateAddressError) throw cause;

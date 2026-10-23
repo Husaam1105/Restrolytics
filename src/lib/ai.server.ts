@@ -51,17 +51,23 @@ function model(kind: "chat" | "vision"): LanguageModel {
   const client = createOpenAI({ apiKey: config.apiKey, baseURL: config.baseURL });
   const id = kind === "chat" ? config.chatModel : config.visionModel;
   // OpenRouter and most compatible gateways speak Chat Completions; OpenAI itself gets the Responses API.
-  return config.provider === "openai" && !process.env["AI_BASE_URL"] ? client.responses(id) : client.chat(id);
+  return config.provider === "openai" && !process.env["AI_BASE_URL"]
+    ? client.responses(id)
+    : client.chat(id);
 }
 
 export const getChatModel = () => model("chat");
 export const getVisionModel = () => model("vision");
 
 /** Maps provider HTTP errors to a message we can show a restaurant manager. */
-export function aiErrorMessage(error: unknown, fallback = "IQ couldn't answer right now. Please try again.") {
+export function aiErrorMessage(
+  error: unknown,
+  fallback = "IQ couldn't answer right now. Please try again.",
+) {
   if (error instanceof AiNotConfiguredError) return error.message;
   const status = (error as { statusCode?: number })?.statusCode;
-  if (status === 401 || status === 403) return "The AI provider rejected our key. Check AI_API_KEY.";
+  if (status === 401 || status === 403)
+    return "The AI provider rejected our key. Check AI_API_KEY.";
   if (status === 402) return "The AI provider account is out of credit.";
   if (status === 429) return "Too many requests right now. Please wait a moment and try again.";
   return fallback;

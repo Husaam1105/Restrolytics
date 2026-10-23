@@ -9,10 +9,7 @@ const meta = "Stock value, what to reorder and recent counts across every vendor
 export const Route = createFileRoute("/_authenticated/inventory/")({
   component: InventoryDashboard,
   head: () => ({
-    meta: [
-      { title: "Inventory dashboard · Restrolytics" },
-      { name: "description", content: meta },
-    ],
+    meta: [{ title: "Inventory dashboard · Restrolytics" }, { name: "description", content: meta }],
   }),
 });
 

@@ -14,8 +14,16 @@ export const getStorageOverview = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const restaurant = await restaurantFor(context);
     const [locs, links, items, counts] = await Promise.all([
-      context.supabase.from("storage_locations").select("id, name, sort_order").eq("restaurant_id", restaurant.id).order("sort_order").order("name"),
-      context.supabase.from("item_locations").select("id, location_id, inventory_item_id, sort_order").eq("restaurant_id", restaurant.id),
+      context.supabase
+        .from("storage_locations")
+        .select("id, name, sort_order")
+        .eq("restaurant_id", restaurant.id)
+        .order("sort_order")
+        .order("name"),
+      context.supabase
+        .from("item_locations")
+        .select("id, location_id, inventory_item_id, sort_order")
+        .eq("restaurant_id", restaurant.id),
       context.supabase
         .from("inventory_items")
         .select("id, name, unit, vendor_id, current_stock, par_level, reorder_level, cost_per_unit")
@@ -47,9 +55,16 @@ export const saveLocation = createServerFn({ method: "POST" })
     if (!name) throw new Error("Location name is required.");
     const payload = { restaurant_id: restaurant.id, name, sort_order: data.sortOrder ?? 0 };
     const { error } = data.id
-      ? await context.supabase.from("storage_locations").update(payload).eq("id", data.id).eq("restaurant_id", restaurant.id)
+      ? await context.supabase
+          .from("storage_locations")
+          .update(payload)
+          .eq("id", data.id)
+          .eq("restaurant_id", restaurant.id)
       : await context.supabase.from("storage_locations").insert(payload);
-    if (error) throw new Error(error.code === "23505" ? "A location with that name already exists." : error.message);
+    if (error)
+      throw new Error(
+        error.code === "23505" ? "A location with that name already exists." : error.message,
+      );
     return { ok: true };
   });
 
@@ -59,7 +74,11 @@ export const deleteLocation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    const { error } = await context.supabase.from("storage_locations").delete().eq("id", data.id).eq("restaurant_id", restaurant.id);
+    const { error } = await context.supabase
+      .from("storage_locations")
+      .delete()
+      .eq("id", data.id)
+      .eq("restaurant_id", restaurant.id);
     if (error) throw error;
     return { ok: true };
   });
@@ -78,7 +97,9 @@ export const setLocationItems = createServerFn({ method: "POST" })
       .eq("location_id", data.locationId);
     if (listErr) throw listErr;
     const keep = new Set(data.itemIds);
-    const removed = (existing ?? []).filter((row) => !keep.has(row.inventory_item_id)).map((row) => row.id);
+    const removed = (existing ?? [])
+      .filter((row) => !keep.has(row.inventory_item_id))
+      .map((row) => row.id);
     if (removed.length) {
       const { error } = await context.supabase.from("item_locations").delete().in("id", removed);
       if (error) throw error;
@@ -104,7 +125,9 @@ export const getCount = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: count, error } = await context.supabase
       .from("inventory_counts")
-      .select("id, location_id, status, counted_by_email, note, total_value, completed_at, created_at")
+      .select(
+        "id, location_id, status, counted_by_email, note, total_value, completed_at, created_at",
+      )
       .eq("id", data.countId)
       .single();
     if (error) throw error;
@@ -159,9 +182,17 @@ export const saveCount = createServerFn({ method: "POST" })
     const { data: items } = itemIds.length
       ? await context.supabase.from("inventory_items").select("id, cost_per_unit").in("id", itemIds)
       : { data: [] as { id: string; cost_per_unit: number }[] };
-    const cost = new Map((items ?? []).map((i: { id: string; cost_per_unit: number }) => [i.id, Number(i.cost_per_unit)]));
+    const cost = new Map(
+      (items ?? []).map((i: { id: string; cost_per_unit: number }) => [
+        i.id,
+        Number(i.cost_per_unit),
+      ]),
+    );
 
-    const { error: clearErr } = await context.supabase.from("inventory_count_lines").delete().eq("count_id", data.countId);
+    const { error: clearErr } = await context.supabase
+      .from("inventory_count_lines")
+      .delete()
+      .eq("count_id", data.countId);
     if (clearErr) throw clearErr;
     const rows = data.lines
       .filter((l) => Number.isFinite(l.quantity))
@@ -189,7 +220,9 @@ export const saveCount = createServerFn({ method: "POST" })
     // Stock is updated in one transaction in the database, summing each
     // item across all of its storage areas.
     if (data.complete) {
-      const { error: completeErr } = await context.supabase.rpc("complete_inventory_count", { _count_id: data.countId });
+      const { error: completeErr } = await context.supabase.rpc("complete_inventory_count", {
+        _count_id: data.countId,
+      });
       if (completeErr) throw completeErr;
     }
     return { ok: true, total };
@@ -201,7 +234,11 @@ export const deleteCount = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    const { error } = await context.supabase.from("inventory_counts").delete().eq("id", data.countId).eq("restaurant_id", restaurant.id);
+    const { error } = await context.supabase
+      .from("inventory_counts")
+      .delete()
+      .eq("id", data.countId)
+      .eq("restaurant_id", restaurant.id);
     if (error) throw error;
     return { ok: true };
   });

@@ -26,7 +26,13 @@ const invoiceSchema = z.object({
   items: z.array(z.object({ name: z.string(), quantity: z.number(), unitPrice: z.number() })),
 });
 
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"]);
+const ALLOWED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "application/pdf",
+]);
 const MAX_BYTES = 15 * 1024 * 1024;
 
 /**
@@ -36,16 +42,25 @@ const MAX_BYTES = 15 * 1024 * 1024;
 function decodeInvoiceDataUrl(dataUrl: string, mimeType: string) {
   const match = /^data:([a-z0-9.+/-]+);base64,([A-Za-z0-9+/=]+)$/i.exec(dataUrl);
   const mediaType = match?.[1]?.toLowerCase();
-  if (!match || !mediaType || !ALLOWED_TYPES.has(mediaType) || mediaType !== mimeType.toLowerCase()) {
+  if (
+    !match ||
+    !mediaType ||
+    !ALLOWED_TYPES.has(mediaType) ||
+    mediaType !== mimeType.toLowerCase()
+  ) {
     throw new Error("Upload a photo (JPG, PNG, WebP, HEIC) or a PDF of the invoice.");
   }
   const bytes = Buffer.from(match[2]!, "base64");
-  if (bytes.byteLength === 0 || bytes.byteLength > MAX_BYTES) throw new Error("That file is empty or larger than 15 MB.");
+  if (bytes.byteLength === 0 || bytes.byteLength > MAX_BYTES)
+    throw new Error("That file is empty or larger than 15 MB.");
   return { bytes: new Uint8Array(bytes), mediaType };
 }
 
 /** Sends an invoice photo or PDF to the AI reader and returns its line items. */
-export async function readInvoiceFile(options: { dataUrl: string; mimeType: string }): Promise<InvoiceRead> {
+export async function readInvoiceFile(options: {
+  dataUrl: string;
+  mimeType: string;
+}): Promise<InvoiceRead> {
   const { aiErrorMessage, getVisionModel, isAiConfigured } = await import("./ai.server");
   if (!isAiConfigured()) throw new Error("The invoice reader isn't set up for this workspace yet.");
   const { generateText, Output } = await import("ai");

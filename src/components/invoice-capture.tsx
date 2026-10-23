@@ -14,12 +14,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { parseInvoice, saveInvoice, type ParsedInvoiceLine } from "@/lib/invoices.functions";
 import { compressImage } from "@/lib/image";
 
 type Props = { vendorId: string; vendorName: string; onSaved: () => void };
-
 
 export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
   const parseFn = useServerFn(parseInvoice);
@@ -58,8 +64,10 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
       setInvoiceNumber(result.invoiceNumber ?? "");
       setInvoiceDate(result.invoiceDate ?? "");
       setTotal(result.total);
-      if (result.items.length === 0) toast.error("No items were found. You can type them in below.");
-      else toast.success(`Found ${result.items.length} item${result.items.length === 1 ? "" : "s"}`);
+      if (result.items.length === 0)
+        toast.error("No items were found. You can type them in below.");
+      else
+        toast.success(`Found ${result.items.length} item${result.items.length === 1 ? "" : "s"}`);
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -87,7 +95,10 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const computed = lines.reduce((sum, l) => sum + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0), 0);
+  const computed = lines.reduce(
+    (sum, l) => sum + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0),
+    0,
+  );
 
   return (
     <>
@@ -112,8 +123,8 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
           <DialogHeader>
             <DialogTitle>Capture an invoice from {vendorName}</DialogTitle>
             <DialogDescription>
-              Take a photo of the invoice or pick a PDF. The items, quantities and prices are read for you. Check them,
-              then save.
+              Take a photo of the invoice or pick a PDF. The items, quantities and prices are read
+              for you. Check them, then save.
             </DialogDescription>
           </DialogHeader>
 
@@ -139,7 +150,11 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
                 </p>
               )}
               {preview && (
-                <img src={preview} alt="Invoice preview" className="max-h-48 rounded-md border object-contain" />
+                <img
+                  src={preview}
+                  alt="Invoice preview"
+                  className="max-h-48 rounded-md border object-contain"
+                />
               )}
             </div>
 
@@ -199,7 +214,11 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
                           <Input
                             value={line.name}
                             onChange={(e) =>
-                              setLines(lines.map((l, i) => (i === index ? { ...l, name: e.target.value } : l)))
+                              setLines(
+                                lines.map((l, i) =>
+                                  i === index ? { ...l, name: e.target.value } : l,
+                                ),
+                              )
                             }
                           />
                         </TableCell>
@@ -210,7 +229,9 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
                             value={line.quantity}
                             onChange={(e) =>
                               setLines(
-                                lines.map((l, i) => (i === index ? { ...l, quantity: Number(e.target.value) } : l)),
+                                lines.map((l, i) =>
+                                  i === index ? { ...l, quantity: Number(e.target.value) } : l,
+                                ),
                               )
                             }
                           />
@@ -222,13 +243,18 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
                             value={line.unitPrice}
                             onChange={(e) =>
                               setLines(
-                                lines.map((l, i) => (i === index ? { ...l, unitPrice: Number(e.target.value) } : l)),
+                                lines.map((l, i) =>
+                                  i === index ? { ...l, unitPrice: Number(e.target.value) } : l,
+                                ),
                               )
                             }
                           />
                         </TableCell>
                         <TableCell className="text-right text-sm">
-                          ${((Number(line.quantity) || 0) * (Number(line.unitPrice) || 0)).toFixed(2)}
+                          $
+                          {((Number(line.quantity) || 0) * (Number(line.unitPrice) || 0)).toFixed(
+                            2,
+                          )}
                         </TableCell>
                         <TableCell>
                           <Button
@@ -255,7 +281,9 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
               >
                 <Plus className="mr-2 h-4 w-4" /> Add row
               </Button>
-              <p className="text-sm text-muted-foreground">Items add up to ${computed.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">
+                Items add up to ${computed.toFixed(2)}
+              </p>
             </div>
 
             <label className="flex items-center gap-2 text-sm">

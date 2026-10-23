@@ -133,7 +133,9 @@ export function DayReport() {
         : isSingle
           ? formatDayLabel(range.from)
           : formatDateRange(range.from, range.to);
-  const subtitle = isSingle ? longDate(range.from) : `${shortDate(range.from)} to ${shortDate(range.to)}, ${range.to.slice(0, 4)}`;
+  const subtitle = isSingle
+    ? longDate(range.from)
+    : `${shortDate(range.from)} to ${shortDate(range.to)}, ${range.to.slice(0, 4)}`;
 
   return (
     <div className="space-y-6">
@@ -213,17 +215,36 @@ export function DayReport() {
       <Card className="overflow-hidden">
         <CardHeader className="border-b bg-surface-subtle/60">
           <CardTitle>Sales mix</CardTitle>
-          <CardDescription>Revenue and order volume by channel for {isSingle ? "this day" : "this period"}.</CardDescription>
+          <CardDescription>
+            Revenue and order volume by channel for {isSingle ? "this day" : "this period"}.
+          </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="chart-enter h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.platforms} margin={{ left: -12, right: 8 }}>
-                <CartesianGrid vertical={false} stroke="var(--color-border)" strokeDasharray="3 3" />
+                <CartesianGrid
+                  vertical={false}
+                  stroke="var(--color-border)"
+                  strokeDasharray="3 3"
+                />
                 <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={11} />
-                <YAxis tickLine={false} axisLine={false} fontSize={11} tickFormatter={(value) => `$${value}`} />
-                <Tooltip formatter={(value: number) => money(value)} cursor={{ fill: "var(--color-muted)" }} />
-                <Bar dataKey="gross" name="Total taken" fill="var(--color-chart-1)" radius={[5, 5, 0, 0]} />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={11}
+                  tickFormatter={(value) => `$${value}`}
+                />
+                <Tooltip
+                  formatter={(value: number) => money(value)}
+                  cursor={{ fill: "var(--color-muted)" }}
+                />
+                <Bar
+                  dataKey="gross"
+                  name="Total taken"
+                  fill="var(--color-chart-1)"
+                  radius={[5, 5, 0, 0]}
+                />
                 <Bar dataKey="net" name="Sales" fill="var(--color-chart-3)" radius={[5, 5, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -234,13 +255,15 @@ export function DayReport() {
       <Card>
         <CardHeader>
           <CardTitle>Where the money came from</CardTitle>
-          <CardDescription>Toast POS and each delivery app, for {isSingle ? "this day" : "this period"}.</CardDescription>
+          <CardDescription>
+            Toast POS and each delivery app, for {isSingle ? "this day" : "this period"}.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {data.platforms.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No sales recorded for this day yet. Connect Toast, Uber Eats, DoorDash or Grubhub on the
-              Sales page to fill this in automatically.
+              No sales recorded for this day yet. Connect Toast, Uber Eats, DoorDash or Grubhub on
+              the Sales page to fill this in automatically.
             </p>
           ) : (
             <Table>
@@ -261,8 +284,12 @@ export function DayReport() {
                     <TableCell className="font-medium">{row.label}</TableCell>
                     <TableCell className="text-right">{row.orders}</TableCell>
                     <TableCell className="text-right font-medium">{money(row.gross)}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{money(row.tax)}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{money(row.tips)}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {money(row.tax)}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {money(row.tips)}
+                    </TableCell>
                     <TableCell className="text-right">{money(row.net)}</TableCell>
                     <TableCell className="text-right text-muted-foreground">
                       {data.totals.gross > 0
@@ -274,10 +301,14 @@ export function DayReport() {
                 <TableRow>
                   <TableCell className="font-semibold">All channels</TableCell>
                   <TableCell className="text-right font-semibold">{data.totals.orders}</TableCell>
-                  <TableCell className="text-right font-semibold">{money(data.totals.gross)}</TableCell>
+                  <TableCell className="text-right font-semibold">
+                    {money(data.totals.gross)}
+                  </TableCell>
                   <TableCell className="text-right">{money(data.totals.tax)}</TableCell>
                   <TableCell className="text-right">{money(data.totals.tips)}</TableCell>
-                  <TableCell className="text-right font-semibold">{money(data.totals.netSales)}</TableCell>
+                  <TableCell className="text-right font-semibold">
+                    {money(data.totals.netSales)}
+                  </TableCell>
                   <TableCell className="text-right">100%</TableCell>
                 </TableRow>
               </TableBody>
@@ -291,7 +322,8 @@ export function DayReport() {
           <CardHeader>
             <CardTitle>What went wrong {isSingle ? "on this day" : "in this period"}</CardTitle>
             <CardDescription>
-              Voids, refunds, remakes, waste and complaints, plus anything the delivery apps cancelled.
+              Voids, refunds, remakes, waste and complaints, plus anything the delivery apps
+              cancelled.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -319,7 +351,10 @@ export function DayReport() {
             <div className="flex flex-wrap items-end gap-2">
               <div className="space-y-1">
                 <Label>Type</Label>
-                <Select value={category} onValueChange={(value) => setCategory(value as IssueCategory)}>
+                <Select
+                  value={category}
+                  onValueChange={(value) => setCategory(value as IssueCategory)}
+                >
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
@@ -345,7 +380,10 @@ export function DayReport() {
                 <p className="text-sm text-muted-foreground">Nothing logged yet today.</p>
               )}
               {data.issues.map((issue) => (
-                <div key={issue.id} className="flex items-start justify-between gap-3 border-b pb-3">
+                <div
+                  key={issue.id}
+                  className="flex items-start justify-between gap-3 border-b pb-3"
+                >
                   <div>
                     <p className="text-sm font-medium">{issue.description}</p>
                     <p className="text-xs text-muted-foreground">
@@ -399,8 +437,8 @@ export function DayReport() {
           <CardContent>
             {data.worked.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No hours recorded for this day. Staff clock in on the Time clock page, or a manager can
-                enter hours on Payroll.
+                No hours recorded for this day. Staff clock in on the Time clock page, or a manager
+                can enter hours on Payroll.
               </p>
             ) : (
               <Table>
@@ -424,7 +462,9 @@ export function DayReport() {
                           </Badge>
                         )}
                         {person.position && (
-                          <span className="block text-xs text-muted-foreground">{person.position}</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {person.position}
+                          </span>
                         )}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
@@ -455,7 +495,8 @@ export function DayReport() {
             )}
             {data.totals.tipPool > 0 && (
               <p className="mt-4 text-sm text-muted-foreground">
-                Tip pool entered for {isSingle ? "this day" : "this period"}: {money(data.totals.tipPool)}
+                Tip pool entered for {isSingle ? "this day" : "this period"}:{" "}
+                {money(data.totals.tipPool)}
               </p>
             )}
           </CardContent>
@@ -482,7 +523,9 @@ function Tile({
     <Card className={alert ? "bg-warning-soft" : undefined}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        {icon && <span className={alert ? "text-destructive" : "text-muted-foreground"}>{icon}</span>}
+        {icon && (
+          <span className={alert ? "text-destructive" : "text-muted-foreground"}>{icon}</span>
+        )}
       </CardHeader>
       <CardContent>
         <div className="font-display text-2xl font-bold">{value}</div>

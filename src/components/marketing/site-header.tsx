@@ -32,13 +32,16 @@ export function SiteHeader({ tone = "paper" }: { tone?: "ink" | "paper" }) {
       className={cn(
         "sticky top-0 z-40 transition-[background-color,box-shadow] duration-200",
         onInk ? "bg-ink text-ink-foreground" : "bg-background/90 text-foreground backdrop-blur-md",
-        scrolled && (onInk ? "shadow-[0_1px_0_oklch(1_0_0/0.08)]" : "shadow-[0_1px_0_var(--color-border)]"),
+        scrolled &&
+          (onInk ? "shadow-[0_1px_0_oklch(1_0_0/0.08)]" : "shadow-[0_1px_0_var(--color-border)]"),
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link to="/" className="rounded-lg" aria-label="Restrolytics home">
           <BrandMark
-            glyphClassName={onInk ? "[&_path]:fill-ink-foreground [&_rect:not(:last-child)]:fill-ink" : undefined}
+            glyphClassName={
+              onInk ? "[&_path]:fill-ink-foreground [&_rect:not(:last-child)]:fill-ink" : undefined
+            }
           />
         </Link>
 
@@ -49,7 +52,9 @@ export function SiteHeader({ tone = "paper" }: { tone?: "ink" | "paper" }) {
               href={item.href}
               className={cn(
                 "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                onInk ? "text-ink-muted hover:text-ink-foreground" : "text-muted-foreground hover:text-foreground",
+                onInk
+                  ? "text-ink-muted hover:text-ink-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {item.label}
@@ -61,17 +66,27 @@ export function SiteHeader({ tone = "paper" }: { tone?: "ink" | "paper" }) {
           <Button
             variant="ghost"
             asChild
-            className={cn("hidden sm:inline-flex", onInk && "text-ink-foreground hover:bg-white/10 hover:text-ink-foreground")}
+            className={cn(
+              "hidden sm:inline-flex",
+              onInk && "text-ink-foreground hover:bg-white/10 hover:text-ink-foreground",
+            )}
           >
             <Link to="/auth">Sign in</Link>
           </Button>
-          <Button variant={onInk ? "highlight" : "default"} asChild className="hidden sm:inline-flex">
+          <Button
+            variant={onInk ? "highlight" : "default"}
+            asChild
+            className="hidden sm:inline-flex"
+          >
             <Link to="/contact">Book a walkthrough</Link>
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className={cn("md:hidden", onInk && "text-ink-foreground hover:bg-white/10 hover:text-ink-foreground")}
+            className={cn(
+              "md:hidden",
+              onInk && "text-ink-foreground hover:bg-white/10 hover:text-ink-foreground",
+            )}
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? "Close menu" : "Open menu"}
@@ -86,7 +101,10 @@ export function SiteHeader({ tone = "paper" }: { tone?: "ink" | "paper" }) {
         <nav
           id="mobile-nav"
           aria-label="Main"
-          className={cn("border-t px-4 pt-2 pb-5 md:hidden", onInk ? "border-white/10" : "border-border")}
+          className={cn(
+            "border-t px-4 pt-2 pb-5 md:hidden",
+            onInk ? "border-white/10" : "border-border",
+          )}
         >
           {NAV.map((item) => (
             <a
@@ -99,7 +117,13 @@ export function SiteHeader({ tone = "paper" }: { tone?: "ink" | "paper" }) {
             </a>
           ))}
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <Button variant="outline" asChild className={cn(onInk && "bg-transparent text-ink-foreground shadow-[0_0_0_1px_oklch(1_0_0/0.2)]")}>
+            <Button
+              variant="outline"
+              asChild
+              className={cn(
+                onInk && "bg-transparent text-ink-foreground shadow-[0_0_0_1px_oklch(1_0_0/0.2)]",
+              )}
+            >
               <Link to="/auth">Sign in</Link>
             </Button>
             <Button variant={onInk ? "highlight" : "default"} asChild>

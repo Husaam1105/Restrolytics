@@ -50,7 +50,9 @@ export function RestaurantOnboarding({
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <Button asChild>
-              <a href="mailto:hello@restrolytics.com?subject=Restrolytics%20access">Contact Restrolytics</a>
+              <a href="mailto:hello@restrolytics.com?subject=Restrolytics%20access">
+                Contact Restrolytics
+              </a>
             </Button>
             <Button variant="outline" onClick={() => window.location.reload()}>
               Refresh

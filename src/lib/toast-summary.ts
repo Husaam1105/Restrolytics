@@ -55,11 +55,15 @@ export function parseToastSummary(sheets: Record<string, Rows>, fileName: string
   }
   const net = table(sheets, "Net sales summary")[0] ?? {};
   const rev = table(sheets, "Revenue summary")[0] ?? {};
-  const mode = table(sheets, "Service mode summary").find((r) => str(r["Service mode"]) === "Total") ?? {};
+  const mode =
+    table(sheets, "Service mode summary").find((r) => str(r["Service mode"]) === "Total") ?? {};
   const cashAct = table(sheets, "Cash activity")[0];
   const cashSum = table(sheets, "Cash summary")[0];
   const voids = table(sheets, "Void summary")[0];
-  const discountList = [...table(sheets, "Menu Item Discounts"), ...table(sheets, "Check Discounts")]
+  const discountList = [
+    ...table(sheets, "Menu Item Discounts"),
+    ...table(sheets, "Check Discounts"),
+  ]
     .filter((r) => str(r["Discount"]) && str(r["Discount"]) !== "Total")
     .map((r) => ({ name: str(r["Discount"]), count: num(r["Count"]), amount: num(r["Amount"]) }))
     .sort((a, b) => b.amount - a.amount);
@@ -81,7 +85,9 @@ export function parseToastSummary(sheets: Record<string, Rows>, fileName: string
     payments: table(sheets, "Payments summary")
       .filter((r) => str(r["Payment type"]) && str(r["Payment type"]) !== "Total")
       .map((r) => ({
-        type: str(r["Payment sub type"]) ? `${str(r["Payment type"])} · ${str(r["Payment sub type"])}` : str(r["Payment type"]),
+        type: str(r["Payment sub type"])
+          ? `${str(r["Payment type"])} · ${str(r["Payment sub type"])}`
+          : str(r["Payment type"]),
         count: num(r["Count"]),
         amount: num(r["Amount"]),
         tips: num(r["Tips"]),
@@ -107,7 +113,9 @@ export function parseToastSummary(sheets: Record<string, Rows>, fileName: string
           overShort: num(cashSum?.["Cash overage/shortage"]),
         }
       : null,
-    voids: voids ? { count: num(voids["Void order count"]), amount: num(voids["Void amount"]) } : null,
+    voids: voids
+      ? { count: num(voids["Void order count"]), amount: num(voids["Void amount"]) }
+      : null,
   };
 }
 
@@ -116,7 +124,15 @@ export type ToastProductMix = {
   endDate: string;
   totals: { qty: number; gross: number; discounts: number; voids: number; net: number };
   groups: { name: string; qty: number; net: number; discounts: number }[];
-  items: { name: string; qty: number; avgPrice: number; gross: number; discounts: number; voids: number; net: number }[];
+  items: {
+    name: string;
+    qty: number;
+    avgPrice: number;
+    gross: number;
+    discounts: number;
+    voids: number;
+    net: number;
+  }[];
 };
 
 export type ToastRemovedItems = {
@@ -124,10 +140,21 @@ export type ToastRemovedItems = {
   endDate: string;
   totalQty: number;
   totalAmount: number;
-  rows: { at: string; date: string; order: string; server: string; item: string; qty: number; amount: number }[];
+  rows: {
+    at: string;
+    date: string;
+    order: string;
+    server: string;
+    item: string;
+    qty: number;
+    amount: number;
+  }[];
 };
 
-export function parseToastProductMix(sheets: Record<string, Rows>, fileName: string): ToastProductMix {
+export function parseToastProductMix(
+  sheets: Record<string, Rows>,
+  fileName: string,
+): ToastProductMix {
   const m = fileName.match(/(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})/);
   if (!m || !sheets["Items"]) throw new Error("This doesn't look like a Toast Product Mix export");
   const items = table(sheets, "Items");
@@ -144,7 +171,12 @@ export function parseToastProductMix(sheets: Record<string, Rows>, fileName: str
     },
     groups: table(sheets, "Menu groups")
       .filter((r) => str(r["Menu group"]) && !str(r["Subgroup"]))
-      .map((r) => ({ name: str(r["Menu group"]), qty: num(r["Qty sold"]), net: num(r["Net item amt"]), discounts: num(r["Discount amt"]) }))
+      .map((r) => ({
+        name: str(r["Menu group"]),
+        qty: num(r["Qty sold"]),
+        net: num(r["Net item amt"]),
+        discounts: num(r["Discount amt"]),
+      }))
       .sort((a, b) => b.net - a.net),
     items: items
       .filter((r) => str(r["Item"]))

@@ -36,13 +36,15 @@ function SignupPage() {
         <li className="surface p-4">
           <p className="font-semibold">Invited by your team?</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Open the invite email and use its link to set your password. No email? Your manager can create a username login
-            for you.
+            Open the invite email and use its link to set your password. No email? Your manager can
+            create a username login for you.
           </p>
         </li>
         <li className="surface p-4">
           <p className="font-semibold">Running a restaurant?</p>
-          <p className="mt-1 text-sm text-muted-foreground">Book a 30-minute walkthrough and we'll set up your account with you.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Book a 30-minute walkthrough and we'll set up your account with you.
+          </p>
           <Button className="mt-3" asChild>
             <Link to="/contact">Book a walkthrough</Link>
           </Button>

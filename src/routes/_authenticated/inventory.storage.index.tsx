@@ -5,14 +5,12 @@ import { listVendors } from "@/lib/inventory.functions";
 import { InventoryNav, InventoryOverview } from "@/components/inventory-overview";
 import { PageContainer, PageHeader } from "@/components/page";
 
-const meta = "What lives in the walk-in, freezer, racks and fridges, listed in shelf order so counting goes fast.";
+const meta =
+  "What lives in the walk-in, freezer, racks and fridges, listed in shelf order so counting goes fast.";
 export const Route = createFileRoute("/_authenticated/inventory/storage/")({
   component: StorageAreasPage,
   head: () => ({
-    meta: [
-      { title: "Storage areas · Restrolytics" },
-      { name: "description", content: meta },
-    ],
+    meta: [{ title: "Storage areas · Restrolytics" }, { name: "description", content: meta }],
   }),
 });
 

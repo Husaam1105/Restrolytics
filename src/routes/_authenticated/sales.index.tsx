@@ -10,7 +10,12 @@ import { StatCard } from "@/components/stat-card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { getSalesOverview } from "@/lib/sales.functions";
 import { money } from "@/lib/sales";
 
@@ -19,7 +24,11 @@ export const Route = createFileRoute("/_authenticated/sales/")({
   head: () => ({
     meta: [
       { title: "Sales overview · Restrolytics" },
-      { name: "description", content: "Total sales with a breakdown by Toast POS, Uber Eats, DoorDash, Grubhub and catering." },
+      {
+        name: "description",
+        content:
+          "Total sales with a breakdown by Toast POS, Uber Eats, DoorDash, Grubhub and catering.",
+      },
     ],
   }),
 });
@@ -32,12 +41,17 @@ const WINDOWS = [
   { days: 90, label: "Last 90 days" },
 ];
 
-const chartConfig = { gross: { label: "Sales", color: "var(--color-chart-1)" } } satisfies ChartConfig;
+const chartConfig = {
+  gross: { label: "Sales", color: "var(--color-chart-1)" },
+} satisfies ChartConfig;
 
 function SalesOverview() {
   const fetchOverview = useServerFn(getSalesOverview);
   const [days, setDays] = useState(30);
-  const query = useQuery({ queryKey: ["sales-overview", days], queryFn: () => fetchOverview({ data: { days } }) });
+  const query = useQuery({
+    queryKey: ["sales-overview", days],
+    queryFn: () => fetchOverview({ data: { days } }),
+  });
   const data = query.data;
   const total = data?.totals.grossWithCatering ?? 0;
 
@@ -58,15 +72,34 @@ function SalesOverview() {
       </div>
 
       {query.isError ? (
-        <ErrorState title="Sales didn't load" error={query.error} onRetry={() => void query.refetch()} />
+        <ErrorState
+          title="Sales didn't load"
+          error={query.error}
+          onRetry={() => void query.refetch()}
+        />
       ) : !data ? (
         <LoadingState rows={4} />
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Total sales" value={money(total)} icon={<Receipt />} note="All channels, including catering" />
-            <StatCard label="Orders" value={data.totals.orders.toLocaleString("en-US")} icon={<ConciergeBell />} note="POS and delivery" />
-            <StatCard label="Tips" value={money(data.totals.tips)} icon={<HandCoins />} note="Across channels" />
+            <StatCard
+              label="Total sales"
+              value={money(total)}
+              icon={<Receipt />}
+              note="All channels, including catering"
+            />
+            <StatCard
+              label="Orders"
+              value={data.totals.orders.toLocaleString("en-US")}
+              icon={<ConciergeBell />}
+              note="POS and delivery"
+            />
+            <StatCard
+              label="Tips"
+              value={money(data.totals.tips)}
+              icon={<HandCoins />}
+              note="Across channels"
+            />
             <StatCard
               label="Catering"
               value={money(data.catering.gross)}
@@ -76,7 +109,10 @@ function SalesOverview() {
           </div>
 
           <section className="surface p-5 sm:p-6" aria-labelledby="by-channel-chart">
-            <SectionHeader title={<span id="by-channel-chart">Sales by channel</span>} description={`${data.from} to ${data.to}`} />
+            <SectionHeader
+              title={<span id="by-channel-chart">Sales by channel</span>}
+              description={`${data.from} to ${data.to}`}
+            />
             <div className="mt-5">
               {total === 0 ? (
                 <EmptyState
@@ -85,17 +121,30 @@ function SalesOverview() {
                 />
               ) : (
                 <ChartContainer config={chartConfig} className="chart-enter h-72 w-full">
-                  <BarChart data={[...data.channels, { label: "Catering", gross: data.catering.gross }]} margin={{ left: 4, right: 4, top: 4 }}>
+                  <BarChart
+                    data={[...data.channels, { label: "Catering", gross: data.catering.gross }]}
+                    margin={{ left: 4, right: 4, top: 4 }}
+                  >
                     <CartesianGrid vertical={false} stroke="var(--color-border)" />
                     <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
                     <YAxis
                       width={56}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(v: number) => (v >= 1000 ? `$${Math.round(v / 100) / 10}k` : `$${v}`)}
+                      tickFormatter={(v: number) =>
+                        v >= 1000 ? `$${Math.round(v / 100) / 10}k` : `$${v}`
+                      }
                     />
-                    <ChartTooltip cursor={{ fill: "var(--color-muted)" }} content={<ChartTooltipContent formatter={(v) => money(Number(v))} />} />
-                    <Bar dataKey="gross" fill="var(--color-gross)" radius={[4, 4, 0, 0]} maxBarSize={56} />
+                    <ChartTooltip
+                      cursor={{ fill: "var(--color-muted)" }}
+                      content={<ChartTooltipContent formatter={(v) => money(Number(v))} />}
+                    />
+                    <Bar
+                      dataKey="gross"
+                      fill="var(--color-gross)"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={56}
+                    />
                   </BarChart>
                 </ChartContainer>
               )}
@@ -104,7 +153,10 @@ function SalesOverview() {
 
           <section className="surface overflow-hidden" aria-labelledby="channel-list">
             <div className="p-5 pb-2 sm:p-6 sm:pb-2">
-              <SectionHeader title={<span id="channel-list">Channels</span>} description="Open a channel to see its orders, fees and payouts." />
+              <SectionHeader
+                title={<span id="channel-list">Channels</span>}
+                description="Open a channel to see its orders, fees and payouts."
+              />
             </div>
             <ul className="divide-y">
               {data.channels.map((channel) => {
@@ -142,11 +194,15 @@ function SalesOverview() {
                 );
               })}
               <li>
-                <Link to="/sales/catering" className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/60 sm:px-6">
+                <Link
+                  to="/sales/catering"
+                  className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/60 sm:px-6"
+                >
                   <div>
                     <p className="font-semibold">Catering</p>
                     <p className="text-sm text-muted-foreground">
-                      {data.catering.orders} event{data.catering.orders === 1 ? "" : "s"} in this period
+                      {data.catering.orders} event{data.catering.orders === 1 ? "" : "s"} in this
+                      period
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-3 text-right">

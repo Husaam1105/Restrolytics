@@ -33,8 +33,9 @@ export const getShiftChecklist = createServerFn({ method: "GET" })
         .eq("active", true)
         .order("sort_order");
 
-    let { data: tasks, error } = await select();
-    if (error) throw error;
+    const first = await select();
+    if (first.error) throw first.error;
+    let tasks = first.data;
 
     // Only owners/managers may create the starter list; staff just read it.
     if ((!tasks || tasks.length === 0) && restaurant.role !== "staff") {
@@ -85,7 +86,10 @@ export const getShiftChecklist = createServerFn({ method: "GET" })
       .eq("task_date", date)
       .order("created_at");
 
-    const notesByTask = new Map<string, { id: string; note: string; author: string | null; createdAt: string }[]>();
+    const notesByTask = new Map<
+      string,
+      { id: string; note: string; author: string | null; createdAt: string }[]
+    >();
     for (const n of notes ?? []) {
       const list = notesByTask.get(n.task_id) ?? [];
       list.push({ id: n.id, note: n.note, author: n.author_email, createdAt: n.created_at });
@@ -230,7 +234,6 @@ export const addShiftTask = createServerFn({ method: "POST" })
     const title = data.title.trim();
     if (!title) throw new Error("Task name is required");
 
-
     const { data: last } = await context.supabase
       .from("shift_tasks")
       .select("sort_order")
@@ -250,8 +253,13 @@ export const addShiftTask = createServerFn({ method: "POST" })
       sort_order: (last?.sort_order ?? 0) + 1,
       input_type: inputType,
       input_label:
-        inputType === "none" ? null : data.inputLabel?.trim() || (inputType === "temperature" ? "Temperature" : "Reading"),
-      input_unit: inputType === "temperature" ? (data.inputUnit?.trim() || "°F") : data.inputUnit?.trim() || null,
+        inputType === "none"
+          ? null
+          : data.inputLabel?.trim() || (inputType === "temperature" ? "Temperature" : "Reading"),
+      input_unit:
+        inputType === "temperature"
+          ? data.inputUnit?.trim() || "°F"
+          : data.inputUnit?.trim() || null,
     });
     if (error) throw error;
 
@@ -267,7 +275,8 @@ export const removeShiftTask = createServerFn({ method: "POST" })
     const { error } = await context.supabase
       .from("shift_tasks")
       .update({ active: false })
-      .eq("id", data.taskId).eq("restaurant_id", restaurant.id);
+      .eq("id", data.taskId)
+      .eq("restaurant_id", restaurant.id);
     if (error) throw error;
     return { ok: true };
   });
@@ -291,7 +300,10 @@ export const saveShiftSettings = createServerFn({ method: "POST" })
     } catch {
       throw new Error(`"${timezone}" isn't a timezone we recognise. Pick one from the list.`);
     }
-    if (!/^\d{1,2}:\d{2}$/.test(input.openTime.trim()) || !/^\d{1,2}:\d{2}$/.test(input.closeTime.trim())) {
+    if (
+      !/^\d{1,2}:\d{2}$/.test(input.openTime.trim()) ||
+      !/^\d{1,2}:\d{2}$/.test(input.closeTime.trim())
+    ) {
       throw new Error("Use times like 11:00 and 22:00.");
     }
     return { timezone, openTime: input.openTime.trim(), closeTime: input.closeTime.trim() };

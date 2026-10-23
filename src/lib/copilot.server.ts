@@ -5,8 +5,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { aiErrorMessage, getChatModel, isAiConfigured } from "./ai.server";
 
 export function userSupabase(request: Request) {
-  const url = process.env['SUPABASE_URL']!;
-  const key = process.env['SUPABASE_PUBLISHABLE_KEY']!;
+  const url = process.env["SUPABASE_URL"]!;
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   const supabase = createClient<Database>(url, key, {
     global: {
@@ -23,7 +23,10 @@ export function userSupabase(request: Request) {
 }
 
 const json = (status: number, message: string) =>
-  new Response(JSON.stringify({ error: message }), { status, headers: { "content-type": "application/json" } });
+  new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
 
 export async function handleCopilot(request: Request) {
   if (!isAiConfigured()) return json(503, "IQ isn't set up for this workspace yet.");
@@ -42,7 +45,9 @@ export async function handleCopilot(request: Request) {
   const threadId = String(body.threadId ?? "");
   // Only the newest user turn comes from the client. History is loaded from
   // what we stored, so a client can't inject fake assistant turns.
-  const incoming = Array.isArray(body.messages) ? body.messages[body.messages.length - 1] : undefined;
+  const incoming = Array.isArray(body.messages)
+    ? body.messages[body.messages.length - 1]
+    : undefined;
   const text = (incoming?.parts ?? [])
     .map((p) => (p.type === "text" ? p.text : ""))
     .join("\n")
@@ -51,7 +56,11 @@ export async function handleCopilot(request: Request) {
   if (!threadId || incoming?.role !== "user" || !text || typeof incoming.id !== "string") {
     return json(400, "Missing message");
   }
-  const userMessage: UIMessage = { id: incoming.id.slice(0, 100), role: "user", parts: [{ type: "text", text }] };
+  const userMessage: UIMessage = {
+    id: incoming.id.slice(0, 100),
+    role: "user",
+    parts: [{ type: "text", text }],
+  };
 
   const { data: thread } = await supabase
     .from("copilot_threads")
@@ -69,7 +78,8 @@ export async function handleCopilot(request: Request) {
     if (error instanceof NoRestaurantError) return json(403, "Join a restaurant to use IQ.");
     throw error;
   }
-  if (restaurant.id !== thread.restaurant_id) return json(403, "Switch to this conversation's restaurant first");
+  if (restaurant.id !== thread.restaurant_id)
+    return json(403, "Switch to this conversation's restaurant first");
 
   const { data: stored } = await supabase
     .from("copilot_messages")
@@ -80,19 +90,32 @@ export async function handleCopilot(request: Request) {
   const history: UIMessage[] = (stored ?? [])
     .reverse()
     .filter((m) => (m.role === "user" || m.role === "assistant") && m.message_id !== userMessage.id)
-    .map((m) => ({ id: m.message_id, role: m.role as "user" | "assistant", parts: m.parts as UIMessage["parts"] }));
+    .map((m) => ({
+      id: m.message_id,
+      role: m.role as "user" | "assistant",
+      parts: m.parts as UIMessage["parts"],
+    }));
   const messages = [...history, userMessage];
 
   const { buildCopilotContext } = await import("./copilot-context.server");
   const { data, alerts } = await buildCopilotContext(supabase as never, user.id, restaurant);
 
   const { error: saveError } = await supabase.from("copilot_messages").upsert(
-    { thread_id: threadId, user_id: user.id, message_id: userMessage.id, role: "user", parts: userMessage.parts as never },
+    {
+      thread_id: threadId,
+      user_id: user.id,
+      message_id: userMessage.id,
+      role: "user",
+      parts: userMessage.parts as never,
+    },
     { onConflict: "thread_id,message_id" },
   );
   if (saveError) console.error("copilot save user msg", saveError.message);
   if (thread.title === "New chat") {
-    await supabase.from("copilot_threads").update({ title: text.slice(0, 60) }).eq("id", threadId);
+    await supabase
+      .from("copilot_threads")
+      .update({ title: text.slice(0, 60) })
+      .eq("id", threadId);
   }
 
   const system = `You are "IQ", the virtual manager and copilot for ${restaurant.name}, a restaurant using Restrolytics.
@@ -112,16 +135,25 @@ ${JSON.stringify(data)}`;
   });
 
   return result.toUIMessageStreamResponse({
-      originalMessages: messages,
-      sendReasoning: true,
-      onError: (e) => aiErrorMessage(e),
-      onFinish: async ({ responseMessage }) => {
-        const { error } = await supabase.from("copilot_messages").upsert(
-          { thread_id: threadId, user_id: user.id, message_id: responseMessage.id, role: "assistant", parts: responseMessage.parts as never },
-          { onConflict: "thread_id,message_id" },
-        );
-        if (error) console.error("copilot save reply", error.message);
-        await supabase.from("copilot_threads").update({ updated_at: new Date().toISOString() }).eq("id", threadId);
-      },
+    originalMessages: messages,
+    sendReasoning: true,
+    onError: (e) => aiErrorMessage(e),
+    onFinish: async ({ responseMessage }) => {
+      const { error } = await supabase.from("copilot_messages").upsert(
+        {
+          thread_id: threadId,
+          user_id: user.id,
+          message_id: responseMessage.id,
+          role: "assistant",
+          parts: responseMessage.parts as never,
+        },
+        { onConflict: "thread_id,message_id" },
+      );
+      if (error) console.error("copilot save reply", error.message);
+      await supabase
+        .from("copilot_threads")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", threadId);
+    },
   });
 }

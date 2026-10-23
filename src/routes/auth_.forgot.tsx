@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/auth_/forgot")({
   component: ForgotPage,
-  head: () => ({ meta: [{ title: "Reset your password · Restrolytics" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Reset your password · Restrolytics" }, { name: "robots", content: "noindex" }],
+  }),
 });
 
 function ForgotPage() {
@@ -21,7 +23,9 @@ function ForgotPage() {
     e.preventDefault();
     const value = email.trim().toLowerCase();
     if (!value.includes("@")) {
-      setError("Staff who sign in with a username can't reset by email. Ask your manager to set a new password for you.");
+      setError(
+        "Staff who sign in with a username can't reset by email. Ask your manager to set a new password for you.",
+      );
       return;
     }
     setError(null);
@@ -55,10 +59,20 @@ function ForgotPage() {
       {sent ? null : (
         <form onSubmit={submit} className="space-y-4" noValidate>
           <AuthField id="email" label="Email">
-            <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </AuthField>
           {error ? (
-            <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive"
+            >
               {error}
             </p>
           ) : null}

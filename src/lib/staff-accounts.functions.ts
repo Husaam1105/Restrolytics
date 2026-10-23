@@ -11,8 +11,14 @@ const username = z
   .string()
   .trim()
   .toLowerCase()
-  .regex(/^[a-z0-9][a-z0-9._-]{2,31}$/, "Use 3–32 letters, numbers, dots, dashes or underscores, starting with a letter or number.");
-const password = z.string().min(8, "Use at least 8 characters.").max(72, "Use at most 72 characters.");
+  .regex(
+    /^[a-z0-9][a-z0-9._-]{2,31}$/,
+    "Use 3–32 letters, numbers, dots, dashes or underscores, starting with a letter or number.",
+  );
+const password = z
+  .string()
+  .min(8, "Use at least 8 characters.")
+  .max(72, "Use at most 72 characters.");
 
 async function employeeInRestaurant(
   supabase: SupabaseClient<Database>,
@@ -50,7 +56,10 @@ export const createStaffLogin = createServerFn({ method: "POST" })
       .select("id")
       .eq("username", data.username)
       .limit(1);
-    if (taken?.length) throw new Error(`The username "${data.username}" is taken. Try adding a number or last initial.`);
+    if (taken?.length)
+      throw new Error(
+        `The username "${data.username}" is taken. Try adding a number or last initial.`,
+      );
 
     const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -62,7 +71,9 @@ export const createStaffLogin = createServerFn({ method: "POST" })
     });
     if (createError || !created.user) {
       if (createError?.message.toLowerCase().includes("already")) {
-        throw new Error(`The username "${data.username}" is taken. Try adding a number or last initial.`);
+        throw new Error(
+          `The username "${data.username}" is taken. Try adding a number or last initial.`,
+        );
       }
       throw createError ?? new Error("The login couldn't be created.");
     }
@@ -86,7 +97,12 @@ export const createStaffLogin = createServerFn({ method: "POST" })
       if (linkError) throw linkError;
 
       await supabaseAdmin.from("profiles").upsert(
-        { user_id: userId, active_restaurant_id: restaurant.id, role: "staff", full_name: employee.full_name },
+        {
+          user_id: userId,
+          active_restaurant_id: restaurant.id,
+          role: "staff",
+          full_name: employee.full_name,
+        },
         { onConflict: "user_id" },
       );
     } catch (error) {
@@ -112,12 +128,17 @@ export const resetStaffPassword = createServerFn({ method: "POST" })
     if (!employee.user_id) throw new Error(`${employee.full_name} doesn't have a login yet.`);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserById(employee.user_id);
+    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserById(
+      employee.user_id,
+    );
     if (userError || !user.user) throw userError ?? new Error("That login no longer exists.");
     if (!user.user.email?.endsWith(`@${STAFF_EMAIL_DOMAIN}`)) {
-      throw new Error("This person signs in with their own email. They can reset it from the sign-in page.");
+      throw new Error(
+        "This person signs in with their own email. They can reset it from the sign-in page.",
+      );
     }
-    const home = (user.user.app_metadata as { home_restaurant_id?: string } | undefined)?.home_restaurant_id;
+    const home = (user.user.app_metadata as { home_restaurant_id?: string } | undefined)
+      ?.home_restaurant_id;
     if (home !== restaurant.id) {
       throw new Error("This login was created by another restaurant, so only they can reset it.");
     }
@@ -128,11 +149,17 @@ export const resetStaffPassword = createServerFn({ method: "POST" })
       .select("restaurant_id, role")
       .eq("user_id", employee.user_id);
     if (rolesError) throw rolesError;
-    if (roles?.length !== 1 || roles[0]!.restaurant_id !== restaurant.id || roles[0]!.role !== "staff") {
+    if (
+      roles?.length !== 1 ||
+      roles[0]!.restaurant_id !== restaurant.id ||
+      roles[0]!.role !== "staff"
+    ) {
       throw new Error("You can only reset passwords for staff logins on this team.");
     }
 
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(employee.user_id, { password: data.password });
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(employee.user_id, {
+      password: data.password,
+    });
     if (error) throw error;
     return { ok: true };
   });

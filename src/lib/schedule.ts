@@ -5,12 +5,7 @@
 import { addDays, weekStartDate } from "./payroll";
 
 export type ScheduleRange =
-  | "today"
-  | "this-week"
-  | "this-month"
-  | "yesterday"
-  | "last-week"
-  | "last-month";
+  "today" | "this-week" | "this-month" | "yesterday" | "last-week" | "last-month";
 
 export const RANGE_LABELS: Record<ScheduleRange, string> = {
   today: "Today",

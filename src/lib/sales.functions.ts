@@ -42,7 +42,17 @@ type DailyRow = {
 
 /** Totals in the same shape as summarize(), from database-side daily rows (no row cap). */
 function summarizeDaily(rows: DailyRow[]) {
-  const t = { orders: 0, gross: 0, tax: 0, tips: 0, failed: 0, fees: 0, promotions: 0, payout: 0, payoutOrders: 0 };
+  const t = {
+    orders: 0,
+    gross: 0,
+    tax: 0,
+    tips: 0,
+    failed: 0,
+    fees: 0,
+    promotions: 0,
+    payout: 0,
+    payoutOrders: 0,
+  };
   for (const r of rows) {
     t.orders += Number(r.orders);
     t.failed += Number(r.failed);
@@ -97,7 +107,18 @@ function summarize(rows: SaleRow[]) {
       promotions += Number(row.promotions ?? 0);
     }
   }
-  return { orders, gross, tax, tips, net: gross - tax - tips, failed, fees, promotions, payout, payoutOrders };
+  return {
+    orders,
+    gross,
+    tax,
+    tips,
+    net: gross - tax - tips,
+    failed,
+    fees,
+    promotions,
+    payout,
+    payoutOrders,
+  };
 }
 
 export const getSalesOverview = createServerFn({ method: "GET" })
@@ -111,7 +132,12 @@ export const getSalesOverview = createServerFn({ method: "GET" })
     const since = addDays(today, -(data.days - 1));
 
     const [salesRes, connectionsRes, cateringRes] = await Promise.all([
-      context.supabase.rpc("sales_daily", { _restaurant_id: restaurant.id, _from: since, _to: today, _tz: timezone }),
+      context.supabase.rpc("sales_daily", {
+        _restaurant_id: restaurant.id,
+        _from: since,
+        _to: today,
+        _tz: timezone,
+      }),
       context.supabase
         .from("platform_connections")
         .select("platform, status, last_synced_at")
@@ -128,9 +154,7 @@ export const getSalesOverview = createServerFn({ method: "GET" })
     if (cateringRes.error) throw cateringRes.error;
 
     const rows = (salesRes.data ?? []) as DailyRow[];
-    const connections = new Map(
-      (connectionsRes.data ?? []).map((c) => [c.platform, c] as const),
-    );
+    const connections = new Map((connectionsRes.data ?? []).map((c) => [c.platform, c] as const));
 
     const channels = SALES_CHANNELS.map((channel) => {
       const own = rows.filter((r) => r.platform === channel.platformKey);
@@ -189,10 +213,17 @@ export const getChannelSales = createServerFn({ method: "GET" })
     const { end } = dayRangeUtc(to, timezone);
 
     const [dailyRes, salesRes, connectionRes] = await Promise.all([
-      context.supabase.rpc("sales_daily", { _restaurant_id: restaurant.id, _from: from, _to: to, _tz: timezone }),
+      context.supabase.rpc("sales_daily", {
+        _restaurant_id: restaurant.id,
+        _from: from,
+        _to: to,
+        _tz: timezone,
+      }),
       context.supabase
         .from("sales")
-        .select("id, platform, order_number, total, tax, tip, status, created_at, payout, fees, promotions, fee_breakdown")
+        .select(
+          "id, platform, order_number, total, tax, tip, status, created_at, payout, fees, promotions, fee_breakdown",
+        )
         .eq("restaurant_id", restaurant.id)
         .eq("platform", channel.platformKey)
         .gte("created_at", start)
@@ -209,7 +240,9 @@ export const getChannelSales = createServerFn({ method: "GET" })
     if (dailyRes.error) throw dailyRes.error;
     if (salesRes.error) throw salesRes.error;
 
-    const daily = ((dailyRes.data ?? []) as DailyRow[]).filter((r) => r.platform === channel.platformKey);
+    const daily = ((dailyRes.data ?? []) as DailyRow[]).filter(
+      (r) => r.platform === channel.platformKey,
+    );
     const rows = (salesRes.data ?? []) as SaleRow[];
 
     const feeTotals = new Map<string, number>();
@@ -257,7 +290,8 @@ export const getChannelSales = createServerFn({ method: "GET" })
 
 export const importPlatformReport = createServerFn({ method: "POST" })
   .inputValidator((data: { slug: string; text: string }) => {
-    if (typeof data?.text !== "string" || data.text.length > 5_000_000) throw new Error("File too large");
+    if (typeof data?.text !== "string" || data.text.length > 5_000_000)
+      throw new Error("File too large");
     return { slug: String(data.slug), text: data.text };
   })
   .middleware([requireSupabaseAuth])
@@ -289,7 +323,9 @@ export const getChannelInsights = createServerFn({ method: "GET" })
     const [payouts, issues, ratings] = await Promise.all([
       context.supabase
         .from("platform_payouts")
-        .select("id, reference_id, payout_date, order_count, sales, fees, promotions, refunds, other, total_payout")
+        .select(
+          "id, reference_id, payout_date, order_count, sales, fees, promotions, refunds, other, total_payout",
+        )
         .eq("restaurant_id", restaurant.id)
         .eq("platform", channel.platformKey)
         .order("payout_date", { ascending: false })
@@ -329,7 +365,8 @@ export const getChannelInsights = createServerFn({ method: "GET" })
 export const importToastSummary = createServerFn({ method: "POST" })
   .inputValidator((data: { summary: import("./toast-summary").ToastSummary }) => {
     const s = data?.summary;
-    if (!s || !DATE_RE.test(s.startDate) || !DATE_RE.test(s.endDate)) throw new Error("Invalid report");
+    if (!s || !DATE_RE.test(s.startDate) || !DATE_RE.test(s.endDate))
+      throw new Error("Invalid report");
     if (JSON.stringify(s).length > 500_000) throw new Error("Report too large");
     return { summary: s };
   })
@@ -381,7 +418,7 @@ export const listItemOutages = createServerFn({ method: "GET" })
   })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
-    const { resolveActiveRestaurant, } = await import("./tenant.server");
+    const { resolveActiveRestaurant } = await import("./tenant.server");
     const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
     const { data: rows, error } = await context.supabase
       .from("item_outages")
@@ -398,10 +435,20 @@ export const listItemOutages = createServerFn({ method: "GET" })
 
 export const addItemOutage = createServerFn({ method: "POST" })
   .inputValidator((data: { platform: string; itemName: string; date: string; note?: string }) => {
-    const itemName = String(data.itemName ?? "").trim().slice(0, 120);
+    const itemName = String(data.itemName ?? "")
+      .trim()
+      .slice(0, 120);
     if (!itemName) throw new Error("Enter the item name");
     if (!DATE_RE.test(data.date)) throw new Error("Invalid date");
-    return { platform: String(data.platform).slice(0, 40), itemName, date: data.date, note: String(data.note ?? "").trim().slice(0, 500) || null };
+    return {
+      platform: String(data.platform).slice(0, 40),
+      itemName,
+      date: data.date,
+      note:
+        String(data.note ?? "")
+          .trim()
+          .slice(0, 500) || null,
+    };
   })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
@@ -421,13 +468,17 @@ export const addItemOutage = createServerFn({ method: "POST" })
   });
 
 export const updateItemOutage = createServerFn({ method: "POST" })
-  .inputValidator((data: { id: string; action: "back" | "delete" }) => ({ id: String(data.id), action: data.action === "delete" ? "delete" as const : "back" as const }))
+  .inputValidator((data: { id: string; action: "back" | "delete" }) => ({
+    id: String(data.id),
+    action: data.action === "delete" ? ("delete" as const) : ("back" as const),
+  }))
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const q = context.supabase.from("item_outages");
-    const { error } = data.action === "delete"
-      ? await q.delete().eq("id", data.id)
-      : await q.update({ back_at: new Date().toISOString() }).eq("id", data.id);
+    const { error } =
+      data.action === "delete"
+        ? await q.delete().eq("id", data.id)
+        : await q.update({ back_at: new Date().toISOString() }).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -435,13 +486,16 @@ export const updateItemOutage = createServerFn({ method: "POST" })
 const TOAST_KINDS = { pmix: "toast_pmix", removed: "toast_removed" } as const;
 
 export const importToastReport = createServerFn({ method: "POST" })
-  .inputValidator((data: { kind: "pmix" | "removed"; report: { startDate: string; endDate: string } }) => {
-    if (!(data?.kind in TOAST_KINDS)) throw new Error("Unknown report");
-    const r = data.report;
-    if (!r || !DATE_RE.test(r.startDate) || !DATE_RE.test(r.endDate)) throw new Error("Invalid report");
-    if (JSON.stringify(r).length > 500_000) throw new Error("Report too large");
-    return data;
-  })
+  .inputValidator(
+    (data: { kind: "pmix" | "removed"; report: { startDate: string; endDate: string } }) => {
+      if (!(data?.kind in TOAST_KINDS)) throw new Error("Unknown report");
+      const r = data.report;
+      if (!r || !DATE_RE.test(r.startDate) || !DATE_RE.test(r.endDate))
+        throw new Error("Invalid report");
+      if (JSON.stringify(r).length > 500_000) throw new Error("Report too large");
+      return data;
+    },
+  )
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const { requireManager } = await import("./tenant.server");
@@ -481,7 +535,11 @@ export const getToastReports = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const all = rows ?? [];
     return {
-      pmix: all.filter((r) => r.platform === "toast_pmix").map((r) => r.data as unknown as import("./toast-summary").ToastProductMix),
-      removed: all.filter((r) => r.platform === "toast_removed").map((r) => r.data as unknown as import("./toast-summary").ToastRemovedItems),
+      pmix: all
+        .filter((r) => r.platform === "toast_pmix")
+        .map((r) => r.data as unknown as import("./toast-summary").ToastProductMix),
+      removed: all
+        .filter((r) => r.platform === "toast_removed")
+        .map((r) => r.data as unknown as import("./toast-summary").ToastRemovedItems),
     };
   });

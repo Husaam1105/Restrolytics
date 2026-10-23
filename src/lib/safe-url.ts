@@ -26,7 +26,8 @@ export function isPublicHttpsUrl(value: string) {
 
 function isPrivateIPv4(ip: string) {
   const parts = ip.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true;
+  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255))
+    return true;
   const [a, b] = parts as [number, number, number, number];
   return (
     a === 0 ||
@@ -49,7 +50,9 @@ function hextets(ip: string): number[] | null {
   const v4 = /(\d{1,3}(?:\.\d{1,3}){3})$/.exec(text);
   if (v4) {
     const [a, b, c, d] = v4[1]!.split(".").map(Number) as [number, number, number, number];
-    text = text.slice(0, -v4[1]!.length) + `${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+    text =
+      text.slice(0, -v4[1]!.length) +
+      `${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
   }
   const halves = text.split("::");
   if (halves.length > 2) return null;

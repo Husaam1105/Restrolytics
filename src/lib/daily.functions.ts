@@ -67,7 +67,12 @@ export const getDayReport = createServerFn({ method: "GET" })
     // Money (sales, wages) is for owners and managers only.
     const [dailyRes, failedRes, issuesRes, entriesRes, poolsRes] = await Promise.all([
       manager
-        ? supabase.rpc("sales_daily", { _restaurant_id: restaurant.id, _from: from, _to: to, _tz: shift.timezone })
+        ? supabase.rpc("sales_daily", {
+            _restaurant_id: restaurant.id,
+            _from: from,
+            _to: to,
+            _tz: shift.timezone,
+          })
         : none,
       manager
         ? supabase
@@ -102,27 +107,34 @@ export const getDayReport = createServerFn({ method: "GET" })
             .lte("pool_date", to)
         : none,
     ]);
-    for (const res of [dailyRes, failedRes, issuesRes, entriesRes, poolsRes]) if (res.error) throw res.error;
+    for (const res of [dailyRes, failedRes, issuesRes, entriesRes, poolsRes])
+      if (res.error) throw res.error;
 
     const failedSales = failedRes.data ?? [];
 
     const byPlatform = new Map<
       string,
-      { platform: string; label: string; orders: number; gross: number; tax: number; tips: number; net: number }
+      {
+        platform: string;
+        label: string;
+        orders: number;
+        gross: number;
+        tax: number;
+        tips: number;
+        net: number;
+      }
     >();
     for (const day of dailyRes.data ?? []) {
       const key = String(day.platform);
-      const row =
-        byPlatform.get(key) ??
-        {
-          platform: key,
-          label: PLATFORM_LABELS[key] ?? key,
-          orders: 0,
-          gross: 0,
-          tax: 0,
-          tips: 0,
-          net: 0,
-        };
+      const row = byPlatform.get(key) ?? {
+        platform: key,
+        label: PLATFORM_LABELS[key] ?? key,
+        orders: 0,
+        gross: 0,
+        tax: 0,
+        tips: 0,
+        net: 0,
+      };
       row.orders += Number(day.orders);
       row.gross += Number(day.gross);
       row.tax += Number(day.tax);
@@ -173,23 +185,21 @@ export const getDayReport = createServerFn({ method: "GET" })
     for (const entry of entriesRes.data ?? []) {
       const employee = employees.get(entry.employee_id);
       if (!employee) continue;
-      const current =
-        workedMap.get(entry.employee_id) ??
-        {
-          employeeId: entry.employee_id,
-          name: employee.full_name,
-          area: employee.area,
-          position: employee.position ?? null,
-          minutes: 0,
-          hours: 0,
-          rate: manager ? Number(employee.hourly_rate ?? 0) : 0,
-          wages: 0,
-          payMethod: employee.pay_method,
-          tipEligible: Boolean(employee.tip_eligible),
-          openShift: false,
-          firstIn: null as string | null,
-          lastOut: null as string | null,
-        };
+      const current = workedMap.get(entry.employee_id) ?? {
+        employeeId: entry.employee_id,
+        name: employee.full_name,
+        area: employee.area,
+        position: employee.position ?? null,
+        minutes: 0,
+        hours: 0,
+        rate: manager ? Number(employee.hourly_rate ?? 0) : 0,
+        wages: 0,
+        payMethod: employee.pay_method,
+        tipEligible: Boolean(employee.tip_eligible),
+        openShift: false,
+        firstIn: null as string | null,
+        lastOut: null as string | null,
+      };
       current.minutes += Number(entry.minutes ?? 0);
       if (entry.clock_in && (!current.firstIn || entry.clock_in < current.firstIn)) {
         current.firstIn = entry.clock_in;

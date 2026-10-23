@@ -33,7 +33,8 @@ export const Route = createFileRoute("/_authenticated/inventory/vendors")({
       { title: "Vendors · Restrolytics" },
       {
         name: "description",
-        content: "Track every vendor, the items you order, quantities, quality and the next order date.",
+        content:
+          "Track every vendor, the items you order, quantities, quality and the next order date.",
       },
     ],
   }),
@@ -102,8 +103,6 @@ function InventoryPage() {
 
       <InventoryNav />
 
-      
-
       {isLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading vendors…
@@ -113,7 +112,8 @@ function InventoryPage() {
           <CardHeader>
             <CardTitle>No vendors yet</CardTitle>
             <CardDescription>
-              Add your first vendor to start tracking orders. Suppliers with an online portal can sync automatically.
+              Add your first vendor to start tracking orders. Suppliers with an online portal can
+              sync automatically.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
@@ -181,8 +181,12 @@ function InventoryPage() {
                       <span className="text-destructive">{stat?.lowStock} to reorder</span>
                     )}
                   </div>
-                  <p className="text-muted-foreground">Last synced: {formatDate(vendor.last_synced_at)}</p>
-                  {vendor.last_error && <p className="text-xs text-destructive">{vendor.last_error}</p>}
+                  <p className="text-muted-foreground">
+                    Last synced: {formatDate(vendor.last_synced_at)}
+                  </p>
+                  {vendor.last_error && (
+                    <p className="text-xs text-destructive">{vendor.last_error}</p>
+                  )}
                   <div className="mt-auto flex flex-wrap gap-2 pt-2">
                     <Button asChild size="sm">
                       <Link to="/inventory/$vendorId" params={{ vendorId: vendor.id }}>
@@ -196,7 +200,10 @@ function InventoryPage() {
                         disabled={sync.isPending}
                         onClick={() => sync.mutate(vendor.id)}
                       >
-                        <RefreshCw className={`mr-2 h-4 w-4 ${sync.isPending ? "animate-spin" : ""}`} /> Sync
+                        <RefreshCw
+                          className={`mr-2 h-4 w-4 ${sync.isPending ? "animate-spin" : ""}`}
+                        />{" "}
+                        Sync
                       </Button>
                     )}
                     {vendor.website_url && (
@@ -219,7 +226,8 @@ function InventoryPage() {
           <DialogHeader>
             <DialogTitle>Add vendor</DialogTitle>
             <DialogDescription>
-              For vendors with a WooCommerce customer portal (like Depot Deliveries), orders can be pulled in daily.
+              For vendors with a WooCommerce customer portal (like Depot Deliveries), orders can be
+              pulled in daily.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -244,7 +252,9 @@ function InventoryPage() {
             <div className="flex items-center justify-between rounded-md border p-3">
               <div>
                 <p className="text-sm font-medium">Pull orders from their website</p>
-                <p className="text-xs text-muted-foreground">Checks the portal daily for new orders.</p>
+                <p className="text-xs text-muted-foreground">
+                  Checks the portal daily for new orders.
+                </p>
               </div>
               <Switch
                 checked={form.portalType === "woocommerce"}
@@ -326,7 +336,8 @@ function InventoryPage() {
                 })}
               </div>
               <p className="text-xs text-muted-foreground">
-                Set the days you order (e.g. Monday and Friday). Leave empty to use the day count above.
+                Set the days you order (e.g. Monday and Friday). Leave empty to use the day count
+                above.
               </p>
             </div>
             <div className="space-y-1.5">
@@ -344,7 +355,8 @@ function InventoryPage() {
               Cancel
             </Button>
             <Button disabled={createVendor.isPending} onClick={() => createVendor.mutate()}>
-              {createVendor.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save vendor
+              {createVendor.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save
+              vendor
             </Button>
           </DialogFooter>
         </DialogContent>

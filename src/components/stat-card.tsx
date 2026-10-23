@@ -25,7 +25,11 @@ export function StatCard({
     <div className={cn("surface flex flex-col gap-3 p-5", className)}>
       <div className="flex items-center justify-between gap-2 text-sm font-medium text-muted-foreground">
         <span>{label}</span>
-        {icon ? <span className="[&_svg]:size-4" aria-hidden="true">{icon}</span> : null}
+        {icon ? (
+          <span className="[&_svg]:size-4" aria-hidden="true">
+            {icon}
+          </span>
+        ) : null}
       </div>
       <div className="text-figure text-[2rem]">{value}</div>
       {note ? (

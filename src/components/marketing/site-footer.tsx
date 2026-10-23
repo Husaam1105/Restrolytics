@@ -34,7 +34,8 @@ export function SiteFooter() {
         <div className="space-y-3">
           <BrandMark />
           <p className="max-w-xs text-sm text-muted-foreground">
-            Sales, stock, shifts and payroll for independent restaurants, with a copilot that knows your numbers.
+            Sales, stock, shifts and payroll for independent restaurants, with a copilot that knows
+            your numbers.
           </p>
         </div>
         {COLUMNS.map((col) => (
@@ -59,7 +60,10 @@ export function SiteFooter() {
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:justify-between sm:px-6 lg:px-8">
           <p>© {new Date().getFullYear()} Restrolytics</p>
           <p>
-            Questions? <Link to="/contact" className="underline underline-offset-4 hover:text-foreground">Talk to us</Link>
+            Questions?{" "}
+            <Link to="/contact" className="underline underline-offset-4 hover:text-foreground">
+              Talk to us
+            </Link>
           </p>
         </div>
       </div>

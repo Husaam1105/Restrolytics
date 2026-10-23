@@ -20,7 +20,16 @@ import { PageContainer, PageHeader } from "@/components/page";
 
 /** Every IANA timezone the browser knows, for the service-hours picker. */
 const TIMEZONES: string[] =
-  typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "Europe/London", "UTC"];
+  typeof Intl.supportedValuesOf === "function"
+    ? Intl.supportedValuesOf("timeZone")
+    : [
+        "America/New_York",
+        "America/Chicago",
+        "America/Denver",
+        "America/Los_Angeles",
+        "Europe/London",
+        "UTC",
+      ];
 
 export const Route = createFileRoute("/_authenticated/shifts")({
   component: ShiftsPage,
@@ -72,16 +81,39 @@ function ShiftsPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Shifts" description={<>Set your service hours and track today&apos;s checklists. Everything resets once you close for the night.</>} />
+      <PageHeader
+        title="Shifts"
+        description={
+          <>
+            Set your service hours and track today&apos;s checklists. Everything resets once you
+            close for the night.
+          </>
+        }
+      />
 
       <Tabs defaultValue="schedule" className="space-y-6">
         <div className="overflow-x-auto">
           <TabsList className="h-auto min-w-max">
-            <TabsTrigger value="schedule"><CalendarDays className="mr-2 size-4" />Schedule</TabsTrigger>
-            <TabsTrigger value="timeclock"><Clock3 className="mr-2 size-4" />Time clock</TabsTrigger>
-            <TabsTrigger value="foh"><CheckCircle2 className="mr-2 size-4" />Front of house</TabsTrigger>
-            <TabsTrigger value="boh"><CheckCircle2 className="mr-2 size-4" />Kitchen staff</TabsTrigger>
-            <TabsTrigger value="checklists"><BarChart3 className="mr-2 size-4" />Hours &amp; progress</TabsTrigger>
+            <TabsTrigger value="schedule">
+              <CalendarDays className="mr-2 size-4" />
+              Schedule
+            </TabsTrigger>
+            <TabsTrigger value="timeclock">
+              <Clock3 className="mr-2 size-4" />
+              Time clock
+            </TabsTrigger>
+            <TabsTrigger value="foh">
+              <CheckCircle2 className="mr-2 size-4" />
+              Front of house
+            </TabsTrigger>
+            <TabsTrigger value="boh">
+              <CheckCircle2 className="mr-2 size-4" />
+              Kitchen staff
+            </TabsTrigger>
+            <TabsTrigger value="checklists">
+              <BarChart3 className="mr-2 size-4" />
+              Hours &amp; progress
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -104,104 +136,105 @@ function ShiftsPage() {
         </TabsContent>
 
         <TabsContent value="checklists" className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Service hours</CardTitle>
-          <CardDescription>
-            Checklists belong to one business day and clear after closing time, even if you close
-            after midnight.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="openTime">Opening time</Label>
-              <Input
-                id="openTime"
-                type="time"
-                value={openTime}
-                onChange={(e) => setOpenTime(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="closeTime">Closing time</Label>
-              <Input
-                id="closeTime"
-                type="time"
-                value={closeTime}
-                onChange={(e) => setCloseTime(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="timezone">Time zone</Label>
-              <Input
-                id="timezone"
-                list="timezone-options"
-                autoComplete="off"
-                spellCheck={false}
-                value={timezone}
-                placeholder="Start typing a city, e.g. New_York"
-                onChange={(e) => setTimezone(e.target.value)}
-                aria-describedby="timezone-hint"
-              />
-              <datalist id="timezone-options">
-                {TIMEZONES.map((zone) => (
-                  <option key={zone} value={zone} />
-                ))}
-              </datalist>
-              <p id="timezone-hint" className="text-xs text-muted-foreground">
-                Pick from the list. Every report and checklist uses this to decide what &quot;today&quot; is.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button onClick={() => save.mutate()} disabled={save.isPending}>
-              {save.isPending ? "Saving…" : "Save hours"}
-            </Button>
-            {data ? (
-              <span className="text-sm text-muted-foreground">
-                Open {formatTime(data.settings.openTime)} to {formatTime(data.settings.closeTime)}. Business day{" "}
-                {data.date}.
-              </span>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Today&apos;s checklists</CardTitle>
-          <CardDescription>
-            {data
-              ? data.phase === "before-open"
-                ? "Not open yet. The opening lists are waiting."
-                : data.phase === "open"
-                  ? "Service is running."
-                  : "Service is closed for the day."
-              : "Loading…"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          {(data?.groups ?? []).map((g) => {
-            const pct = g.total ? Math.round((g.completed / g.total) * 100) : 0;
-            return (
-              <Link
-                key={`${g.area}-${g.shift}`}
-                to={`/${g.area}/${g.shift}` as string}
-                className="rounded-lg border p-4 transition-colors hover:bg-muted/50"
-              >
-                <div className="flex items-center justify-between text-sm font-medium">
-                  <span>{groupLabels[`${g.area}-${g.shift}`]}</span>
-                  <span className="text-muted-foreground">
-                    {g.completed}/{g.total}
-                  </span>
+          <Card>
+            <CardHeader>
+              <CardTitle>Service hours</CardTitle>
+              <CardDescription>
+                Checklists belong to one business day and clear after closing time, even if you
+                close after midnight.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="openTime">Opening time</Label>
+                  <Input
+                    id="openTime"
+                    type="time"
+                    value={openTime}
+                    onChange={(e) => setOpenTime(e.target.value)}
+                  />
                 </div>
-                <Progress value={pct} className="mt-3 h-2" />
-              </Link>
-            );
-          })}
-        </CardContent>
-      </Card>
+                <div className="space-y-1.5">
+                  <Label htmlFor="closeTime">Closing time</Label>
+                  <Input
+                    id="closeTime"
+                    type="time"
+                    value={closeTime}
+                    onChange={(e) => setCloseTime(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="timezone">Time zone</Label>
+                  <Input
+                    id="timezone"
+                    list="timezone-options"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={timezone}
+                    placeholder="Start typing a city, e.g. New_York"
+                    onChange={(e) => setTimezone(e.target.value)}
+                    aria-describedby="timezone-hint"
+                  />
+                  <datalist id="timezone-options">
+                    {TIMEZONES.map((zone) => (
+                      <option key={zone} value={zone} />
+                    ))}
+                  </datalist>
+                  <p id="timezone-hint" className="text-xs text-muted-foreground">
+                    Pick from the list. Every report and checklist uses this to decide what
+                    &quot;today&quot; is.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button onClick={() => save.mutate()} disabled={save.isPending}>
+                  {save.isPending ? "Saving…" : "Save hours"}
+                </Button>
+                {data ? (
+                  <span className="text-sm text-muted-foreground">
+                    Open {formatTime(data.settings.openTime)} to{" "}
+                    {formatTime(data.settings.closeTime)}. Business day {data.date}.
+                  </span>
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Today&apos;s checklists</CardTitle>
+              <CardDescription>
+                {data
+                  ? data.phase === "before-open"
+                    ? "Not open yet. The opening lists are waiting."
+                    : data.phase === "open"
+                      ? "Service is running."
+                      : "Service is closed for the day."
+                  : "Loading…"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              {(data?.groups ?? []).map((g) => {
+                const pct = g.total ? Math.round((g.completed / g.total) * 100) : 0;
+                return (
+                  <Link
+                    key={`${g.area}-${g.shift}`}
+                    to={`/${g.area}/${g.shift}` as string}
+                    className="rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                  >
+                    <div className="flex items-center justify-between text-sm font-medium">
+                      <span>{groupLabels[`${g.area}-${g.shift}`]}</span>
+                      <span className="text-muted-foreground">
+                        {g.completed}/{g.total}
+                      </span>
+                    </div>
+                    <Progress value={pct} className="mt-3 h-2" />
+                  </Link>
+                );
+              })}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </PageContainer>

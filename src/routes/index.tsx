@@ -4,7 +4,15 @@ import { absoluteUrl, canonical } from "@/lib/seo";
 
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
-import { ClosingCta, Faq, Hero, IqSection, ManagerSection, Operations, Sources } from "@/components/marketing/landing";
+import {
+  ClosingCta,
+  Faq,
+  Hero,
+  IqSection,
+  ManagerSection,
+  Operations,
+  Sources,
+} from "@/components/marketing/landing";
 
 const TITLE = "Restrolytics: restaurant sales, stock, shifts and payroll in one place";
 const DESCRIPTION =
@@ -27,14 +35,24 @@ export const Route = createFileRoute("/")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@graph": [
-            { "@type": "Organization", name: "Restrolytics", url: absoluteUrl("/"), email: "hello@restrolytics.com" },
+            {
+              "@type": "Organization",
+              name: "Restrolytics",
+              url: absoluteUrl("/"),
+              email: "hello@restrolytics.com",
+            },
             {
               "@type": "SoftwareApplication",
               name: "Restrolytics",
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web",
               description: DESCRIPTION,
-              offers: { "@type": "Offer", price: "199", priceCurrency: "USD", description: "Per location, per month" },
+              offers: {
+                "@type": "Offer",
+                price: "199",
+                priceCurrency: "USD",
+                description: "Per location, per month",
+              },
             },
           ],
         }),

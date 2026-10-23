@@ -28,7 +28,11 @@ export const saveMyDetails = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("employees")
-      .update({ email: data.email || null, phone: data.phone || null, address: data.address || null })
+      .update({
+        email: data.email || null,
+        phone: data.phone || null,
+        address: data.address || null,
+      })
       .eq("user_id", context.userId);
     if (error) throw error;
     return { ok: true };

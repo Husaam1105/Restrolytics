@@ -6,7 +6,11 @@ import { toast } from "sonner";
 
 import { useConfirm } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import { createCopilotThread, deleteCopilotThread, listCopilotThreads } from "@/lib/copilot.functions";
+import {
+  createCopilotThread,
+  deleteCopilotThread,
+  listCopilotThreads,
+} from "@/lib/copilot.functions";
 import { cn } from "@/lib/utils";
 
 export function useNewThread() {
@@ -23,14 +27,24 @@ export function useNewThread() {
   });
 }
 
-export function ThreadList({ activeId, onNavigate }: { activeId?: string; onNavigate?: () => void }) {
+export function ThreadList({
+  activeId,
+  onNavigate,
+}: {
+  activeId?: string;
+  onNavigate?: () => void;
+}) {
   const list = useServerFn(listCopilotThreads);
   const del = useServerFn(deleteCopilotThread);
   const qc = useQueryClient();
   const navigate = useNavigate();
   const confirm = useConfirm();
   const newThread = useNewThread();
-  const { data = [], isError, refetch } = useQuery({ queryKey: ["copilot-threads"], queryFn: () => list() });
+  const {
+    data = [],
+    isError,
+    refetch,
+  } = useQuery({ queryKey: ["copilot-threads"], queryFn: () => list() });
   const remove = useMutation({
     mutationFn: (id: string) => del({ data: { id } }),
     onSuccess: (_, id) => {
@@ -53,13 +67,21 @@ export function ThreadList({ activeId, onNavigate }: { activeId?: string; onNavi
 
   return (
     <div className="flex flex-col gap-2">
-      <Button onClick={() => newThread.mutate(undefined)} disabled={newThread.isPending} className="w-full justify-start">
+      <Button
+        onClick={() => newThread.mutate(undefined)}
+        disabled={newThread.isPending}
+        className="w-full justify-start"
+      >
         <MessageSquarePlus />
         New chat
       </Button>
       <nav aria-label="Your chats" className="flex flex-col gap-0.5">
         {isError ? (
-          <button type="button" onClick={() => void refetch()} className="px-2 py-1 text-left text-sm text-destructive underline-offset-4 hover:underline">
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="px-2 py-1 text-left text-sm text-destructive underline-offset-4 hover:underline"
+          >
             Chats didn&apos;t load. Try again
           </button>
         ) : data.length === 0 ? (

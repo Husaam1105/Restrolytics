@@ -8,9 +8,19 @@ import { MessagesSquare } from "lucide-react";
 import { toast } from "sonner";
 
 import iqLogo from "@/assets/iq-copilot.png";
-import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
-import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
+import {
+  PromptInput,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTextarea,
+} from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { ThreadList } from "@/components/copilot/thread-list";
 import { PageContainer } from "@/components/page";
@@ -22,11 +32,15 @@ import { getCopilotMessages } from "@/lib/copilot.functions";
 
 export const Route = createFileRoute("/_authenticated/copilot/$threadId")({
   validateSearch: (s: Record<string, unknown>): { q?: string } =>
-    typeof s['q'] === "string" && s['q'] ? { q: (s['q'] as string).slice(0, 500) } : {},
+    typeof s["q"] === "string" && s["q"] ? { q: (s["q"] as string).slice(0, 500) } : {},
   head: () => ({
     meta: [
       { title: "Chat with IQ · Restrolytics" },
-      { name: "description", content: "Ask IQ, your virtual restaurant manager, about sales, labor, inventory and tasks." },
+      {
+        name: "description",
+        content:
+          "Ask IQ, your virtual restaurant manager, about sales, labor, inventory and tasks.",
+      },
     ],
   }),
   component: ThreadPage,
@@ -121,10 +135,18 @@ function ChatWindow({ threadId, initial }: { threadId: string; initial: UIMessag
           ) : null}
           {messages.map((m) => (
             <Message key={m.id} from={m.role}>
-              <MessageContent className={m.role === "user" ? "bg-primary text-primary-foreground" : undefined}>
+              <MessageContent
+                className={m.role === "user" ? "bg-primary text-primary-foreground" : undefined}
+              >
                 {m.parts.map((p, i) =>
                   p.type === "text" ? (
-                    m.role === "assistant" ? <MessageResponse key={i}>{p.text}</MessageResponse> : <span key={i} className="whitespace-pre-wrap">{p.text}</span>
+                    m.role === "assistant" ? (
+                      <MessageResponse key={i}>{p.text}</MessageResponse>
+                    ) : (
+                      <span key={i} className="whitespace-pre-wrap">
+                        {p.text}
+                      </span>
+                    )
                   ) : null,
                 )}
               </MessageContent>

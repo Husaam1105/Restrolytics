@@ -88,8 +88,6 @@
   --color-ink-muted: var(--ink-muted);
   --color-highlight: var(--highlight);
   --color-surface-subtle: var(--surface-subtle);
-
-
 }
 
 :root {
@@ -348,7 +346,11 @@
 }
 
 @utility data-grid {
-  background-image: linear-gradient(to bottom, color-mix(in oklab, var(--color-border) 52%, transparent) 1px, transparent 1px);
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--color-border) 52%, transparent) 1px,
+    transparent 1px
+  );
   background-size: 100% 25%;
 }
 

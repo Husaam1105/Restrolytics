@@ -4,7 +4,15 @@ import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 
 /** Readable long-form layout for policy pages. */
-export function LegalPage({ title, updated, children }: { title: string; updated: string; children: ReactNode }) {
+export function LegalPage({
+  title,
+  updated,
+  children,
+}: {
+  title: string;
+  updated: string;
+  children: ReactNode;
+}) {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />

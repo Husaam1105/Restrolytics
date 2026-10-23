@@ -110,7 +110,9 @@ for (const [mode, tokens, pairs] of [
     const ratio = contrast(a, b);
     const ok = ratio >= min;
     if (!ok) failures++;
-    console.log(`${ok ? "✓" : "✗"} ${mode.padEnd(5)} ${fg} on ${bg}: ${ratio.toFixed(2)} (min ${min})`);
+    console.log(
+      `${ok ? "✓" : "✗"} ${mode.padEnd(5)} ${fg} on ${bg}: ${ratio.toFixed(2)} (min ${min})`,
+    );
   }
 }
 

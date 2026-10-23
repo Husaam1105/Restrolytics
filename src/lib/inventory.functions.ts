@@ -13,11 +13,21 @@ const fetchableUrl = z
 const vendorSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(1, "Vendor name is required.").max(120),
-  websiteUrl: z.string().trim().max(500).optional().refine((v) => !v || /^https?:\/\//i.test(v), "Start the website with https://"),
+  websiteUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .refine((v) => !v || /^https?:\/\//i.test(v), "Start the website with https://"),
   portalType: z.enum(["manual", "woocommerce"]),
   loginUrl: fetchableUrl,
   ordersUrl: fetchableUrl,
-  contactEmail: z.string().trim().max(254).optional().refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Enter a valid email."),
+  contactEmail: z
+    .string()
+    .trim()
+    .max(254)
+    .optional()
+    .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Enter a valid email."),
   orderCadenceDays: z.coerce.number().int().min(1).max(365),
   orderDays: z.array(z.number().int().min(0).max(6)).max(7).optional(),
   autoSync: z.boolean(),
@@ -25,7 +35,10 @@ const vendorSchema = z.object({
 });
 
 const amount = (label: string, max = 1_000_000) =>
-  z.coerce.number({ invalid_type_error: `${label} must be a number.` }).min(0, `${label} can't be negative.`).max(max);
+  z.coerce
+    .number({ invalid_type_error: `${label} must be a number.` })
+    .min(0, `${label} can't be negative.`)
+    .max(max);
 
 const itemSchema = z.object({
   id: z.string().uuid().optional(),
@@ -162,7 +175,13 @@ export const saveVendor = createServerFn({ method: "POST" })
     };
 
     const query = data.id
-      ? context.supabase.from("vendors").update(payload).eq("id", data.id).eq("restaurant_id", restaurant.id).select("id").single()
+      ? context.supabase
+          .from("vendors")
+          .update(payload)
+          .eq("id", data.id)
+          .eq("restaurant_id", restaurant.id)
+          .select("id")
+          .single()
       : context.supabase.from("vendors").insert(payload).select("id").single();
 
     const { data: saved, error } = await query;
@@ -176,7 +195,11 @@ export const deleteVendor = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    const { error } = await context.supabase.from("vendors").delete().eq("id", data.vendorId).eq("restaurant_id", restaurant.id);
+    const { error } = await context.supabase
+      .from("vendors")
+      .delete()
+      .eq("id", data.vendorId)
+      .eq("restaurant_id", restaurant.id);
     if (error) throw error;
     return { success: true };
   });
@@ -187,7 +210,8 @@ export const saveVendorCredentials = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    if (!data.username.trim() || !data.password) throw new Error("Username and password are required.");
+    if (!data.username.trim() || !data.password)
+      throw new Error("Username and password are required.");
 
     const { data: vendor, error } = await context.supabase
       .from("vendors")
@@ -211,7 +235,8 @@ export const saveVendorCredentials = createServerFn({ method: "POST" })
     await context.supabase
       .from("vendors")
       .update({ sync_status: "connected", last_error: null })
-      .eq("id", data.vendorId).eq("restaurant_id", restaurant.id);
+      .eq("id", data.vendorId)
+      .eq("restaurant_id", restaurant.id);
 
     return { success: true };
   });
@@ -308,7 +333,13 @@ export const saveInventoryItem = createServerFn({ method: "POST" })
     };
 
     const query = data.id
-      ? context.supabase.from("inventory_items").update(payload).eq("id", data.id).eq("restaurant_id", restaurant.id).select("id").single()
+      ? context.supabase
+          .from("inventory_items")
+          .update(payload)
+          .eq("id", data.id)
+          .eq("restaurant_id", restaurant.id)
+          .select("id")
+          .single()
       : context.supabase.from("inventory_items").insert(payload).select("id").single();
 
     const { data: saved, error } = await query;
@@ -322,7 +353,11 @@ export const deleteInventoryItem = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    const { error } = await context.supabase.from("inventory_items").delete().eq("id", data.itemId).eq("restaurant_id", restaurant.id);
+    const { error } = await context.supabase
+      .from("inventory_items")
+      .delete()
+      .eq("id", data.itemId)
+      .eq("restaurant_id", restaurant.id);
     if (error) throw error;
     return { success: true };
   });

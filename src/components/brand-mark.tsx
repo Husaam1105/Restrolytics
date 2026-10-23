@@ -11,8 +11,22 @@ export function BrandGlyph({ className }: { className?: string | undefined }) {
         d="M6 4.5A2.5 2.5 0 0 1 8.5 2h15A2.5 2.5 0 0 1 26 4.5V28l-2.5-1.75L21 28l-2.5-1.75L16 28l-2.5-1.75L11 28l-2.5-1.75L6 28Z"
         className="fill-primary"
       />
-      <rect x="10" y="16" width="3" height="6" rx="1" className="fill-primary-foreground opacity-55" />
-      <rect x="14.5" y="12" width="3" height="10" rx="1" className="fill-primary-foreground opacity-75" />
+      <rect
+        x="10"
+        y="16"
+        width="3"
+        height="6"
+        rx="1"
+        className="fill-primary-foreground opacity-55"
+      />
+      <rect
+        x="14.5"
+        y="12"
+        width="3"
+        height="10"
+        rx="1"
+        className="fill-primary-foreground opacity-75"
+      />
       <rect x="19" y="8" width="3" height="14" rx="1" className="fill-primary-foreground" />
     </svg>
   );

@@ -3,7 +3,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
-import { ChatPane, ensureThread, NotesPanel, TasksPanel } from "@/components/manager/manager-panels";
+import {
+  ChatPane,
+  ensureThread,
+  NotesPanel,
+  TasksPanel,
+} from "@/components/manager/manager-panels";
 import { PageContainer, PageHeader } from "@/components/page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/button";
@@ -14,7 +19,11 @@ export const Route = createFileRoute("/_authenticated/copilot/manager")({
   head: () => ({
     meta: [
       { title: "Live manager · Restrolytics" },
-      { name: "description", content: "Chat live with your Restrolytics manager, track assigned tasks and log notes for review." },
+      {
+        name: "description",
+        content:
+          "Chat live with your Restrolytics manager, track assigned tasks and log notes for review.",
+      },
     ],
   }),
   component: ManagerPage,
@@ -29,7 +38,11 @@ function ManagerPage() {
     queryKey: ["mgr-thread", restaurantId, room, ctx.data?.userId],
     enabled: !!restaurantId,
     queryFn: () =>
-      ensureThread(restaurantId!, room, room === "direct" ? { id: ctx.data!.userId, name: ctx.data!.name } : undefined),
+      ensureThread(
+        restaurantId!,
+        room,
+        room === "direct" ? { id: ctx.data!.userId, name: ctx.data!.name } : undefined,
+      ),
   });
 
   if (ctx.isLoading) {
@@ -42,7 +55,10 @@ function ManagerPage() {
   if (!ctx.data?.restaurant) {
     return (
       <PageContainer>
-        <EmptyState title="Join a restaurant to talk to a manager" description="Once you're on a team, your Restrolytics manager is here." />
+        <EmptyState
+          title="Join a restaurant to talk to a manager"
+          description="Once you're on a team, your Restrolytics manager is here."
+        />
       </PageContainer>
     );
   }
@@ -76,18 +92,34 @@ function ManagerPage() {
         </TabsList>
         <TabsContent value="chat" className="space-y-3">
           <div className="flex gap-2" role="group" aria-label="Conversation">
-            <Button size="sm" aria-pressed={room === "team"} variant={room === "team" ? "default" : "outline"} onClick={() => setRoom("team")}>
+            <Button
+              size="sm"
+              aria-pressed={room === "team"}
+              variant={room === "team" ? "default" : "outline"}
+              onClick={() => setRoom("team")}
+            >
               Team channel
             </Button>
-            <Button size="sm" aria-pressed={room === "direct"} variant={room === "direct" ? "default" : "outline"} onClick={() => setRoom("direct")}>
+            <Button
+              size="sm"
+              aria-pressed={room === "direct"}
+              variant={room === "direct" ? "default" : "outline"}
+              onClick={() => setRoom("direct")}
+            >
               Private with manager
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            {room === "team" ? "Everyone at your restaurant sees this channel." : "Only you and the Restrolytics manager see this chat."}
+            {room === "team"
+              ? "Everyone at your restaurant sees this channel."
+              : "Only you and the Restrolytics manager see this chat."}
           </p>
           {thread.error ? (
-            <ErrorState title="This conversation didn't open" error={thread.error} onRetry={() => void thread.refetch()} />
+            <ErrorState
+              title="This conversation didn't open"
+              error={thread.error}
+              onRetry={() => void thread.refetch()}
+            />
           ) : thread.data ? (
             <ChatPane key={thread.data} threadId={thread.data} me={me} />
           ) : (

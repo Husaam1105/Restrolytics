@@ -17,7 +17,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -28,7 +35,14 @@ import {
   saveVendorCredentials,
   syncVendor,
 } from "@/lib/inventory.functions";
-import { DAY_LABELS, describeSchedule, formatDate, nextOrderDate, orderUrgency, type VendorItem } from "@/lib/vendors";
+import {
+  DAY_LABELS,
+  describeSchedule,
+  formatDate,
+  nextOrderDate,
+  orderUrgency,
+  type VendorItem,
+} from "@/lib/vendors";
 import { InvoiceCapture } from "@/components/invoice-capture";
 import { requireManagerRoute } from "@/lib/workspace";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -41,7 +55,8 @@ export const Route = createFileRoute("/_authenticated/inventory/$vendorId")({
       { title: "Vendor · Restrolytics" },
       {
         name: "description",
-        content: "Items ordered from this vendor with quantity, quality, last order date and next order date.",
+        content:
+          "Items ordered from this vendor with quantity, quality, last order date and next order date.",
       },
     ],
   }),
@@ -228,7 +243,9 @@ function VendorPage() {
             {formatDate(vendor.last_synced_at)}
             {"."}
           </p>
-          {vendor.last_error && <p className="mt-1 text-xs text-destructive">{vendor.last_error}</p>}
+          {vendor.last_error && (
+            <p className="mt-1 text-xs text-destructive">{vendor.last_error}</p>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <InvoiceCapture vendorId={vendorId} vendorName={vendor.name} onSaved={invalidate} />
@@ -239,7 +256,8 @@ function VendorPage() {
                 {data?.hasCredentials ? "Update login" : "Add portal login"}
               </Button>
               <Button variant="outline" disabled={sync.isPending} onClick={() => sync.mutate()}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${sync.isPending ? "animate-spin" : ""}`} /> Sync now
+                <RefreshCw className={`mr-2 h-4 w-4 ${sync.isPending ? "animate-spin" : ""}`} />{" "}
+                Sync now
               </Button>
             </>
           )}
@@ -257,7 +275,10 @@ function VendorPage() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Order days</CardTitle>
-          <CardDescription>Pick the days you place orders with this vendor. Leave all off to use a fixed number of days between orders.</CardDescription>
+          <CardDescription>
+            Pick the days you place orders with this vendor. Leave all off to use a fixed number of
+            days between orders.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {DAY_LABELS.map((label, index) => {
@@ -270,7 +291,9 @@ function VendorPage() {
                 disabled={saveDays.isPending}
                 onClick={() =>
                   saveDays.mutate(
-                    active ? orderDays.filter((d) => d !== index) : [...orderDays, index].sort((a, b) => a - b),
+                    active
+                      ? orderDays.filter((d) => d !== index)
+                      : [...orderDays, index].sort((a, b) => a - b),
                   )
                 }
               >
@@ -335,7 +358,8 @@ function VendorPage() {
                           <TableCell>
                             {item.quality_rating ? (
                               <span className="inline-flex items-center gap-1">
-                                <Star className="h-3.5 w-3.5 fill-current" /> {item.quality_rating}/5
+                                <Star className="h-3.5 w-3.5 fill-current" /> {item.quality_rating}
+                                /5
                               </span>
                             ) : (
                               <span className="text-muted-foreground">—</span>
@@ -346,13 +370,19 @@ function VendorPage() {
                           <TableCell>
                             <Badge
                               variant={
-                                urgency === "overdue" ? "destructive" : urgency === "due" ? "default" : "secondary"
+                                urgency === "overdue"
+                                  ? "destructive"
+                                  : urgency === "due"
+                                    ? "default"
+                                    : "secondary"
                               }
                             >
                               {formatDate(nextOrderDate(item, orderDays))}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">${Number(item.cost_per_unit).toFixed(2)}</TableCell>
+                          <TableCell className="text-right">
+                            ${Number(item.cost_per_unit).toFixed(2)}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Button
                               variant="ghost"
@@ -385,7 +415,8 @@ function VendorPage() {
                                 if (
                                   await confirm({
                                     title: `Delete ${item.name}?`,
-                                    description: "It's removed from inventory, storage areas and future counts. Past invoices keep their lines.",
+                                    description:
+                                      "It's removed from inventory, storage areas and future counts. Past invoices keep their lines.",
                                     confirmLabel: "Delete item",
                                     destructive: true,
                                   })
@@ -410,16 +441,22 @@ function VendorPage() {
         <TabsContent value="orders" className="mt-4 space-y-4">
           {orders.length === 0 ? (
             <Card>
-              <CardContent className="py-6 text-sm text-muted-foreground">No orders recorded yet.</CardContent>
+              <CardContent className="py-6 text-sm text-muted-foreground">
+                No orders recorded yet.
+              </CardContent>
             </Card>
           ) : (
             orders.map((order) => (
               <Card key={order.id}>
                 <CardHeader>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <CardTitle className="text-base">Order #{order.external_order_id ?? order.id.slice(0, 8)}</CardTitle>
+                    <CardTitle className="text-base">
+                      Order #{order.external_order_id ?? order.id.slice(0, 8)}
+                    </CardTitle>
                     <div className="flex items-center gap-2 text-sm">
-                      <Badge variant="secondary">{order.source === "portal" ? "Auto-imported" : "Manual"}</Badge>
+                      <Badge variant="secondary">
+                        {order.source === "portal" ? "Auto-imported" : "Manual"}
+                      </Badge>
                       <span className="text-muted-foreground">{formatDate(order.ordered_at)}</span>
                       <span className="font-medium">${Number(order.total).toFixed(2)}</span>
                     </div>
@@ -435,7 +472,9 @@ function VendorPage() {
                           <span>
                             {line.name} × {Number(line.quantity)}
                           </span>
-                          <span className="text-muted-foreground">${Number(line.unit_price).toFixed(2)} ea</span>
+                          <span className="text-muted-foreground">
+                            ${Number(line.unit_price).toFixed(2)} ea
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -451,7 +490,9 @@ function VendorPage() {
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{itemForm.id ? "Edit item" : "Add item"}</DialogTitle>
-            <DialogDescription>Track quantity, quality and how often this item is reordered.</DialogDescription>
+            <DialogDescription>
+              Track quantity, quality and how often this item is reordered.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
@@ -475,7 +516,9 @@ function VendorPage() {
                 <Input
                   type="number"
                   value={itemForm.currentStock}
-                  onChange={(e) => setItemForm({ ...itemForm, currentStock: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, currentStock: Number(e.target.value) })
+                  }
                 />
               </Field>
               <Field label="Par level">
@@ -489,7 +532,9 @@ function VendorPage() {
                 <Input
                   type="number"
                   value={itemForm.reorderLevel}
-                  onChange={(e) => setItemForm({ ...itemForm, reorderLevel: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, reorderLevel: Number(e.target.value) })
+                  }
                 />
               </Field>
               <Field label="Unit cost ($)">
@@ -497,7 +542,9 @@ function VendorPage() {
                   type="number"
                   step="0.01"
                   value={itemForm.costPerUnit}
-                  onChange={(e) => setItemForm({ ...itemForm, costPerUnit: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, costPerUnit: Number(e.target.value) })
+                  }
                 />
               </Field>
               <Field label="Quality (1–5)">
@@ -519,7 +566,9 @@ function VendorPage() {
                   type="number"
                   min={1}
                   value={itemForm.reorderIntervalDays}
-                  onChange={(e) => setItemForm({ ...itemForm, reorderIntervalDays: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, reorderIntervalDays: Number(e.target.value) })
+                  }
                 />
               </Field>
             </div>
@@ -549,7 +598,8 @@ function VendorPage() {
           <DialogHeader>
             <DialogTitle>Vendor portal login</DialogTitle>
             <DialogDescription>
-              Stored securely on the server and never shown in the browser. Used only to read your order history.
+              Stored securely on the server and never shown in the browser. Used only to read your
+              order history.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">

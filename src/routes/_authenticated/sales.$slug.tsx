@@ -45,13 +45,14 @@ export const Route = createFileRoute("/_authenticated/sales/$slug")({
   },
 });
 
-
 function ChannelSales() {
   const { slug } = Route.useParams();
   const fetchChannel = useServerFn(getChannelSales);
   const [preset, setPreset] = useState("this_week");
   const clock = useRestaurantClock();
-  const [custom, setCustom] = useState(() => rangeDates("this_week", clock.today, clock.weekStartsOn));
+  const [custom, setCustom] = useState(() =>
+    rangeDates("this_week", clock.today, clock.weekStartsOn),
+  );
   const range = preset === "custom" ? custom : rangeDates(preset, clock.today, clock.weekStartsOn);
 
   const { data, isLoading, error } = useQuery({
@@ -111,144 +112,152 @@ function ChannelSales() {
         </div>
       </div>
 
-      {slug === "toast" ? <ToastSummaryPanel from={range.from} to={range.to} /> : (<>
-      {slug === "ubereats" ? (
-        <ReportImport slug={slug} label={data?.channel.label ?? ""} />
-      ) : !hasImports && data ? (
-        <div className="surface flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-semibold">{data.channel.label} report import is coming</p>
-            <p className="text-sm text-muted-foreground">
-              Right now Restrolytics reads Uber Eats reports and Toast exports. Orders entered for {data.channel.label} still
-              show here.
-            </p>
-          </div>
-          {!connected ? (
-            <Button asChild size="sm" variant="outline" className="shrink-0">
-              <Link to="/settings/integrations">Integrations</Link>
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile label="Order total" value={money(data?.totals.gross ?? 0)} hint="What customers paid" />
-        <FeesTile
-          fees={data?.totals.fees ?? 0}
-          promotions={data?.totals.promotions ?? 0}
-          breakdown={data?.feeBreakdown ?? []}
-          label={data?.channel.label ?? "The platform"}
-        />
-        <Tile
-          label="You actually get"
-          value={money(data?.totals.payout ?? 0)}
-          hint={`${data?.totals.payoutOrders ?? 0} orders with payout data`}
-          highlight
-        />
-        <Tile
-          label="You keep"
-          value={
-            (data?.totals.gross ?? 0) > 0 && (data?.totals.payoutOrders ?? 0) > 0
-              ? `${Math.round(((data?.totals.payout ?? 0) / (data?.totals.gross ?? 1)) * 100)}%`
-              : "—"
-          }
-          hint="Of the order total, after fees"
-        />
-      </div>
-
-      <Insights slug={slug} />
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">By day</CardTitle>
-          <CardDescription>
-            {isLoading ? "Loading…" : `${data?.days_breakdown.length ?? 0} days with orders`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {(data?.days_breakdown.length ?? 0) === 0 ? (
-            <p className="text-sm text-muted-foreground">No orders in this period yet.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Day</TableHead>
-                  <TableHead className="text-right">Orders</TableHead>
-                  <TableHead className="text-right">Sales</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(data?.days_breakdown ?? []).map((day) => (
-                  <TableRow key={day.date}>
-                    <TableCell>
-                      {new Date(`${day.date}T12:00:00Z`).toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                        timeZone: "UTC",
-                      })}
-                    </TableCell>
-                    <TableCell className="text-right">{day.orders}</TableCell>
-                    <TableCell className="text-right">{money(day.gross)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Individual orders</CardTitle>
-          <CardDescription>
-            {data?.ordersTruncated
-              ? `Showing the newest ${data.ordersShown} orders. Totals above include every order in the period.`
-              : "Newest first."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {(data?.orders.length ?? 0) === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing to show yet.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order</TableHead>
-                    <TableHead>When</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Order total</TableHead>
-                    <TableHead className="text-right">Fees</TableHead>
-                    <TableHead className="text-right">Promos</TableHead>
-                    <TableHead className="text-right">You get</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(data?.orders ?? []).map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell>{order.orderNumber ?? order.id.slice(0, 8)}</TableCell>
-                      <TableCell>{new Date(order.createdAt).toLocaleString("en-US")}</TableCell>
-                      <TableCell className="capitalize">{order.status}</TableCell>
-                      <TableCell className="text-right">{money(order.total)}</TableCell>
-                      <TableCell className="text-right">
-                        {order.fees === null ? "—" : money(order.fees)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {order.promotions === null ? "—" : money(order.promotions)}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {order.payout === null ? "—" : money(order.payout)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+      {slug === "toast" ? (
+        <ToastSummaryPanel from={range.from} to={range.to} />
+      ) : (
+        <>
+          {slug === "ubereats" ? (
+            <ReportImport slug={slug} label={data?.channel.label ?? ""} />
+          ) : !hasImports && data ? (
+            <div className="surface flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold">{data.channel.label} report import is coming</p>
+                <p className="text-sm text-muted-foreground">
+                  Right now Restrolytics reads Uber Eats reports and Toast exports. Orders entered
+                  for {data.channel.label} still show here.
+                </p>
+              </div>
+              {!connected ? (
+                <Button asChild size="sm" variant="outline" className="shrink-0">
+                  <Link to="/settings/integrations">Integrations</Link>
+                </Button>
+              ) : null}
             </div>
-          )}
-        </CardContent>
-      </Card>
-      </>)}
+          ) : null}
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Tile
+              label="Order total"
+              value={money(data?.totals.gross ?? 0)}
+              hint="What customers paid"
+            />
+            <FeesTile
+              fees={data?.totals.fees ?? 0}
+              promotions={data?.totals.promotions ?? 0}
+              breakdown={data?.feeBreakdown ?? []}
+              label={data?.channel.label ?? "The platform"}
+            />
+            <Tile
+              label="You actually get"
+              value={money(data?.totals.payout ?? 0)}
+              hint={`${data?.totals.payoutOrders ?? 0} orders with payout data`}
+              highlight
+            />
+            <Tile
+              label="You keep"
+              value={
+                (data?.totals.gross ?? 0) > 0 && (data?.totals.payoutOrders ?? 0) > 0
+                  ? `${Math.round(((data?.totals.payout ?? 0) / (data?.totals.gross ?? 1)) * 100)}%`
+                  : "—"
+              }
+              hint="Of the order total, after fees"
+            />
+          </div>
+
+          <Insights slug={slug} />
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">By day</CardTitle>
+              <CardDescription>
+                {isLoading ? "Loading…" : `${data?.days_breakdown.length ?? 0} days with orders`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(data?.days_breakdown.length ?? 0) === 0 ? (
+                <p className="text-sm text-muted-foreground">No orders in this period yet.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Day</TableHead>
+                      <TableHead className="text-right">Orders</TableHead>
+                      <TableHead className="text-right">Sales</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(data?.days_breakdown ?? []).map((day) => (
+                      <TableRow key={day.date}>
+                        <TableCell>
+                          {new Date(`${day.date}T12:00:00Z`).toLocaleDateString("en-US", {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                            timeZone: "UTC",
+                          })}
+                        </TableCell>
+                        <TableCell className="text-right">{day.orders}</TableCell>
+                        <TableCell className="text-right">{money(day.gross)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Individual orders</CardTitle>
+              <CardDescription>
+                {data?.ordersTruncated
+                  ? `Showing the newest ${data.ordersShown} orders. Totals above include every order in the period.`
+                  : "Newest first."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(data?.orders.length ?? 0) === 0 ? (
+                <p className="text-sm text-muted-foreground">Nothing to show yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order</TableHead>
+                        <TableHead>When</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Order total</TableHead>
+                        <TableHead className="text-right">Fees</TableHead>
+                        <TableHead className="text-right">Promos</TableHead>
+                        <TableHead className="text-right">You get</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(data?.orders ?? []).map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell>{order.orderNumber ?? order.id.slice(0, 8)}</TableCell>
+                          <TableCell>{new Date(order.createdAt).toLocaleString("en-US")}</TableCell>
+                          <TableCell className="capitalize">{order.status}</TableCell>
+                          <TableCell className="text-right">{money(order.total)}</TableCell>
+                          <TableCell className="text-right">
+                            {order.fees === null ? "—" : money(order.fees)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {order.promotions === null ? "—" : money(order.promotions)}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {order.payout === null ? "—" : money(order.payout)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
@@ -274,7 +283,8 @@ function FeesTile({
               <CardDescription>Fees & commission</CardDescription>
               <CardTitle className="text-2xl">{money(fees)}</CardTitle>
               <p className="text-xs text-muted-foreground">
-                {promotions > 0 ? `Plus ${money(promotions)} in promotions. ` : ""}Tap for the breakdown
+                {promotions > 0 ? `Plus ${money(promotions)} in promotions. ` : ""}Tap for the
+                breakdown
               </p>
             </CardHeader>
           </Card>
@@ -363,14 +373,18 @@ function ReportImport({ slug, label }: { slug: string; label: string }) {
       <CardHeader>
         <CardTitle className="text-base">Import {label} reports</CardTitle>
         <CardDescription>
-          Download reports from the {label} merchant site and drop them here: payment details (orders
-          and fees), payout summaries, orders with errors, and ratings. Uploading the same file twice
-          won't double-count anything.
+          Download reports from the {label} merchant site and drop them here: payment details
+          (orders and fees), payout summaries, orders with errors, and ratings. Uploading the same
+          file twice won't double-count anything.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed p-6 text-sm text-muted-foreground hover:bg-muted/50">
-          {mutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+          {mutation.isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <Upload className="h-5 w-5" />
+          )}
           {mutation.isPending ? "Reading reports…" : "Choose one or more CSV files"}
           <input
             type="file"
@@ -403,7 +417,9 @@ function Insights({ slug }: { slug: string }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Payouts</CardTitle>
-          <CardDescription>What was actually deposited, after fees, promotions and refunds.</CardDescription>
+          <CardDescription>
+            What was actually deposited, after fees, promotions and refunds.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {data.payouts.length === 0 ? (
@@ -431,7 +447,9 @@ function Insights({ slug }: { slug: string }) {
                       <TableCell className="text-right">{money(Number(p.fees))}</TableCell>
                       <TableCell className="text-right">{money(Number(p.promotions))}</TableCell>
                       <TableCell className="text-right">{money(Number(p.other))}</TableCell>
-                      <TableCell className="text-right font-medium">{money(Number(p.total_payout))}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        {money(Number(p.total_payout))}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -467,7 +485,10 @@ function Insights({ slug }: { slug: string }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              Ratings{data.averageRating !== null ? `, averaging ${data.averageRating.toFixed(1)} out of 5` : ""}
+              Ratings
+              {data.averageRating !== null
+                ? `, averaging ${data.averageRating.toFixed(1)} out of 5`
+                : ""}
             </CardTitle>
             <CardDescription>
               {data.ratingCount} order ratings. Low ratings (3 or below) are listed here.

@@ -11,7 +11,11 @@ export const listPlatformConnections = createServerFn({ method: "GET" })
       .select("id, platform, status, account_label, last_synced_at, last_error")
       .eq("restaurant_id", restaurant.id);
     if (error) throw error;
-    return { restaurantId: restaurant.id, restaurantName: restaurant.name, connections: data ?? [] };
+    return {
+      restaurantId: restaurant.id,
+      restaurantName: restaurant.name,
+      connections: data ?? [],
+    };
   });
 
 export const connectPlatform = createServerFn({ method: "POST" })

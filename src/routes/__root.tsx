@@ -53,7 +53,8 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
         <BrandGlyph className="mx-auto size-12" />
         <h1 className="text-title mt-6">This page didn&apos;t load</h1>
         <p className="mt-2 text-muted-foreground">
-          Something failed on our side. Try again, and if it keeps happening, email hello@restrolytics.com.
+          Something failed on our side. Try again, and if it keeps happening, email
+          hello@restrolytics.com.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-2">
           <Button
@@ -81,7 +82,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Restrolytics" },
       {
         name: "description",
-        content: "Sales, stock, shifts and payroll for restaurants, with a copilot that knows your numbers.",
+        content:
+          "Sales, stock, shifts and payroll for restaurants, with a copilot that knows your numbers.",
       },
       { name: "theme-color", content: "#fdfafb" },
       { property: "og:site_name", content: "Restrolytics" },

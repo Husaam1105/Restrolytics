@@ -12,7 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   cancelInvite,
   createRestaurant,
@@ -30,7 +36,11 @@ export const Route = createFileRoute("/_authenticated/settings/access")({
   head: () => ({ meta: [{ title: "Team access · Restrolytics" }] }),
 });
 
-const ROLE_LABEL: Record<MemberRole, string> = { owner: "Owner", manager: "Manager", staff: "Staff" };
+const ROLE_LABEL: Record<MemberRole, string> = {
+  owner: "Owner",
+  manager: "Manager",
+  staff: "Staff",
+};
 
 const ROLE_HELP: Record<MemberRole, string> = {
   owner: "Everything, including team access and restaurant settings.",
@@ -141,7 +151,8 @@ function TeamPage() {
               next === "owner" &&
               !(await confirm({
                 title: `Make ${who} an owner?`,
-                description: "Owners can change everyone's access, including yours, and delete the restaurant.",
+                description:
+                  "Owners can change everyone's access, including yours, and delete the restaurant.",
                 confirmLabel: "Make owner",
               }))
             ) {
@@ -154,7 +165,8 @@ function TeamPage() {
             if (
               await confirm({
                 title: `Remove ${who} from ${team.restaurantName}?`,
-                description: "They lose access straight away. Their hours and pay history stay on file.",
+                description:
+                  "They lose access straight away. Their hours and pay history stay on file.",
                 confirmLabel: "Remove access",
                 destructive: true,
               })
@@ -167,7 +179,10 @@ function TeamPage() {
             <>
               <section className="surface space-y-4 p-5 sm:p-6" aria-labelledby="invite-heading">
                 <SectionHeader title={<span id="invite-heading">Invite someone by email</span>} />
-                <form onSubmit={submitInvite} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <form
+                  onSubmit={submitInvite}
+                  className="flex flex-col gap-3 sm:flex-row sm:items-end"
+                >
                   <div className="flex-1 space-y-1.5">
                     <Label htmlFor="invite-email">Email</Label>
                     <Input
@@ -219,11 +234,18 @@ function TeamPage() {
                     const who = displayLogin(member.email);
                     const isMe = member.userId === team.myUserId;
                     return (
-                      <li key={member.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-6">
+                      <li
+                        key={member.id}
+                        className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-6"
+                      >
                         <div className="min-w-0">
                           <p className="truncate font-medium">
                             {who}
-                            {isMe ? <span className="ml-2 text-xs font-normal text-muted-foreground">You</span> : null}
+                            {isMe ? (
+                              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                You
+                              </span>
+                            ) : null}
                             {member.email?.endsWith("@kaizr.staff") ? (
                               <Badge variant="secondary" className="ml-2 align-middle">
                                 Username login
@@ -234,7 +256,12 @@ function TeamPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           {isOwner && !isMe ? (
-                            <Select value={member.role} onValueChange={(v) => void changeMemberRole(member.id, who, v as MemberRole)}>
+                            <Select
+                              value={member.role}
+                              onValueChange={(v) =>
+                                void changeMemberRole(member.id, who, v as MemberRole)
+                              }
+                            >
                               <SelectTrigger className="w-32" aria-label={`Role for ${who}`}>
                                 <SelectValue />
                               </SelectTrigger>
@@ -281,10 +308,15 @@ function TeamPage() {
                   </div>
                   <ul className="divide-y">
                     {team.invites.map((pending) => (
-                      <li key={pending.id} className="flex items-center justify-between gap-3 px-5 py-3 sm:px-6">
+                      <li
+                        key={pending.id}
+                        className="flex items-center justify-between gap-3 px-5 py-3 sm:px-6"
+                      >
                         <div className="min-w-0">
                           <p className="truncate font-medium">{pending.email}</p>
-                          <p className="text-sm text-muted-foreground">Invited as {ROLE_LABEL[pending.role].toLowerCase()}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Invited as {ROLE_LABEL[pending.role].toLowerCase()}
+                          </p>
                         </div>
                         <Button
                           variant="ghost"
@@ -293,7 +325,8 @@ function TeamPage() {
                             if (
                               await confirm({
                                 title: `Cancel the invite for ${pending.email}?`,
-                                description: "Their invite link stops working. You can invite them again later.",
+                                description:
+                                  "Their invite link stops working. You can invite them again later.",
                                 confirmLabel: "Cancel invite",
                                 cancelLabel: "Keep invite",
                                 destructive: true,
@@ -313,7 +346,10 @@ function TeamPage() {
               ) : null}
 
               {workspace?.canCreateRestaurant ? (
-                <section className="surface space-y-4 p-5 sm:p-6" aria-labelledby="add-restaurant-heading">
+                <section
+                  className="surface space-y-4 p-5 sm:p-6"
+                  aria-labelledby="add-restaurant-heading"
+                >
                   <SectionHeader
                     title={<span id="add-restaurant-heading">Add another restaurant</span>}
                     description={`You have ${workspace.restaurants.length}. Each keeps its own sales, stock, team and checklists.`}
@@ -334,7 +370,11 @@ function TeamPage() {
                         onChange={(e) => setNewRestaurant(e.target.value)}
                       />
                     </div>
-                    <Button type="submit" variant="outline" disabled={!newRestaurant.trim() || restaurantMutation.isPending}>
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      disabled={!newRestaurant.trim() || restaurantMutation.isPending}
+                    >
                       <Plus />
                       {restaurantMutation.isPending ? "Adding…" : "Add restaurant"}
                     </Button>

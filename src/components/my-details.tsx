@@ -20,7 +20,8 @@ export function MyDetails() {
   const [confirm, setConfirm] = useState("");
 
   useEffect(() => {
-    if (data) setForm({ email: data.email ?? "", phone: data.phone ?? "", address: data.address ?? "" });
+    if (data)
+      setForm({ email: data.email ?? "", phone: data.phone ?? "", address: data.address ?? "" });
   }, [data]);
 
   const details = useMutation({
@@ -47,7 +48,11 @@ export function MyDetails() {
     <section className="surface space-y-6 p-5 sm:p-6" aria-labelledby="my-details-heading">
       <SectionHeader
         title={<span id="my-details-heading">My details</span>}
-        description={data?.username ? `You sign in with the username "${data.username}".` : "Your manager uses these to reach you."}
+        description={
+          data?.username
+            ? `You sign in with the username "${data.username}".`
+            : "Your manager uses these to reach you."
+        }
       />
       <form
         className="grid gap-4 sm:grid-cols-2"
@@ -58,15 +63,32 @@ export function MyDetails() {
       >
         <div className="space-y-1.5">
           <Label htmlFor="md-email">Email</Label>
-          <Input id="md-email" type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <Input
+            id="md-email"
+            type="email"
+            autoComplete="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="md-phone">Phone</Label>
-          <Input id="md-phone" type="tel" autoComplete="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <Input
+            id="md-phone"
+            type="tel"
+            autoComplete="tel"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="md-address">Address</Label>
-          <Input id="md-address" autoComplete="street-address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+          <Input
+            id="md-address"
+            autoComplete="street-address"
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
+          />
         </div>
         <div>
           <Button type="submit" disabled={details.isPending}>
@@ -84,12 +106,24 @@ export function MyDetails() {
       >
         <div className="space-y-1.5">
           <Label htmlFor="md-pw">New password</Label>
-          <Input id="md-pw" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input
+            id="md-pw"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
           <p className="text-xs text-muted-foreground">At least 8 characters.</p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="md-pw2">Type it again</Label>
-          <Input id="md-pw2" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+          <Input
+            id="md-pw2"
+            type="password"
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
           {mismatch ? (
             <p role="alert" className="text-sm text-destructive">
               The passwords don&apos;t match.
@@ -97,7 +131,11 @@ export function MyDetails() {
           ) : null}
         </div>
         <div>
-          <Button type="submit" variant="outline" disabled={password.length < 8 || mismatch || !confirm || pw.isPending}>
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={password.length < 8 || mismatch || !confirm || pw.isPending}
+          >
             {pw.isPending ? "Changing…" : "Change password"}
           </Button>
         </div>

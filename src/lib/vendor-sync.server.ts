@@ -6,8 +6,14 @@ import { publicOnlyFetch } from "./safe-url.server";
 type Cookies = Map<string, string>;
 
 function mergeCookies(jar: Cookies, response: Response) {
-  const raw = (response.headers as unknown as { getSetCookie?: () => string[] }).getSetCookie?.() ?? [];
-  const list = raw.length > 0 ? raw : (response.headers.get("set-cookie") ? [response.headers.get("set-cookie")!] : []);
+  const raw =
+    (response.headers as unknown as { getSetCookie?: () => string[] }).getSetCookie?.() ?? [];
+  const list =
+    raw.length > 0
+      ? raw
+      : response.headers.get("set-cookie")
+        ? [response.headers.get("set-cookie")!]
+        : [];
   for (const entry of list) {
     for (const part of entry.split(/,(?=[^;]+?=)/g)) {
       const [pair] = part.split(";");
@@ -35,7 +41,12 @@ const MAX_REDIRECTS = 5;
  * public https address, so a vendor site can't bounce the server into a
  * private network, and redirect chains are capped.
  */
-async function jarFetch(url: string, jar: Cookies, init?: RequestInit, hops = 0): Promise<Response> {
+async function jarFetch(
+  url: string,
+  jar: Cookies,
+  init?: RequestInit,
+  hops = 0,
+): Promise<Response> {
   if (hops > MAX_REDIRECTS) {
     throw new Error("The vendor site redirected too many times.");
   }
@@ -127,11 +138,15 @@ export async function scrapeWooCommerceOrders(options: {
 
   const ordersResponse = await jarFetch(options.ordersUrl, jar);
   const ordersHtml = await ordersResponse.text();
-  if (/woocommerce-form-login|Username or email/i.test(ordersHtml) && !/orders-table|order-number/i.test(ordersHtml)) {
+  if (
+    /woocommerce-form-login|Username or email/i.test(ordersHtml) &&
+    !/orders-table|order-number/i.test(ordersHtml)
+  ) {
     throw new Error("Signed in but the orders page was not accessible.");
   }
 
-  const rows = ordersHtml.match(/<tr[^>]*class="[^"]*orders-table__row[^"]*"[\s\S]*?<\/tr>/gi) ?? [];
+  const rows =
+    ordersHtml.match(/<tr[^>]*class="[^"]*orders-table__row[^"]*"[\s\S]*?<\/tr>/gi) ?? [];
   const orders: ScrapedOrder[] = [];
 
   for (const row of rows.slice(0, options.maxOrders ?? 20)) {
@@ -144,7 +159,8 @@ export async function scrapeWooCommerceOrders(options: {
     const parsedDate = dateAttr ? new Date(dateAttr) : new Date(stripTags(dateText));
     const orderedAt = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
 
-    const status = stripTags(row.match(/order-status[^>]*>([\s\S]*?)<\/td>/i)?.[1] ?? "") || "completed";
+    const status =
+      stripTags(row.match(/order-status[^>]*>([\s\S]*?)<\/td>/i)?.[1] ?? "") || "completed";
     const total = parseMoney(stripTags(row.match(/order-total[^>]*>([\s\S]*?)<\/td>/i)?.[1] ?? ""));
     const href = row.match(/href="([^"]*view-order[^"]*)"/i)?.[1];
     const detailUrl = href ? new URL(decodeEntities(href), options.ordersUrl).toString() : null;
@@ -182,8 +198,14 @@ export function parseWooOrderItems(html: string): ScrapedItem[] {
     const quantity = Math.abs(parseMoney(stripTags(quantityRaw))) || 1;
     const name = stripTags(nameCell.replace(/<strong[\s\S]*?<\/strong>/gi, ""));
     if (!name) continue;
-    const lineTotal = parseMoney(stripTags(row.match(/product-total[^>]*>([\s\S]*?)<\/td>/i)?.[1] ?? ""));
-    items.push({ name, quantity, unitPrice: quantity ? Number((lineTotal / quantity).toFixed(2)) : lineTotal });
+    const lineTotal = parseMoney(
+      stripTags(row.match(/product-total[^>]*>([\s\S]*?)<\/td>/i)?.[1] ?? ""),
+    );
+    items.push({
+      name,
+      quantity,
+      unitPrice: quantity ? Number((lineTotal / quantity).toFixed(2)) : lineTotal,
+    });
   }
 
   return items;
@@ -205,14 +227,29 @@ type VendorRow = {
  */
 export async function runVendorSync(admin: SupabaseClient, vendor: VendorRow) {
   if (vendor.portal_type !== "woocommerce") {
-    return { ok: false, message: "This vendor has no supported online portal yet.", newOrders: 0, updatedItems: 0 };
+    return {
+      ok: false,
+      message: "This vendor has no supported online portal yet.",
+      newOrders: 0,
+      updatedItems: 0,
+    };
   }
   if (!vendor.login_url || !vendor.orders_url) {
-    return { ok: false, message: "Add the vendor's login and orders page URLs first.", newOrders: 0, updatedItems: 0 };
+    return {
+      ok: false,
+      message: "Add the vendor's login and orders page URLs first.",
+      newOrders: 0,
+      updatedItems: 0,
+    };
   }
   // Vendors saved before URL validation existed are re-checked here.
   if (!isPublicHttpsUrl(vendor.login_url) || !isPublicHttpsUrl(vendor.orders_url)) {
-    return { ok: false, message: "Edit this vendor: its portal addresses must be public https:// websites.", newOrders: 0, updatedItems: 0 };
+    return {
+      ok: false,
+      message: "Edit this vendor: its portal addresses must be public https:// websites.",
+      newOrders: 0,
+      updatedItems: 0,
+    };
   }
 
   const { data: creds } = await admin
@@ -222,15 +259,20 @@ export async function runVendorSync(admin: SupabaseClient, vendor: VendorRow) {
     .maybeSingle();
 
   const credentials = (creds?.credentials ?? {}) as Record<string, string>;
-  if (!credentials['username'] || !credentials['password']) {
-    return { ok: false, message: "Save the vendor portal login before syncing.", newOrders: 0, updatedItems: 0 };
+  if (!credentials["username"] || !credentials["password"]) {
+    return {
+      ok: false,
+      message: "Save the vendor portal login before syncing.",
+      newOrders: 0,
+      updatedItems: 0,
+    };
   }
 
   const orders = await scrapeWooCommerceOrders({
     loginUrl: vendor.login_url,
     ordersUrl: vendor.orders_url,
-    username: credentials['username'],
-    password: credentials['password'],
+    username: credentials["username"],
+    password: credentials["password"],
   });
 
   const { data: existing } = await admin
@@ -243,7 +285,9 @@ export async function runVendorSync(admin: SupabaseClient, vendor: VendorRow) {
   let updatedItems = 0;
 
   // Oldest first, so the newest order always has the final say on "last ordered".
-  const ordered = [...orders].sort((a, b) => new Date(a.orderedAt).getTime() - new Date(b.orderedAt).getTime());
+  const ordered = [...orders].sort(
+    (a, b) => new Date(a.orderedAt).getTime() - new Date(b.orderedAt).getTime(),
+  );
 
   for (const order of ordered) {
     if (known.has(order.externalId)) continue;

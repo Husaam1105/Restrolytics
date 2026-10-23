@@ -38,7 +38,7 @@ In **Authentication → URL Configuration**:
 In **Authentication → Providers**:
 
 - **Email:** keep it enabled. Turn **off** "Allow new users to sign up" if you want accounts created only through invites and the Employees page.
-- **Google (optional):** create an OAuth client in Google Cloud Console (type *Web application*). Add `https://<project-ref>.supabase.co/auth/v1/callback` as an authorised redirect URI, then paste the client ID and secret into Supabase.
+- **Google (optional):** create an OAuth client in Google Cloud Console (type _Web application_). Add `https://<project-ref>.supabase.co/auth/v1/callback` as an authorised redirect URI, then paste the client ID and secret into Supabase.
 
 ## 4. Make yourself Restrolytics staff
 
@@ -54,10 +54,10 @@ Then sign in, create the first restaurant, and invite its owner from **Settings 
 
 ## 5. Optional services
 
-| Feature | Variables | Notes |
-|---|---|---|
-| IQ Copilot, Manager Assist, invoice reader | `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL_CHAT`, `AI_MODEL_VISION` | Leave `AI_PROVIDER` empty and these features show "not set up yet" instead of failing. |
-| Daily vendor order sync | `VENDOR_SYNC_SECRET` | Generate with `openssl rand -hex 32`. Have your scheduler call `POST /api/public/hooks/vendor-sync` with `Authorization: Bearer <secret>`. |
+| Feature                                    | Variables                                                       | Notes                                                                                                                                      |
+| ------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| IQ Copilot, Manager Assist, invoice reader | `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL_CHAT`, `AI_MODEL_VISION` | Leave `AI_PROVIDER` empty and these features show "not set up yet" instead of failing.                                                     |
+| Daily vendor order sync                    | `VENDOR_SYNC_SECRET`                                            | Generate with `openssl rand -hex 32`. Have your scheduler call `POST /api/public/hooks/vendor-sync` with `Authorization: Bearer <secret>`. |
 
 ## Hosting notes
 
@@ -68,7 +68,7 @@ Then sign in, create the first restaurant, and invite its owner from **Settings 
 
 Two options, depending on what Lovable gives you access to:
 
-- **Database connection string available:** `pg_dump --data-only --schema=public` from the old project, then restore into the new one *after* `db push`.
+- **Database connection string available:** `pg_dump --data-only --schema=public` from the old project, then restore into the new one _after_ `db push`.
 - **Dashboard only:** export each table as CSV from the table editor and import them in the same order the migrations create them: restaurants and members first, then employees, then everything else.
 
 Things that can't be copied:

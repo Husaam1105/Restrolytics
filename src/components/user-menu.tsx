@@ -18,7 +18,10 @@ const THEMES: { id: ThemePreference; label: string; icon: typeof Sun }[] = [
 ];
 
 function initials(name: string) {
-  const parts = name.replace(/@.*/, "").split(/[\s._-]+/).filter(Boolean);
+  const parts = name
+    .replace(/@.*/, "")
+    .split(/[\s._-]+/)
+    .filter(Boolean);
   return (parts[0]?.[0] ?? "?").toUpperCase() + (parts[1]?.[0] ?? "").toUpperCase();
 }
 
@@ -46,7 +49,9 @@ export function UserMenu({
           <span className="grid size-8 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
             {initials(display)}
           </span>
-          <span className="hidden max-w-[10rem] truncate text-sm font-medium md:inline">{display}</span>
+          <span className="hidden max-w-[10rem] truncate text-sm font-medium md:inline">
+            {display}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
@@ -58,7 +63,9 @@ export function UserMenu({
           {role ? <p className="text-xs capitalize text-muted-foreground">{role}</p> : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Appearance</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+          Appearance
+        </DropdownMenuLabel>
         {THEMES.map(({ id, label, icon: Icon }) => (
           <DropdownMenuItem key={id} onSelect={() => setPreference(id)} className="gap-2">
             <Icon className="size-4" aria-hidden="true" />

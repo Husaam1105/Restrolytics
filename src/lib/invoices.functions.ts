@@ -11,8 +11,10 @@ export const parseInvoice = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    if (!data.dataUrl.startsWith("data:")) throw new Error("Please choose a photo or PDF of the invoice.");
-    if (data.dataUrl.length > 14_000_000) throw new Error("That file is too large. Try a smaller photo.");
+    if (!data.dataUrl.startsWith("data:"))
+      throw new Error("Please choose a photo or PDF of the invoice.");
+    if (data.dataUrl.length > 14_000_000)
+      throw new Error("That file is too large. Try a smaller photo.");
 
     const { readInvoiceFile } = await import("./invoice-ai.server");
     return readInvoiceFile({ dataUrl: data.dataUrl, mimeType: data.mimeType });

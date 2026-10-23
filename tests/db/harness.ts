@@ -39,7 +39,9 @@ export const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
 export async function migratedDb() {
   const db = new PGlite();
   await db.exec(SUPABASE_STUBS);
-  for (const file of readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql")).sort()) {
+  for (const file of readdirSync(MIGRATIONS_DIR)
+    .filter((f) => f.endsWith(".sql"))
+    .sort()) {
     try {
       await db.exec(readFileSync(join(MIGRATIONS_DIR, file), "utf8"));
     } catch (error) {

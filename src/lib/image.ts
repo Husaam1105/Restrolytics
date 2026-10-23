@@ -14,7 +14,10 @@ export function fileToDataUrl(file: Blob) {
  * fast on restaurant Wi-Fi. Non-images (PDFs) and formats the browser can't
  * decode are returned unchanged.
  */
-export async function compressImage(file: File, { maxSide = 1600, quality = 0.82 } = {}): Promise<{ dataUrl: string; type: string }> {
+export async function compressImage(
+  file: File,
+  { maxSide = 1600, quality = 0.82 } = {},
+): Promise<{ dataUrl: string; type: string }> {
   if (!file.type.startsWith("image/")) {
     return { dataUrl: await fileToDataUrl(file), type: file.type };
   }
@@ -28,8 +31,11 @@ export async function compressImage(file: File, { maxSide = 1600, quality = 0.82
     if (!ctx) throw new Error("no canvas");
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     bitmap.close();
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-    if (!blob || blob.size >= file.size) return { dataUrl: await fileToDataUrl(file), type: file.type };
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", quality),
+    );
+    if (!blob || blob.size >= file.size)
+      return { dataUrl: await fileToDataUrl(file), type: file.type };
     return { dataUrl: await fileToDataUrl(blob), type: "image/jpeg" };
   } catch {
     return { dataUrl: await fileToDataUrl(file), type: file.type };

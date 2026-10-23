@@ -158,8 +158,13 @@ export const deleteCateringOrder = createServerFn({ method: "POST" })
 
 export const addCateringPayment = createServerFn({ method: "POST" })
   .inputValidator(
-    (data: { orderId: string; amount: number; method: string; paidAt: string; note?: string | null }) =>
-      paymentSchema.parse(data),
+    (data: {
+      orderId: string;
+      amount: number;
+      method: string;
+      paidAt: string;
+      note?: string | null;
+    }) => paymentSchema.parse(data),
   )
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {

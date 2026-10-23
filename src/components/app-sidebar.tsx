@@ -147,7 +147,13 @@ function buildNav(role: string | null | undefined, isPlatformStaff: boolean): Na
   return groups;
 }
 
-export function AppSidebar({ role, isPlatformStaff = false }: { role?: string | null; isPlatformStaff?: boolean }) {
+export function AppSidebar({
+  role,
+  isPlatformStaff = false,
+}: {
+  role?: string | null;
+  isPlatformStaff?: boolean;
+}) {
   const groups = buildNav(role, isPlatformStaff);
   const { state, isMobile, setOpenMobile } = useSidebar();
   // The mobile drawer always shows labels, whatever the desktop collapse state.
@@ -162,7 +168,12 @@ export function AppSidebar({ role, isPlatformStaff = false }: { role?: string | 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 pt-4 pb-2">
-        <Link to="/dashboard" onClick={close} className="flex items-center rounded-lg px-1 py-2" aria-label="Restrolytics dashboard">
+        <Link
+          to="/dashboard"
+          onClick={close}
+          className="flex items-center rounded-lg px-1 py-2"
+          aria-label="Restrolytics dashboard"
+        >
           <BrandMark wordmarkClassName={collapsed ? "sr-only" : "text-sidebar-foreground"} />
         </Link>
       </SidebarHeader>
@@ -171,7 +182,9 @@ export function AppSidebar({ role, isPlatformStaff = false }: { role?: string | 
         {groups.map((group, i) => (
           <SidebarGroup key={group.label ?? i}>
             {group.label ? (
-              <SidebarGroupLabel className="text-sidebar-muted-foreground">{group.label}</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-sidebar-muted-foreground">
+                {group.label}
+              </SidebarGroupLabel>
             ) : null}
             <SidebarGroupContent>
               <SidebarMenu>
@@ -179,7 +192,11 @@ export function AppSidebar({ role, isPlatformStaff = false }: { role?: string | 
                   const active = sectionActive(item);
                   return (
                     <SidebarMenuItem key={item.url + item.title}>
-                      <SidebarMenuButton asChild isActive={active && !item.children} tooltip={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active && !item.children}
+                        tooltip={item.title}
+                      >
                         <Link
                           to={item.url}
                           onClick={close}
@@ -195,7 +212,11 @@ export function AppSidebar({ role, isPlatformStaff = false }: { role?: string | 
                           {item.children.map((child) => (
                             <SidebarMenuSubItem key={child.url + child.title}>
                               <SidebarMenuSubButton asChild isActive={matches(child)}>
-                                <Link to={child.url} onClick={close} aria-current={matches(child) ? "page" : undefined}>
+                                <Link
+                                  to={child.url}
+                                  onClick={close}
+                                  aria-current={matches(child) ? "page" : undefined}
+                                >
                                   <span>{child.title}</span>
                                 </Link>
                               </SidebarMenuSubButton>

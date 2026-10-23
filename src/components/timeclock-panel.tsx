@@ -9,7 +9,14 @@ import { StatCard } from "@/components/stat-card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { acknowledgePay, clockIn, clockOut, getMyTimeclock } from "@/lib/payroll.functions";
 import {
   AREA_LABELS,
@@ -76,7 +83,11 @@ export function TimeclockPanel() {
     return (
       <PageContainer size="narrow">
         {header}
-        <ErrorState title="Your time clock didn't load" error={query.error} onRetry={() => void query.refetch()} />
+        <ErrorState
+          title="Your time clock didn't load"
+          error={query.error}
+          onRetry={() => void query.refetch()}
+        />
       </PageContainer>
     );
   }
@@ -105,7 +116,9 @@ export function TimeclockPanel() {
     <PageContainer size="narrow">
       <PageHeader
         title="My hours and pay"
-        description={[employee.fullName, AREA_LABELS[employee.area], employee.position].filter(Boolean).join(", ")}
+        description={[employee.fullName, AREA_LABELS[employee.area], employee.position]
+          .filter(Boolean)
+          .join(", ")}
       />
 
       <section
@@ -114,23 +127,40 @@ export function TimeclockPanel() {
       >
         <div>
           <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <span className={`size-2.5 rounded-full ${onClock ? "bg-success" : "bg-muted-foreground/40"}`} aria-hidden="true" />
+            <span
+              className={`size-2.5 rounded-full ${onClock ? "bg-success" : "bg-muted-foreground/40"}`}
+              aria-hidden="true"
+            />
             {onClock ? "On the clock" : "Off the clock"}
           </p>
           <p className="text-figure mt-2 text-4xl">
-            {onClock && data.openEntry ? `Since ${formatClockTime(data.openEntry.clockIn, timezone)}` : "Ready when you are"}
+            {onClock && data.openEntry
+              ? `Since ${formatClockTime(data.openEntry.clockIn, timezone)}`
+              : "Ready when you are"}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            {hoursLabel(data.weekHours)} this pay week ({formatDateRange(data.weekStart, data.weekEnd)})
+            {hoursLabel(data.weekHours)} this pay week (
+            {formatDateRange(data.weekStart, data.weekEnd)})
           </p>
         </div>
         {onClock ? (
-          <Button size="lg" variant="outline" className="h-14 px-8 text-base sm:w-56" onClick={() => clockOutMutation.mutate()} disabled={busy}>
+          <Button
+            size="lg"
+            variant="outline"
+            className="h-14 px-8 text-base sm:w-56"
+            onClick={() => clockOutMutation.mutate()}
+            disabled={busy}
+          >
             <LogOut className="size-5" />
             {clockOutMutation.isPending ? "Clocking out…" : "Clock out"}
           </Button>
         ) : (
-          <Button size="lg" className="h-14 px-8 text-base sm:w-56" onClick={() => clockInMutation.mutate()} disabled={busy}>
+          <Button
+            size="lg"
+            className="h-14 px-8 text-base sm:w-56"
+            onClick={() => clockInMutation.mutate()}
+            disabled={busy}
+          >
             <LogIn className="size-5" />
             {clockInMutation.isPending ? "Clocking in…" : "Clock in"}
           </Button>
@@ -145,7 +175,10 @@ export function TimeclockPanel() {
 
       <section className="surface overflow-hidden" aria-labelledby="timecard-heading">
         <div className="p-5 pb-3 sm:p-6 sm:pb-3">
-          <SectionHeader title={<span id="timecard-heading">My timecard</span>} description="Every shift recorded this pay week." />
+          <SectionHeader
+            title={<span id="timecard-heading">My timecard</span>}
+            description="Every shift recorded this pay week."
+          />
         </div>
         <div className="overflow-x-auto">
           <Table>
@@ -168,13 +201,23 @@ export function TimeclockPanel() {
               ) : (
                 data.entries.map((entry) => (
                   <TableRow key={entry.id}>
-                    <TableCell className="pl-6 font-medium">{formatDayLabel(entry.workDate)}</TableCell>
-                    <TableCell className="tabular-nums">{formatClockTime(entry.clockIn, timezone)}</TableCell>
-                    <TableCell className="tabular-nums">{formatClockTime(entry.clockOut, timezone)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{entry.source === "clock" ? "Time clock" : "Manager"}</Badge>
+                    <TableCell className="pl-6 font-medium">
+                      {formatDayLabel(entry.workDate)}
                     </TableCell>
-                    <TableCell className="pr-6 text-right font-semibold tabular-nums">{hoursLabel(minutesToHours(entry.minutes))}</TableCell>
+                    <TableCell className="tabular-nums">
+                      {formatClockTime(entry.clockIn, timezone)}
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {formatClockTime(entry.clockOut, timezone)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {entry.source === "clock" ? "Time clock" : "Manager"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="pr-6 text-right font-semibold tabular-nums">
+                      {hoursLabel(minutesToHours(entry.minutes))}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -197,7 +240,9 @@ export function TimeclockPanel() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {line.startDate && line.endDate ? formatDateRange(line.startDate, line.endDate) : "Pay week"}
+                      {line.startDate && line.endDate
+                        ? formatDateRange(line.startDate, line.endDate)
+                        : "Pay week"}
                     </p>
                     <p className="text-figure mt-1 text-2xl">{money(line.total)}</p>
                   </div>
@@ -207,7 +252,11 @@ export function TimeclockPanel() {
                       Received
                     </Badge>
                   ) : line.paid ? (
-                    <Button size="sm" onClick={() => acknowledge.mutate(line.id)} disabled={acknowledge.isPending}>
+                    <Button
+                      size="sm"
+                      onClick={() => acknowledge.mutate(line.id)}
+                      disabled={acknowledge.isPending}
+                    >
                       I&apos;ve received it
                     </Button>
                   ) : (

@@ -8,7 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { addItemOutage, listItemOutages, updateItemOutage } from "@/lib/sales.functions";
 
 function today() {
@@ -17,7 +24,15 @@ function today() {
 }
 const who = (email: string | null) => (email ? email.split("@")[0] : "—");
 
-export function ItemOutages({ platform, from, to }: { platform: string; from: string; to: string }) {
+export function ItemOutages({
+  platform,
+  from,
+  to,
+}: {
+  platform: string;
+  from: string;
+  to: string;
+}) {
   const qc = useQueryClient();
   const list = useServerFn(listItemOutages);
   const add = useServerFn(addItemOutage);
@@ -51,7 +66,9 @@ export function ItemOutages({ platform, from, to }: { platform: string; from: st
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Items not available (86'd)</CardTitle>
-        <CardDescription>Log anything you ran out of or turned off, who did it, and why.</CardDescription>
+        <CardDescription>
+          Log anything you ran out of or turned off, who did it, and why.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form
@@ -61,13 +78,31 @@ export function ItemOutages({ platform, from, to }: { platform: string; from: st
             addMut.mutate();
           }}
         >
-          <Input placeholder="Item (e.g. Shawarma Bowl)" value={item} onChange={(e) => setItem(e.target.value)} required />
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value || today())} className="w-auto" />
-          <Input placeholder="Note (e.g. out of chicken)" value={note} onChange={(e) => setNote(e.target.value)} />
-          <Button type="submit" disabled={addMut.isPending || !item.trim()}>Add</Button>
+          <Input
+            placeholder="Item (e.g. Shawarma Bowl)"
+            value={item}
+            onChange={(e) => setItem(e.target.value)}
+            required
+          />
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value || today())}
+            className="w-auto"
+          />
+          <Input
+            placeholder="Note (e.g. out of chicken)"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+          <Button type="submit" disabled={addMut.isPending || !item.trim()}>
+            Add
+          </Button>
         </form>
         {data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nothing marked unavailable for these dates.</p>
+          <p className="text-sm text-muted-foreground">
+            Nothing marked unavailable for these dates.
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -85,25 +120,45 @@ export function ItemOutages({ platform, from, to }: { platform: string; from: st
                 {data.map((o) => (
                   <TableRow key={o.id}>
                     <TableCell className="whitespace-nowrap">
-                      {new Date(`${o.outage_date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                      {new Date(`${o.outage_date}T12:00:00`).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </TableCell>
                     <TableCell className="font-medium">{o.item_name}</TableCell>
                     <TableCell className="text-muted-foreground">{o.note ?? "—"}</TableCell>
                     <TableCell className="capitalize">{who(o.reported_by_email)}</TableCell>
                     <TableCell>
                       {o.back_at ? (
-                        <Badge variant="secondary">Back {new Date(o.back_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</Badge>
+                        <Badge variant="secondary">
+                          Back{" "}
+                          {new Date(o.back_at).toLocaleString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
+                        </Badge>
                       ) : (
                         <Badge variant="destructive">Not available</Badge>
                       )}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-right">
                       {!o.back_at ? (
-                        <Button size="sm" variant="outline" onClick={() => updMut.mutate({ id: o.id, action: "back" })}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updMut.mutate({ id: o.id, action: "back" })}
+                        >
                           <CheckCircle2 className="mr-1 h-4 w-4" /> Back in stock
                         </Button>
                       ) : null}
-                      <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => updMut.mutate({ id: o.id, action: "delete" })}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Delete"
+                        onClick={() => updMut.mutate({ id: o.id, action: "delete" })}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>

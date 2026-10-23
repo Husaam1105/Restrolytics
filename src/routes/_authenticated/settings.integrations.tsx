@@ -112,7 +112,12 @@ function IntegrationsPage() {
 
   return (
     <PageContainer size="narrow">
-      <PageHeader title="Integrations" description={<>Connect your POS and delivery accounts so every order lands in Sales automatically.</>} />
+      <PageHeader
+        title="Integrations"
+        description={
+          <>Connect your POS and delivery accounts so every order lands in Sales automatically.</>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {PLATFORMS.map((platform) => {
@@ -238,7 +243,9 @@ function IntegrationsPage() {
                 connectMutation.mutate({ platform: activePlatform.id, credentials: fields })
               }
             >
-              {connectMutation.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
+              {connectMutation.isPending ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : null}
               Save &amp; connect
             </Button>
           </DialogFooter>

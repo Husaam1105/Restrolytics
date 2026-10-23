@@ -35,7 +35,11 @@ export const deleteCopilotThread = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => ({ id: String(d.id) }))
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
-    const { error } = await context.supabase.from("copilot_threads").delete().eq("id", data.id).eq("user_id", context.userId);
+    const { error } = await context.supabase
+      .from("copilot_threads")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -59,7 +63,11 @@ export const getCopilotMessages = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return {
       thread,
-      messages: (rows ?? []).map((r) => ({ id: r.message_id, role: r.role as "user" | "assistant", parts: r.parts as never })),
+      messages: (rows ?? []).map((r) => ({
+        id: r.message_id,
+        role: r.role as "user" | "assistant",
+        parts: r.parts as never,
+      })),
     };
   });
 
@@ -69,7 +77,14 @@ export const getCopilotAlerts = createServerFn({ method: "GET" })
     const { resolveActiveRestaurant } = await import("./tenant.server");
     const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
     const { buildCopilotContext } = await import("./copilot-context.server");
-    const { alerts } = await buildCopilotContext(context.supabase, context.userId, restaurant, { alertsOnly: true });
+    const { alerts } = await buildCopilotContext(context.supabase, context.userId, restaurant, {
+      alertsOnly: true,
+    });
     const { isAiConfigured } = await import("./ai.server");
-    return { alerts, role: restaurant.role, restaurant: restaurant.name, aiReady: isAiConfigured() };
+    return {
+      alerts,
+      role: restaurant.role,
+      restaurant: restaurant.name,
+      aiReady: isAiConfigured(),
+    };
   });

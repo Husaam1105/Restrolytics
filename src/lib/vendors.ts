@@ -97,7 +97,10 @@ export function nextOrderDate(
   return next;
 }
 
-export function orderUrgency(item: VendorItem, orderDays?: number[] | null): "overdue" | "due" | "ok" {
+export function orderUrgency(
+  item: VendorItem,
+  orderDays?: number[] | null,
+): "overdue" | "due" | "ok" {
   const next = nextOrderDate(item, orderDays);
   const lowStock = item.current_stock <= item.reorder_level;
   if (!next) return lowStock ? "due" : "ok";

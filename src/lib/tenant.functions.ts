@@ -39,7 +39,8 @@ export const getWorkspace = createServerFn({ method: "GET" })
 
     const active =
       restaurants.find((r) => r.id === profile?.active_restaurant_id) ?? restaurants[0] ?? null;
-    const activeSettings = memberships.find((m) => m.restaurants!.id === active?.id)?.restaurants?.settings;
+    const activeSettings = memberships.find((m) => m.restaurants!.id === active?.id)?.restaurants
+      ?.settings;
     const { parseShiftSettings } = await import("./operating-day");
     const { parsePayrollSettings } = await import("./payroll");
 
@@ -65,10 +66,13 @@ export const createRestaurant = createServerFn({ method: "POST" })
     if (!name) throw new Error("Restaurant name is required.");
     if (name.length > 120) throw new Error("Keep the restaurant name under 120 characters.");
 
-    const { data: allowed, error: allowedError } = await context.supabase.rpc("can_create_restaurant");
+    const { data: allowed, error: allowedError } =
+      await context.supabase.rpc("can_create_restaurant");
     if (allowedError) throw allowedError;
     if (!allowed) {
-      throw new Error("Restrolytics is invite-only. Ask your Restrolytics contact to set up your restaurant.");
+      throw new Error(
+        "Restrolytics is invite-only. Ask your Restrolytics contact to set up your restaurant.",
+      );
     }
 
     const { data: restaurant, error } = await context.supabase
@@ -103,7 +107,9 @@ export const createRestaurant = createServerFn({ method: "POST" })
 
     // Give the new restaurant its starter FOH/BOH checklists.
     const { allSeedRows } = await import("./shift-defaults");
-    const { error: seedError } = await context.supabase.from("shift_tasks").insert(allSeedRows(restaurant.id));
+    const { error: seedError } = await context.supabase
+      .from("shift_tasks")
+      .insert(allSeedRows(restaurant.id));
     if (seedError) console.error("createRestaurant: seeding checklists failed", seedError.message);
 
     return restaurant;
@@ -186,7 +192,9 @@ export const inviteMember = createServerFn({ method: "POST" })
     // Username logins (@kaizr.staff) are created per restaurant on the Employees
     // page and must never be claimable by another restaurant through an invite.
     if (email.endsWith("@kaizr.staff")) {
-      throw new Error("That's a staff username login. Create logins for your own staff on the Employees page.");
+      throw new Error(
+        "That's a staff username login. Create logins for your own staff on the Employees page.",
+      );
     }
     if (restaurant.role === "manager" && data.role !== "staff") {
       throw new Error("Managers can only invite staff.");

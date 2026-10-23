@@ -38,7 +38,10 @@ function AuthPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email: toLoginEmail(login), password });
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: toLoginEmail(login),
+      password,
+    });
     setLoading(false);
     if (signInError) {
       setError(
@@ -95,15 +98,26 @@ function AuthPage() {
           />
         </AuthField>
         {error ? (
-          <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive"
+          >
             {error}
           </p>
         ) : null}
-        <Button type="submit" size="lg" className="w-full" disabled={loading || !login.trim() || !password}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={loading || !login.trim() || !password}
+        >
           {loading ? "Signing in…" : "Sign in"}
         </Button>
         <div className="text-right">
-          <Link to="/auth/forgot" className="text-sm font-medium text-link underline-offset-4 hover:underline">
+          <Link
+            to="/auth/forgot"
+            className="text-sm font-medium text-link underline-offset-4 hover:underline"
+          >
             Forgot your password?
           </Link>
         </div>

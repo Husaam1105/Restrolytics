@@ -24,7 +24,10 @@ describe("rangeDates", () => {
   it("handles months, including year boundaries", () => {
     expect(rangeDates("this_month", TODAY)).toEqual({ from: "2026-10-01", to: TODAY });
     expect(rangeDates("last_month", TODAY)).toEqual({ from: "2026-09-01", to: "2026-09-30" });
-    expect(rangeDates("last_month", "2027-01-05")).toEqual({ from: "2026-12-01", to: "2026-12-31" });
+    expect(rangeDates("last_month", "2027-01-05")).toEqual({
+      from: "2026-12-01",
+      to: "2026-12-31",
+    });
   });
 
   it("falls back to today for unknown ids", () => {

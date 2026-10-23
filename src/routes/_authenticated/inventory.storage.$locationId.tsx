@@ -3,7 +3,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowDown, ArrowLeft, ArrowUp, ClipboardList, Loader2, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  ClipboardList,
+  Loader2,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,8 +25,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { deleteLocation, getStorageOverview, saveLocation, setLocationItems, startCount } from "@/lib/storage.functions";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  deleteLocation,
+  getStorageOverview,
+  saveLocation,
+  setLocationItems,
+  startCount,
+} from "@/lib/storage.functions";
 import { listVendors } from "@/lib/inventory.functions";
 import { useConfirm } from "@/components/confirm-dialog";
 
@@ -27,7 +48,10 @@ export const Route = createFileRoute("/_authenticated/inventory/storage/$locatio
   head: () => ({
     meta: [
       { title: "Storage area · Restrolytics" },
-      { name: "description", content: "Items kept in this storage location in shelf order, with counts and value." },
+      {
+        name: "description",
+        content: "Items kept in this storage location in shelf order, with counts and value.",
+      },
     ],
   }),
 });
@@ -43,7 +67,10 @@ function LocationPage() {
   const saveLoc = useServerFn(saveLocation);
   const delLoc = useServerFn(deleteLocation);
   const start = useServerFn(startCount);
-  const { data, isLoading } = useQuery({ queryKey: ["storage-overview"], queryFn: () => fetchOverview() });
+  const { data, isLoading } = useQuery({
+    queryKey: ["storage-overview"],
+    queryFn: () => fetchOverview(),
+  });
   const { data: vdata } = useQuery({ queryKey: ["vendors"], queryFn: () => fetchVendors() });
 
   const [pickOpen, setPickOpen] = useState(false);
@@ -53,11 +80,17 @@ function LocationPage() {
   const [name, setName] = useState("");
 
   const loc = data?.locations.find((l) => l.id === locationId);
-  const links = (data?.links ?? []).filter((l) => l.location_id === locationId).sort((a, b) => a.sort_order - b.sort_order);
+  const links = (data?.links ?? [])
+    .filter((l) => l.location_id === locationId)
+    .sort((a, b) => a.sort_order - b.sort_order);
   const itemMap = new Map((data?.items ?? []).map((i) => [i.id, i]));
-  const rows = links.map((l) => itemMap.get(l.inventory_item_id)).filter(Boolean) as NonNullable<ReturnType<typeof itemMap.get>>[];
+  const rows = links.map((l) => itemMap.get(l.inventory_item_id)).filter(Boolean) as NonNullable<
+    ReturnType<typeof itemMap.get>
+  >[];
   const vendorName = (id: string | null) => vdata?.vendors.find((v) => v.id === id)?.name ?? "—";
-  const lastCount = data?.counts.find((c) => c.status === "completed" && (c.location_id === locationId || !c.location_id));
+  const lastCount = data?.counts.find(
+    (c) => c.status === "completed" && (c.location_id === locationId || !c.location_id),
+  );
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["storage-overview"] });
   const save = useMutation({
@@ -104,19 +137,26 @@ function LocationPage() {
   if (!loc) return <p className="p-6 text-sm text-muted-foreground">Location not found.</p>;
 
   const value = rows.reduce((s, i) => s + Number(i.current_stock) * Number(i.cost_per_unit), 0);
-  const filtered = (data?.items ?? []).filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = (data?.items ?? []).filter((i) =>
+    i.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Link to="/inventory/storage" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            to="/inventory/storage"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft className="h-4 w-4" /> Storage areas
           </Link>
           <h1 className="text-title mt-2">{loc.name}</h1>
           <p className="text-sm text-muted-foreground">
             {rows.length} items, ${value.toFixed(2)} on hand, last counted{" "}
-            {lastCount?.completed_at ? new Date(lastCount.completed_at).toLocaleDateString() : "never"}
+            {lastCount?.completed_at
+              ? new Date(lastCount.completed_at).toLocaleDateString()
+              : "never"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -149,7 +189,16 @@ function LocationPage() {
             size="icon"
             aria-label="Delete location"
             onClick={async () => {
-              if (await confirm({ title: `Delete ${loc.name}?`, description: "Items stay in inventory; only this storage area and its count history go.", confirmLabel: "Delete area", destructive: true })) remove.mutate();
+              if (
+                await confirm({
+                  title: `Delete ${loc.name}?`,
+                  description:
+                    "Items stay in inventory; only this storage area and its count history go.",
+                  confirmLabel: "Delete area",
+                  destructive: true,
+                })
+              )
+                remove.mutate();
             }}
           >
             <Trash2 className="h-4 w-4" />
@@ -184,10 +233,22 @@ function LocationPage() {
                   <TableRow key={i.id}>
                     <TableCell>
                       <div className="flex">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Move up" onClick={() => move(index, -1)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label="Move up"
+                          onClick={() => move(index, -1)}
+                        >
                           <ArrowUp className="h-3 w-3" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Move down" onClick={() => move(index, 1)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label="Move down"
+                          onClick={() => move(index, 1)}
+                        >
                           <ArrowDown className="h-3 w-3" />
                         </Button>
                       </div>
@@ -195,7 +256,11 @@ function LocationPage() {
                     <TableCell className="font-medium">{i.name}</TableCell>
                     <TableCell>
                       {i.vendor_id ? (
-                        <Link to="/inventory/$vendorId" params={{ vendorId: i.vendor_id }} className="hover:underline">
+                        <Link
+                          to="/inventory/$vendorId"
+                          params={{ vendorId: i.vendor_id }}
+                          className="hover:underline"
+                        >
                           {vendorName(i.vendor_id)}
                         </Link>
                       ) : (
@@ -204,7 +269,11 @@ function LocationPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       {Number(i.current_stock)} {i.unit}
-                      {low && <Badge variant="destructive" className="ml-1">Low</Badge>}
+                      {low && (
+                        <Badge variant="destructive" className="ml-1">
+                          Low
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">{Number(i.par_level)}</TableCell>
                     <TableCell className="text-right">
@@ -224,13 +293,22 @@ function LocationPage() {
             <DialogTitle>Items in {loc.name}</DialogTitle>
             <DialogDescription>An item can be kept in more than one location.</DialogDescription>
           </DialogHeader>
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search items" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search items"
+          />
           <div className="max-h-80 space-y-1 overflow-y-auto">
             {filtered.map((i) => (
-              <label key={i.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
+              <label
+                key={i.id}
+                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted"
+              >
                 <Checkbox
                   checked={picked.includes(i.id)}
-                  onCheckedChange={(c) => setPicked(c ? [...picked, i.id] : picked.filter((x) => x !== i.id))}
+                  onCheckedChange={(c) =>
+                    setPicked(c ? [...picked, i.id] : picked.filter((x) => x !== i.id))
+                  }
                 />
                 <span className="flex-1">{i.name}</span>
                 <span className="text-xs text-muted-foreground">{vendorName(i.vendor_id)}</span>

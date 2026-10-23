@@ -35,17 +35,25 @@ beforeAll(async () => {
 
 describe("payroll", () => {
   it("staff cannot edit their own pay line", async () => {
-    await asUser(db, STAFF, () => db.exec(`UPDATE payroll_lines SET total = 9999, paid = true WHERE id = '${LINE}'`));
-    const { rows } = await db.query<{ total: string; paid: boolean }>(`SELECT total, paid FROM payroll_lines WHERE id = '${LINE}'`);
+    await asUser(db, STAFF, () =>
+      db.exec(`UPDATE payroll_lines SET total = 9999, paid = true WHERE id = '${LINE}'`),
+    );
+    const { rows } = await db.query<{ total: string; paid: boolean }>(
+      `SELECT total, paid FROM payroll_lines WHERE id = '${LINE}'`,
+    );
     expect(Number(rows[0]!.total)).toBe(150);
     expect(rows[0]!.paid).toBe(false);
   });
 
   it("staff can only acknowledge a paid line", async () => {
-    const before = await asUser(db, STAFF, () => db.query<{ ok: boolean }>(`SELECT acknowledge_pay('${LINE}') AS ok`));
+    const before = await asUser(db, STAFF, () =>
+      db.query<{ ok: boolean }>(`SELECT acknowledge_pay('${LINE}') AS ok`),
+    );
     expect(before.rows[0]!.ok).toBe(false);
     await db.exec(`UPDATE payroll_lines SET paid = true WHERE id = '${LINE}'`);
-    const after = await asUser(db, STAFF, () => db.query<{ ok: boolean }>(`SELECT acknowledge_pay('${LINE}') AS ok`));
+    const after = await asUser(db, STAFF, () =>
+      db.query<{ ok: boolean }>(`SELECT acknowledge_pay('${LINE}') AS ok`),
+    );
     expect(after.rows[0]!.ok).toBe(true);
   });
 
@@ -70,14 +78,24 @@ describe("time entries", () => {
     expect(rows[0]).toMatchObject({ minutes: 0, source: "clock" });
     expect(rows[0]!.age).toBeLessThan(60);
 
-    await asUser(db, STAFF, () => db.exec(`UPDATE time_entries SET clock_out = now(), minutes = 600 WHERE employee_id = '${EMP}'`));
-    const closed = await db.query<{ minutes: number }>(`SELECT minutes FROM time_entries WHERE employee_id = '${EMP}'`);
+    await asUser(db, STAFF, () =>
+      db.exec(
+        `UPDATE time_entries SET clock_out = now(), minutes = 600 WHERE employee_id = '${EMP}'`,
+      ),
+    );
+    const closed = await db.query<{ minutes: number }>(
+      `SELECT minutes FROM time_entries WHERE employee_id = '${EMP}'`,
+    );
     expect(closed.rows[0]!.minutes).toBeLessThan(2);
   });
 
   it("staff cannot rewrite a closed shift", async () => {
-    await asUser(db, STAFF, () => db.exec(`UPDATE time_entries SET minutes = 600 WHERE employee_id = '${EMP}'`));
-    const { rows } = await db.query<{ minutes: number }>(`SELECT minutes FROM time_entries WHERE employee_id = '${EMP}'`);
+    await asUser(db, STAFF, () =>
+      db.exec(`UPDATE time_entries SET minutes = 600 WHERE employee_id = '${EMP}'`),
+    );
+    const { rows } = await db.query<{ minutes: number }>(
+      `SELECT minutes FROM time_entries WHERE employee_id = '${EMP}'`,
+    );
     expect(rows[0]!.minutes).toBeLessThan(2);
   });
 });
@@ -95,13 +113,17 @@ describe("tenant isolation", () => {
 
   it("rows cannot be moved to another restaurant", async () => {
     await expect(
-      asUser(db, OWNER, () => db.exec(`UPDATE sales SET restaurant_id = '${R2}' WHERE restaurant_id = '${R1}'`)),
+      asUser(db, OWNER, () =>
+        db.exec(`UPDATE sales SET restaurant_id = '${R2}' WHERE restaurant_id = '${R1}'`),
+      ),
     ).rejects.toThrow(/restaurant_id cannot be changed/);
   });
 
   it("sales_daily totals match for managers and are empty for staff", async () => {
     const owner = await asUser(db, OWNER, () =>
-      db.query<{ gross: string }>(`SELECT sum(gross) AS gross FROM sales_daily('${R1}', current_date - 1, current_date + 1, 'UTC')`),
+      db.query<{ gross: string }>(
+        `SELECT sum(gross) AS gross FROM sales_daily('${R1}', current_date - 1, current_date + 1, 'UTC')`,
+      ),
     );
     expect(Number(owner.rows[0]!.gross)).toBe(150);
     const staff = await asUser(db, STAFF, () =>
@@ -115,18 +137,26 @@ describe("inventory", () => {
   it("low_stock_items compares stock to each item's own reorder level", async () => {
     await db.exec(`INSERT INTO inventory_items (restaurant_id, name, unit, current_stock, reorder_level) VALUES
       ('${R1}', 'Flour', 'lb', 2, 10), ('${R1}', 'Oil', 'L', 20, 5)`);
-    const { rows } = await asUser(db, STAFF, () => db.query<{ name: string }>(`SELECT name FROM low_stock_items('${R1}')`));
+    const { rows } = await asUser(db, STAFF, () =>
+      db.query<{ name: string }>(`SELECT name FROM low_stock_items('${R1}')`),
+    );
     expect(rows.map((r) => r.name)).toEqual(["Flour"]);
   });
 
   it("name_key matches item names exactly, wildcards included", async () => {
-    await db.exec(`INSERT INTO inventory_items (restaurant_id, name, unit) VALUES ('${R1}', 'Juice 100%*', 'case'), ('${R1}', 'Juice 1000', 'case')`);
-    const exact = await db.query(`SELECT 1 FROM inventory_items WHERE restaurant_id = '${R1}' AND name_key = 'juice 100%*'`);
+    await db.exec(
+      `INSERT INTO inventory_items (restaurant_id, name, unit) VALUES ('${R1}', 'Juice 100%*', 'case'), ('${R1}', 'Juice 1000', 'case')`,
+    );
+    const exact = await db.query(
+      `SELECT 1 FROM inventory_items WHERE restaurant_id = '${R1}' AND name_key = 'juice 100%*'`,
+    );
     expect(exact.rows).toHaveLength(1);
   });
 
   it("completing a count for one area keeps stock held in other areas", async () => {
-    const { rows: items } = await db.query<{ id: string }>(`SELECT id FROM inventory_items WHERE name = 'Flour'`);
+    const { rows: items } = await db.query<{ id: string }>(
+      `SELECT id FROM inventory_items WHERE name = 'Flour'`,
+    );
     const item = items[0]!.id;
     await db.exec(`
       INSERT INTO storage_locations (id, restaurant_id, name) VALUES ('${DRY}', '${R1}', 'Dry'), ('${LINE_STATION}', '${R1}', 'Line');
@@ -137,7 +167,9 @@ describe("inventory", () => {
         VALUES ('${R1}', '${COUNT}', '${DRY}', '${item}', 7, 1);
     `);
     await asUser(db, STAFF, () => db.query(`SELECT complete_inventory_count('${COUNT}')`));
-    const { rows } = await db.query<{ current_stock: string }>(`SELECT current_stock FROM inventory_items WHERE id = '${item}'`);
+    const { rows } = await db.query<{ current_stock: string }>(
+      `SELECT current_stock FROM inventory_items WHERE id = '${item}'`,
+    );
     expect(Number(rows[0]!.current_stock)).toBe(11);
   });
 });
@@ -146,7 +178,9 @@ describe("staff username logins", () => {
   it("cannot be invited by another restaurant", async () => {
     await expect(
       asUser(db, OTHER_OWNER, () =>
-        db.exec(`INSERT INTO restaurant_invites (restaurant_id, email, role) VALUES ('${R2}', 'sam@kaizr.staff', 'staff')`),
+        db.exec(
+          `INSERT INTO restaurant_invites (restaurant_id, email, role) VALUES ('${R2}', 'sam@kaizr.staff', 'staff')`,
+        ),
       ),
     ).rejects.toThrow(/restaurant_invites_no_staff_logins/);
   });
@@ -155,9 +189,13 @@ describe("staff username logins", () => {
 describe("invite-only", () => {
   it("staff (and strangers) cannot create restaurants; owners can add another", async () => {
     await expect(
-      asUser(db, STAFF, () => db.exec(`INSERT INTO restaurants (owner_id, name) VALUES ('${STAFF}', 'Mine')`)),
+      asUser(db, STAFF, () =>
+        db.exec(`INSERT INTO restaurants (owner_id, name) VALUES ('${STAFF}', 'Mine')`),
+      ),
     ).rejects.toThrow(/row-level security/);
-    await asUser(db, OWNER, () => db.exec(`INSERT INTO restaurants (owner_id, name) VALUES ('${OWNER}', 'A2')`));
+    await asUser(db, OWNER, () =>
+      db.exec(`INSERT INTO restaurants (owner_id, name) VALUES ('${OWNER}', 'A2')`),
+    );
     const { rows } = await db.query(`SELECT 1 FROM restaurants WHERE name = 'A2'`);
     expect(rows).toHaveLength(1);
   });
@@ -165,7 +203,9 @@ describe("invite-only", () => {
 
 describe("cross-tenant links", () => {
   it("a manager cannot log hours against another restaurant's employee", async () => {
-    await db.exec(`INSERT INTO employees (id, restaurant_id, full_name) VALUES ('20000000-0000-0000-0000-000000000009', '${R2}', 'Other')`);
+    await db.exec(
+      `INSERT INTO employees (id, restaurant_id, full_name) VALUES ('20000000-0000-0000-0000-000000000009', '${R2}', 'Other')`,
+    );
     await expect(
       asUser(db, OWNER, () =>
         db.exec(`INSERT INTO time_entries (restaurant_id, employee_id, work_date, minutes, source)
@@ -175,9 +215,15 @@ describe("cross-tenant links", () => {
   });
 
   it("a count line cannot point at another restaurant's location", async () => {
-    await db.exec(`INSERT INTO storage_locations (id, restaurant_id, name) VALUES ('50000000-0000-0000-0000-000000000009', '${R2}', 'B freezer')`);
-    const { rows: items } = await db.query<{ id: string }>(`SELECT id FROM inventory_items WHERE name = 'Oil'`);
-    await db.exec(`INSERT INTO inventory_counts (id, restaurant_id) VALUES ('60000000-0000-0000-0000-000000000002', '${R1}')`);
+    await db.exec(
+      `INSERT INTO storage_locations (id, restaurant_id, name) VALUES ('50000000-0000-0000-0000-000000000009', '${R2}', 'B freezer')`,
+    );
+    const { rows: items } = await db.query<{ id: string }>(
+      `SELECT id FROM inventory_items WHERE name = 'Oil'`,
+    );
+    await db.exec(
+      `INSERT INTO inventory_counts (id, restaurant_id) VALUES ('60000000-0000-0000-0000-000000000002', '${R1}')`,
+    );
     await expect(
       asUser(db, STAFF, () =>
         db.exec(`INSERT INTO inventory_count_lines (restaurant_id, count_id, location_id, inventory_item_id, quantity)
@@ -195,7 +241,9 @@ describe("checklists", () => {
     `);
     await expect(
       asUser(db, STAFF, () =>
-        db.exec(`UPDATE shift_task_completions SET completed_by = '${OWNER}' WHERE task_id = '70000000-0000-0000-0000-000000000002'`),
+        db.exec(
+          `UPDATE shift_task_completions SET completed_by = '${OWNER}' WHERE task_id = '70000000-0000-0000-0000-000000000002'`,
+        ),
       ),
     ).rejects.toThrow(/row-level security/);
   });

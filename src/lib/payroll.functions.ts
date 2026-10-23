@@ -205,8 +205,15 @@ export const saveEmployee = createServerFn({ method: "POST" })
 /** Everything the manager payroll screen needs for one week or a combined date range. */
 export const getPayrollWeek = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { weekStart?: string | null; rangeStart?: string | null; rangeEnd?: string | null }) =>
-    z.object({ weekStart: isoDate.nullish(), rangeStart: isoDate.nullish(), rangeEnd: isoDate.nullish() }).parse(input),
+  .inputValidator(
+    (input: { weekStart?: string | null; rangeStart?: string | null; rangeEnd?: string | null }) =>
+      z
+        .object({
+          weekStart: isoDate.nullish(),
+          rangeStart: isoDate.nullish(),
+          rangeEnd: isoDate.nullish(),
+        })
+        .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
@@ -217,11 +224,12 @@ export const getPayrollWeek = createServerFn({ method: "POST" })
     const rangeStart = data.rangeStart ?? null;
     const rangeEnd = data.rangeEnd ?? null;
     const isCombined = Boolean(rangeStart && rangeEnd);
-    const weekStart = rangeStart && rangeEnd
-      ? rangeStart
-      : data.weekStart
-        ? weekStartDate(data.weekStart, weekStartsOn)
-        : weekStartDate(today(restaurant.settings), weekStartsOn);
+    const weekStart =
+      rangeStart && rangeEnd
+        ? rangeStart
+        : data.weekStart
+          ? weekStartDate(data.weekStart, weekStartsOn)
+          : weekStartDate(today(restaurant.settings), weekStartsOn);
     const weekEnd = rangeStart && rangeEnd ? rangeEnd : weekDays(weekStart)[6]!;
     if (weekEnd < weekStart) throw new Error("The end date must be after the start date.");
     const days: string[] = [];
@@ -256,7 +264,8 @@ export const getPayrollWeek = createServerFn({ method: "POST" })
         .gte("end_date", weekStart)
         .order("start_date"),
     ]);
-    for (const res of [employeesRes, entriesRes, poolsRes, periodsRes]) if (res.error) throw res.error;
+    for (const res of [employeesRes, entriesRes, poolsRes, periodsRes])
+      if (res.error) throw res.error;
     const employees = employeesRes.data;
     const entries = entriesRes.data;
     const pools = poolsRes.data;
@@ -282,23 +291,26 @@ export const getPayrollWeek = createServerFn({ method: "POST" })
 
     const lines = isCombined
       ? Object.values(
-          ((rawLines ?? []) as PayrollLineRow[]).reduce<Record<string, PayrollLineRow>>((result, line) => {
-            const current = result[line.employee_id];
-            if (!current) {
-              result[line.employee_id] = { ...line };
-            } else {
-              current.hours = Number(current.hours) + Number(line.hours);
-              current.wages = Number(current.wages) + Number(line.wages);
-              current.tips = Number(current.tips) + Number(line.tips);
-              current.adjustments = Number(current.adjustments) + Number(line.adjustments);
-              current.total = Number(current.total) + Number(line.total);
-              current.paid = current.paid && line.paid;
-              current.acknowledged_at = current.acknowledged_at && line.acknowledged_at;
-            }
-            return result;
-          }, {}),
+          ((rawLines ?? []) as PayrollLineRow[]).reduce<Record<string, PayrollLineRow>>(
+            (result, line) => {
+              const current = result[line.employee_id];
+              if (!current) {
+                result[line.employee_id] = { ...line };
+              } else {
+                current.hours = Number(current.hours) + Number(line.hours);
+                current.wages = Number(current.wages) + Number(line.wages);
+                current.tips = Number(current.tips) + Number(line.tips);
+                current.adjustments = Number(current.adjustments) + Number(line.adjustments);
+                current.total = Number(current.total) + Number(line.total);
+                current.paid = current.paid && line.paid;
+                current.acknowledged_at = current.acknowledged_at && line.acknowledged_at;
+              }
+              return result;
+            },
+            {},
+          ),
         )
-      : rawLines ?? [];
+      : (rawLines ?? []);
 
     const minutesByEmployeeDay: Record<string, number> = {};
     for (const entry of entries ?? []) {
@@ -420,7 +432,10 @@ export const saveHours = createServerFn({ method: "POST" })
       .object({
         employeeId: z.string().uuid(),
         workDate: isoDate,
-        hours: z.coerce.number().min(0, "Hours can't be negative.").max(24, "A day has at most 24 hours."),
+        hours: z.coerce
+          .number()
+          .min(0, "Hours can't be negative.")
+          .max(24, "A day has at most 24 hours."),
       })
       .parse(input),
   )
@@ -446,12 +461,17 @@ export const saveHours = createServerFn({ method: "POST" })
       .eq("work_date", data.workDate);
     if (error) throw error;
 
-    const clocked = (entries ?? []).filter((e) => e.source === "clock").reduce((sum, e) => sum + (e.minutes ?? 0), 0);
+    const clocked = (entries ?? [])
+      .filter((e) => e.source === "clock")
+      .reduce((sum, e) => sum + (e.minutes ?? 0), 0);
     const manualIds = (entries ?? []).filter((e) => e.source === "manual").map((e) => e.id);
     const adjustment = hoursToMinutes(data.hours) - clocked;
 
     if (manualIds.length) {
-      const { error: deleteError } = await context.supabase.from("time_entries").delete().in("id", manualIds);
+      const { error: deleteError } = await context.supabase
+        .from("time_entries")
+        .delete()
+        .in("id", manualIds);
       if (deleteError) throw deleteError;
     }
     if (adjustment !== 0) {
@@ -497,10 +517,12 @@ export const saveTipPool = createServerFn({ method: "POST" })
       return { ok: true };
     }
 
-    const { error } = await context.supabase.from("tip_pools").upsert(
-      { restaurant_id: restaurant.id, pool_date: data.poolDate, area: data.area, amount },
-      { onConflict: "restaurant_id,pool_date,area" },
-    );
+    const { error } = await context.supabase
+      .from("tip_pools")
+      .upsert(
+        { restaurant_id: restaurant.id, pool_date: data.poolDate, area: data.area, amount },
+        { onConflict: "restaurant_id,pool_date,area" },
+      );
     if (error) throw error;
     return { ok: true };
   });
@@ -575,11 +597,15 @@ export const buildPayrollWeek = createServerFn({ method: "POST" })
       minutesByDay: days.map((d) => minutesByEmployeeDay[`${e.id}|${d}`] ?? 0),
     }));
 
-    const shares = computeTipShares(staff, days, (pools ?? []).map((p) => ({
-      poolDate: p.pool_date,
-      area: p.area as PoolArea,
-      amount: Number(p.amount ?? 0),
-    })));
+    const shares = computeTipShares(
+      staff,
+      days,
+      (pools ?? []).map((p) => ({
+        poolDate: p.pool_date,
+        area: p.area as PoolArea,
+        amount: Number(p.amount ?? 0),
+      })),
+    );
 
     let periodId: string;
     const { data: existing } = await context.supabase
@@ -647,7 +673,12 @@ export const buildPayrollWeek = createServerFn({ method: "POST" })
 export const updatePayrollLine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (input: { lineId: string; adjustments?: number; note?: string | null; payMethod?: PayMethod }) =>
+    (input: {
+      lineId: string;
+      adjustments?: number;
+      note?: string | null;
+      payMethod?: PayMethod;
+    }) =>
       z
         .object({
           lineId: z.string().uuid(),
@@ -671,7 +702,9 @@ export const updatePayrollLine = createServerFn({ method: "POST" })
     if (!line) throw new Error("Pay row not found.");
 
     const adjustments =
-      data.adjustments === undefined ? Number(line.adjustments ?? 0) : Math.round(data.adjustments * 100) / 100;
+      data.adjustments === undefined
+        ? Number(line.adjustments ?? 0)
+        : Math.round(data.adjustments * 100) / 100;
 
     const update: {
       adjustments: number;
@@ -934,9 +967,13 @@ export const clockOut = createServerFn({ method: "POST" })
 
 export const acknowledgePay = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { lineId: string }) => z.object({ lineId: z.string().uuid() }).parse(input))
+  .inputValidator((input: { lineId: string }) =>
+    z.object({ lineId: z.string().uuid() }).parse(input),
+  )
   .handler(async ({ data, context }) => {
-    const { data: ok, error } = await context.supabase.rpc("acknowledge_pay", { _line_id: data.lineId });
+    const { data: ok, error } = await context.supabase.rpc("acknowledge_pay", {
+      _line_id: data.lineId,
+    });
     if (error) throw error;
     if (!ok) throw new Error("This payout isn't marked as paid yet, or it's already confirmed.");
     return { ok: true };

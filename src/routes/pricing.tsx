@@ -14,10 +14,14 @@ export const Route = createFileRoute("/pricing")({
       { title: "Pricing · Restrolytics" },
       {
         name: "description",
-        content: "Restrolytics packages from $199 per location each month: team workspace, virtual manager support and marketing.",
+        content:
+          "Restrolytics packages from $199 per location each month: team workspace, virtual manager support and marketing.",
       },
       { property: "og:title", content: "Restrolytics pricing" },
-      { property: "og:description", content: "Team workspace, virtual manager and marketing packages, priced per location." },
+      {
+        property: "og:description",
+        content: "Team workspace, virtual manager and marketing packages, priced per location.",
+      },
     ],
     links: canonical("/pricing"),
   }),
@@ -89,10 +93,12 @@ function PricingPage() {
       <main id="main">
         <section className="border-b">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <h1 className="text-display max-w-[16ch]">The support your restaurant needs, priced per location.</h1>
+            <h1 className="text-display max-w-[16ch]">
+              The support your restaurant needs, priced per location.
+            </h1>
             <p className="text-lead mt-6 max-w-2xl">
-              Keep your restaurant organized, your team accountable and your marketing active, so you can focus on growth.
-              All prices are USD, per restaurant location, billed monthly.
+              Keep your restaurant organized, your team accountable and your marketing active, so
+              you can focus on growth. All prices are USD, per restaurant location, billed monthly.
             </p>
           </div>
         </section>
@@ -147,12 +153,19 @@ function PricingPage() {
                 <p className="mt-3 text-sm text-primary-foreground/80">
                   Regular combined price <s>$1,118</s>. You save $119 every month.
                 </p>
-                <Button size="lg" variant="outline" className="mt-8 bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="mt-8 bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                  asChild
+                >
                   <Link to="/contact">Talk to us about the complete package</Link>
                 </Button>
               </div>
               <div className="p-7 sm:p-10 lg:p-12">
-                <h3 className="font-display text-lg font-bold [font-stretch:85%]">What&apos;s included</h3>
+                <h3 className="font-display text-lg font-bold [font-stretch:85%]">
+                  What&apos;s included
+                </h3>
                 <ul className="mt-5 space-y-4">
                   {completeFeatures.map((feature) => (
                     <li key={feature} className="flex gap-3">
@@ -175,8 +188,8 @@ function PricingPage() {
                 Clear coverage, no surprises
               </h2>
               <p className="mt-4 text-sm text-muted-foreground">
-                Virtual manager support follows an agreed schedule. All remote operations work and camera checks share the
-                included 20 hours each week.
+                Virtual manager support follows an agreed schedule. All remote operations work and
+                camera checks share the included 20 hours each week.
               </p>
             </div>
             <ul className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
@@ -200,8 +213,13 @@ function PricingPage() {
         <section className="bg-ink py-16 text-ink-foreground">
           <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-4 sm:px-6 md:flex-row md:items-center lg:px-8">
             <div className="max-w-2xl">
-              <h2 className="text-headline">Your team runs the restaurant. We keep the details moving.</h2>
-              <p className="mt-3 text-ink-muted">Tell us about your location and we&apos;ll help you choose the right level of support.</p>
+              <h2 className="text-headline">
+                Your team runs the restaurant. We keep the details moving.
+              </h2>
+              <p className="mt-3 text-ink-muted">
+                Tell us about your location and we&apos;ll help you choose the right level of
+                support.
+              </p>
             </div>
             <Button size="lg" variant="highlight" className="shrink-0" asChild>
               <Link to="/contact">Book a walkthrough</Link>

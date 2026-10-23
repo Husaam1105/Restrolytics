@@ -26,8 +26,20 @@ const CHART_COLORS = [
 ];
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getToastReports, getToastSummaries, importToastReport, importToastSummary } from "@/lib/sales.functions";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  getToastReports,
+  getToastSummaries,
+  importToastReport,
+  importToastSummary,
+} from "@/lib/sales.functions";
 import { money } from "@/lib/sales";
 import { ItemOutages } from "@/components/item-outages";
 import {
@@ -40,7 +52,11 @@ import {
 } from "@/lib/toast-summary";
 
 function fmtDate(d: string) {
-  return new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  return new Date(`${d}T12:00:00`).toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function ToastUpload() {
@@ -54,10 +70,16 @@ function ToastUpload() {
       for (const file of files) {
         try {
           const isCsv = file.name.toLowerCase().endsWith(".csv");
-          const wb = isCsv ? XLSX.read(await file.text(), { type: "string", raw: true }) : XLSX.read(await file.arrayBuffer());
+          const wb = isCsv
+            ? XLSX.read(await file.text(), { type: "string", raw: true })
+            : XLSX.read(await file.arrayBuffer());
           const sheets: Record<string, unknown[][]> = {};
           for (const n of wb.SheetNames) {
-            sheets[n] = XLSX.utils.sheet_to_json(wb.Sheets[n]!, { header: 1, defval: null, raw: !isCsv });
+            sheets[n] = XLSX.utils.sheet_to_json(wb.Sheets[n]!, {
+              header: 1,
+              defval: null,
+              raw: !isCsv,
+            });
           }
           const first = sheets[wb.SheetNames[0]!] ?? [];
           let label: string;
@@ -99,7 +121,11 @@ function ToastUpload() {
       </CardHeader>
       <CardContent>
         <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed p-6 text-sm text-muted-foreground hover:bg-muted/50">
-          {mutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+          {mutation.isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <Upload className="h-5 w-5" />
+          )}
           {mutation.isPending ? "Reading report…" : "Choose one or more .xlsx or .csv files"}
           <input
             type="file"
@@ -140,17 +166,30 @@ function SummaryView({ s }: { s: ToastSummary }) {
   const diningRows = s.dining.filter((d) => d.netSales > 0 || d.orders > 0);
   const paymentRows = s.payments
     .filter((p) => p.total > 0)
-    .map((p) => ({ name: p.type.split(" · ").pop() ?? p.type, total: Math.round(p.total * 100) / 100 }));
+    .map((p) => ({
+      name: p.type.split(" · ").pop() ?? p.type,
+      total: Math.round(p.total * 100) / 100,
+    }));
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold">
         {fmtDate(s.startDate)} – {fmtDate(s.endDate)}
-        {s.location ? <span className="ml-2 text-sm font-normal text-muted-foreground">{s.location}</span> : null}
+        {s.location ? (
+          <span className="ml-2 text-sm font-normal text-muted-foreground">{s.location}</span>
+        ) : null}
       </h3>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Gross sales" value={money(s.grossSales)} hint="Before discounts" />
-        <Stat label="Discounts" value={`-${money(s.discounts)}`} hint={s.refunds ? `Refunds -${money(s.refunds)}` : "No refunds"} />
-        <Stat label="Net sales" value={money(s.netSales)} hint={`+ tax ${money(s.tax)} + tips ${money(s.tips)}`} />
+        <Stat
+          label="Discounts"
+          value={`-${money(s.discounts)}`}
+          hint={s.refunds ? `Refunds -${money(s.refunds)}` : "No refunds"}
+        />
+        <Stat
+          label="Net sales"
+          value={money(s.netSales)}
+          hint={`+ tax ${money(s.tax)} + tips ${money(s.tips)}`}
+        />
         <Stat label="Orders" value={String(s.orders)} hint={`Avg ${money(s.avgOrder)} per order`} />
       </div>
 
@@ -165,7 +204,12 @@ function SummaryView({ s }: { s: ToastSummary }) {
               <BarChart data={dayRows} margin={{ left: -12, right: 8 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} className="text-xs" />
-                <YAxis tickFormatter={(v) => `$${v}`} tickLine={false} axisLine={false} className="text-xs" />
+                <YAxis
+                  tickFormatter={(v) => `$${v}`}
+                  tickLine={false}
+                  axisLine={false}
+                  className="text-xs"
+                />
                 <Tooltip
                   formatter={(value: number, name: string) =>
                     name === "net" ? [money(value), "Net sales"] : [value, "Orders"]
@@ -189,7 +233,14 @@ function SummaryView({ s }: { s: ToastSummary }) {
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={diningRows} dataKey="netSales" nameKey="option" innerRadius={50} outerRadius={80} paddingAngle={2}>
+                  <Pie
+                    data={diningRows}
+                    dataKey="netSales"
+                    nameKey="option"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                  >
                     {diningRows.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                     ))}
@@ -202,10 +253,16 @@ function SummaryView({ s }: { s: ToastSummary }) {
               {diningRows.map((d, i) => (
                 <div key={d.option} className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
-                    <span className="inline-block h-2 w-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                    />
                     {d.option}
                   </span>
-                  <span className="text-muted-foreground">{d.orders} orders, <span className="font-medium text-foreground">{money(d.netSales)}</span></span>
+                  <span className="text-muted-foreground">
+                    {d.orders} orders,{" "}
+                    <span className="font-medium text-foreground">{money(d.netSales)}</span>
+                  </span>
                 </div>
               ))}
             </div>
@@ -221,9 +278,25 @@ function SummaryView({ s }: { s: ToastSummary }) {
             <div className="chart-enter h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={paymentRows} layout="vertical" margin={{ left: 8, right: 16 }}>
-                  <XAxis type="number" tickFormatter={(v) => `$${v}`} tickLine={false} axisLine={false} className="text-xs" />
-                  <YAxis type="category" dataKey="name" width={110} tickLine={false} axisLine={false} className="text-xs" />
-                  <Tooltip formatter={(value: number) => money(value)} cursor={{ fill: "var(--muted)" }} />
+                  <XAxis
+                    type="number"
+                    tickFormatter={(v) => `$${v}`}
+                    tickLine={false}
+                    axisLine={false}
+                    className="text-xs"
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={110}
+                    tickLine={false}
+                    axisLine={false}
+                    className="text-xs"
+                  />
+                  <Tooltip
+                    formatter={(value: number) => money(value)}
+                    cursor={{ fill: "var(--muted)" }}
+                  />
                   <Bar dataKey="total" fill="var(--color-chart-2)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -236,12 +309,20 @@ function SummaryView({ s }: { s: ToastSummary }) {
             <CardTitle className="text-base">Discounts, voids & cash</CardTitle>
             <CardDescription>
               {s.voids ? `${s.voids.count} voided orders (${money(s.voids.amount)}). ` : ""}
-              {s.cash ? `Cash drawer ${s.cash.overShort >= 0 ? "over" : "short"} ${money(Math.abs(s.cash.overShort))} (expected ${money(s.cash.expected)}, counted ${money(s.cash.actual)}).` : ""}
+              {s.cash
+                ? `Cash drawer ${s.cash.overShort >= 0 ? "over" : "short"} ${money(Math.abs(s.cash.overShort))} (expected ${money(s.cash.expected)}, counted ${money(s.cash.actual)}).`
+                : ""}
             </CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
             <Table>
-              <TableHeader><TableRow><TableHead>Discount</TableHead><TableHead className="text-right">Used</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Discount</TableHead>
+                  <TableHead className="text-right">Used</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {s.discountList.slice(0, 8).map((d) => (
                   <TableRow key={d.name}>
@@ -262,7 +343,9 @@ function SummaryView({ s }: { s: ToastSummary }) {
 function ProductMixView({ p }: { p: ToastProductMix }) {
   const [all, setAll] = useState(false);
   const items = all ? p.items : p.items.slice(0, 10);
-  const topItems = p.items.slice(0, 10).map((i) => ({ name: i.name, net: Math.round(i.net * 100) / 100 }));
+  const topItems = p.items
+    .slice(0, 10)
+    .map((i) => ({ name: i.name, net: Math.round(i.net * 100) / 100 }));
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold">
@@ -271,7 +354,11 @@ function ProductMixView({ p }: { p: ToastProductMix }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Items sold" value={p.totals.qty.toLocaleString()} />
         <Stat label="Item sales" value={money(p.totals.gross)} hint="Before discounts" />
-        <Stat label="Item discounts" value={`-${money(p.totals.discounts)}`} hint={`Voids ${money(p.totals.voids)}`} />
+        <Stat
+          label="Item discounts"
+          value={`-${money(p.totals.discounts)}`}
+          hint={`Voids ${money(p.totals.voids)}`}
+        />
         <Stat label="Net item sales" value={money(p.totals.net)} />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -284,7 +371,14 @@ function ProductMixView({ p }: { p: ToastProductMix }) {
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={p.groups} dataKey="net" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={2}>
+                  <Pie
+                    data={p.groups}
+                    dataKey="net"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                  >
                     {p.groups.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                     ))}
@@ -297,10 +391,16 @@ function ProductMixView({ p }: { p: ToastProductMix }) {
               {p.groups.map((g, i) => (
                 <div key={g.name} className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
-                    <span className="inline-block h-2 w-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                    />
                     {g.name}
                   </span>
-                  <span className="text-muted-foreground">{g.qty} sold, <span className="font-medium text-foreground">{money(g.net)}</span></span>
+                  <span className="text-muted-foreground">
+                    {g.qty} sold,{" "}
+                    <span className="font-medium text-foreground">{money(g.net)}</span>
+                  </span>
                 </div>
               ))}
             </div>
@@ -315,9 +415,25 @@ function ProductMixView({ p }: { p: ToastProductMix }) {
             <div className="chart-enter h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topItems} layout="vertical" margin={{ left: 8, right: 16 }}>
-                  <XAxis type="number" tickFormatter={(v) => `$${v}`} tickLine={false} axisLine={false} className="text-xs" />
-                  <YAxis type="category" dataKey="name" width={130} tickLine={false} axisLine={false} className="text-xs" />
-                  <Tooltip formatter={(value: number) => money(value)} cursor={{ fill: "var(--muted)" }} />
+                  <XAxis
+                    type="number"
+                    tickFormatter={(v) => `$${v}`}
+                    tickLine={false}
+                    axisLine={false}
+                    className="text-xs"
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={130}
+                    tickLine={false}
+                    axisLine={false}
+                    className="text-xs"
+                  />
+                  <Tooltip
+                    formatter={(value: number) => money(value)}
+                    cursor={{ fill: "var(--muted)" }}
+                  />
                   <Bar dataKey="net" fill="var(--color-chart-3)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -335,14 +451,24 @@ function ProductMixView({ p }: { p: ToastProductMix }) {
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
             <Table>
-              <TableHeader><TableRow><TableHead>Item</TableHead><TableHead className="text-right">Sold</TableHead><TableHead className="text-right">Avg price</TableHead><TableHead className="text-right">Discounts</TableHead><TableHead className="text-right">Net sales</TableHead></TableRow></TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item</TableHead>
+                  <TableHead className="text-right">Sold</TableHead>
+                  <TableHead className="text-right">Avg price</TableHead>
+                  <TableHead className="text-right">Discounts</TableHead>
+                  <TableHead className="text-right">Net sales</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {items.map((i) => (
                   <TableRow key={i.name}>
                     <TableCell className="font-medium">{i.name}</TableCell>
                     <TableCell className="text-right">{i.qty}</TableCell>
                     <TableCell className="text-right">{money(i.avgPrice)}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{i.discounts ? `-${money(i.discounts)}` : "—"}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {i.discounts ? `-${money(i.discounts)}` : "—"}
+                    </TableCell>
                     <TableCell className="text-right">{money(i.net)}</TableCell>
                   </TableRow>
                 ))}
@@ -368,7 +494,10 @@ function RemovedItemsView({ r, from, to }: { r: ToastRemovedItems; from: string;
   ).sort((a, b) => b[1].amount - a[1].amount);
   const byItem = Object.entries(
     rows.reduce<Record<string, { qty: number; amount: number }>>((acc, x) => {
-      acc[x.item] = { qty: (acc[x.item]?.qty ?? 0) + x.qty, amount: (acc[x.item]?.amount ?? 0) + x.amount };
+      acc[x.item] = {
+        qty: (acc[x.item]?.qty ?? 0) + x.qty,
+        amount: (acc[x.item]?.amount ?? 0) + x.amount,
+      };
       return acc;
     }, {}),
   ).sort((a, b) => b[1].amount - a[1].amount);
@@ -377,7 +506,9 @@ function RemovedItemsView({ r, from, to }: { r: ToastRemovedItems; from: string;
     <div className="space-y-4">
       <h3 className="text-base font-semibold">
         Removed items: {rows.length} removed, {money(amount)}
-        <span className="ml-2 text-sm font-normal text-muted-foreground">from report {fmtDate(r.startDate)} – {fmtDate(r.endDate)}</span>
+        <span className="ml-2 text-sm font-normal text-muted-foreground">
+          from report {fmtDate(r.startDate)} – {fmtDate(r.endDate)}
+        </span>
       </h3>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
@@ -388,10 +519,22 @@ function RemovedItemsView({ r, from, to }: { r: ToastRemovedItems; from: string;
           <CardContent>
             <div className="chart-enter h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={byServer.map(([name, v]) => ({ name, amount: Math.round(v.amount * 100) / 100, qty: v.qty }))} margin={{ left: -12, right: 8 }}>
+                <BarChart
+                  data={byServer.map(([name, v]) => ({
+                    name,
+                    amount: Math.round(v.amount * 100) / 100,
+                    qty: v.qty,
+                  }))}
+                  margin={{ left: -12, right: 8 }}
+                >
                   <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="name" tickLine={false} axisLine={false} className="text-xs" />
-                  <YAxis tickFormatter={(v) => `$${v}`} tickLine={false} axisLine={false} className="text-xs" />
+                  <YAxis
+                    tickFormatter={(v) => `$${v}`}
+                    tickLine={false}
+                    axisLine={false}
+                    className="text-xs"
+                  />
                   <Tooltip
                     formatter={(value: number, name: string) =>
                       name === "amount" ? [money(value), "Removed value"] : [value, "Items"]
@@ -405,13 +548,25 @@ function RemovedItemsView({ r, from, to }: { r: ToastRemovedItems; from: string;
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Most removed items</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-base">Most removed items</CardTitle>
+          </CardHeader>
           <CardContent className="overflow-x-auto p-0">
             <Table>
-              <TableHeader><TableRow><TableHead>Item</TableHead><TableHead className="text-right">Times</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item</TableHead>
+                  <TableHead className="text-right">Times</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {byItem.slice(0, 8).map(([name, v]) => (
-                  <TableRow key={name}><TableCell>{name}</TableCell><TableCell className="text-right">{v.qty}</TableCell><TableCell className="text-right">{money(v.amount)}</TableCell></TableRow>
+                  <TableRow key={name}>
+                    <TableCell>{name}</TableCell>
+                    <TableCell className="text-right">{v.qty}</TableCell>
+                    <TableCell className="text-right">{money(v.amount)}</TableCell>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>
@@ -428,11 +583,22 @@ function RemovedItemsView({ r, from, to }: { r: ToastRemovedItems; from: string;
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
             <Table>
-              <TableHeader><TableRow><TableHead>When</TableHead><TableHead>Order</TableHead><TableHead>Server</TableHead><TableHead>Item</TableHead><TableHead className="text-right">Qty</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>When</TableHead>
+                  <TableHead>Order</TableHead>
+                  <TableHead>Server</TableHead>
+                  <TableHead>Item</TableHead>
+                  <TableHead className="text-right">Qty</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {list.map((x, i) => (
                   <TableRow key={`${x.at}-${x.order}-${i}`}>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">{x.at}</TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {x.at}
+                    </TableCell>
                     <TableCell>#{x.order}</TableCell>
                     <TableCell>{x.server}</TableCell>
                     <TableCell>{x.item}</TableCell>
@@ -472,12 +638,18 @@ export function ToastSummaryPanel({ from, to }: { from: string; to: string }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">No Toast report for these dates</CardTitle>
-            <CardDescription>Pick another date range, or upload the sales summary for this period.</CardDescription>
+            <CardDescription>
+              Pick another date range, or upload the sales summary for this period.
+            </CardDescription>
           </CardHeader>
         </Card>
       )}
-      {reports.data?.pmix.map((p) => <ProductMixView key={`${p.startDate}-${p.endDate}`} p={p} />)}
-      {reports.data?.removed.map((r) => <RemovedItemsView key={`${r.startDate}-${r.endDate}`} r={r} from={from} to={to} />)}
+      {reports.data?.pmix.map((p) => (
+        <ProductMixView key={`${p.startDate}-${p.endDate}`} p={p} />
+      ))}
+      {reports.data?.removed.map((r) => (
+        <RemovedItemsView key={`${r.startDate}-${r.endDate}`} r={r} from={from} to={to} />
+      ))}
     </div>
   );
 }

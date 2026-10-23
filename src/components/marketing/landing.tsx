@@ -14,7 +14,12 @@ import {
   Wallet,
 } from "lucide-react";
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 
 export function Hero() {
@@ -22,10 +27,13 @@ export function Hero() {
     <section className="relative overflow-hidden border-b bg-background">
       <div className="mx-auto grid max-w-7xl items-center gap-14 px-4 pt-14 pb-20 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.05fr] lg:px-8 lg:pt-24 lg:pb-28">
         <div className="max-w-xl">
-          <h1 className="text-display text-foreground">The whole night, added up before you lock the door.</h1>
+          <h1 className="text-display text-foreground">
+            The whole night, added up before you lock the door.
+          </h1>
           <p className="text-lead mt-7 max-w-md">
-            Restrolytics brings your Toast and delivery-app sales, labor, stock counts and checklists into one place. IQ, the
-            built-in copilot, reads all of it and tells you what to fix for tomorrow.
+            Restrolytics brings your Toast and delivery-app sales, labor, stock counts and
+            checklists into one place. IQ, the built-in copilot, reads all of it and tells you what
+            to fix for tomorrow.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button size="lg" asChild>
@@ -47,9 +55,12 @@ export function Hero() {
               What should I fix for tomorrow?
             </p>
             <p className="mt-3 rounded-2xl rounded-bl-md bg-muted px-3.5 py-2.5 text-sm">
-              Garlic fries were 86'd on Uber Eats from 8:40. Add a case to Friday's order, and move one close shift to 5 PM.
+              Garlic fries were 86'd on Uber Eats from 8:40. Add a case to Friday's order, and move
+              one close shift to 5 PM.
             </p>
-            <figcaption className="mt-2 text-xs text-muted-foreground">Example answer from IQ</figcaption>
+            <figcaption className="mt-2 text-xs text-muted-foreground">
+              Example answer from IQ
+            </figcaption>
           </figure>
         </div>
       </div>
@@ -58,12 +69,32 @@ export function Hero() {
 }
 
 const SOURCES = [
-  { icon: Receipt, name: "Toast POS", detail: "Sales summary, product mix and removed-item exports" },
-  { icon: FileSpreadsheet, name: "Uber Eats", detail: "Payment, payout, order-error and ratings reports" },
-  { icon: FileSpreadsheet, name: "DoorDash and Grubhub", detail: "Orders entered today, report import on the way" },
+  {
+    icon: Receipt,
+    name: "Toast POS",
+    detail: "Sales summary, product mix and removed-item exports",
+  },
+  {
+    icon: FileSpreadsheet,
+    name: "Uber Eats",
+    detail: "Payment, payout, order-error and ratings reports",
+  },
+  {
+    icon: FileSpreadsheet,
+    name: "DoorDash and Grubhub",
+    detail: "Orders entered today, report import on the way",
+  },
   { icon: Truck, name: "Vendor portals", detail: "Order history pulled from supplier websites" },
-  { icon: ScanLine, name: "Invoice photos", detail: "Snap a delivery invoice; IQ reads the line items" },
-  { icon: Camera, name: "Your team", detail: "Clock-ins, checklist ticks and photo proof from the floor" },
+  {
+    icon: ScanLine,
+    name: "Invoice photos",
+    detail: "Snap a delivery invoice; IQ reads the line items",
+  },
+  {
+    icon: Camera,
+    name: "Your team",
+    detail: "Clock-ins, checklist ticks and photo proof from the floor",
+  },
 ];
 
 export function Sources() {
@@ -73,8 +104,8 @@ export function Sources() {
         <div className="max-w-md">
           <h2 className="text-headline">Your numbers already exist. They're just in six places.</h2>
           <p className="text-lead mt-5">
-            Restrolytics pulls them together and sorts everything by your business day, so a shift that closes at 1 AM still
-            counts as Friday.
+            Restrolytics pulls them together and sorts everything by your business day, so a shift
+            that closes at 1 AM still counts as Friday.
           </p>
         </div>
         <dl className="grid gap-x-10 sm:grid-cols-2">
@@ -107,7 +138,9 @@ export function DayReportPreview() {
           <p className="font-display text-base font-bold [font-stretch:82%]">Friday, close-out</p>
           <p className="text-xs text-muted-foreground">Main Street Kitchen</p>
         </div>
-        <span className="rounded-md bg-success-soft px-2 py-1 text-xs font-semibold text-success">Checklists done</span>
+        <span className="rounded-md bg-success-soft px-2 py-1 text-xs font-semibold text-success">
+          Checklists done
+        </span>
       </div>
       <div className="grid grid-cols-3 divide-x border-b">
         {[
@@ -134,7 +167,9 @@ export function DayReportPreview() {
           </div>
         ))}
       </div>
-      <figcaption className="border-t bg-muted/50 px-5 py-3 text-xs text-muted-foreground">Example data</figcaption>
+      <figcaption className="border-t bg-muted/50 px-5 py-3 text-xs text-muted-foreground">
+        Example data
+      </figcaption>
     </figure>
   );
 }
@@ -168,7 +203,9 @@ export function Operations() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-start gap-14 lg:grid-cols-[1fr_1.05fr]">
           <div>
-            <h2 className="text-headline max-w-lg">Know what happened before you leave the floor.</h2>
+            <h2 className="text-headline max-w-lg">
+              Know what happened before you leave the floor.
+            </h2>
             <dl className="mt-10 space-y-8">
               {AREAS.map(({ icon: Icon, title, text }) => (
                 <div key={title} className="grid grid-cols-[2.5rem_1fr] gap-4">
@@ -200,8 +237,8 @@ export function IqSection() {
           <BrainCircuit className="size-8 text-highlight" aria-hidden="true" />
           <h2 className="text-headline mt-6">Ask IQ the question you'd ask your best GM.</h2>
           <p className="mt-5 text-lg leading-relaxed text-ink-muted">
-            IQ answers from your restaurant's own sales, schedule, stock and payroll. If something isn't in your data, it says
-            so and tells you where to add it.
+            IQ answers from your restaurant's own sales, schedule, stock and payroll. If something
+            isn't in your data, it says so and tells you where to add it.
           </p>
           <ul className="mt-8 space-y-3 text-ink-foreground">
             <li className="flex gap-3">
@@ -222,8 +259,8 @@ export function IqSection() {
             </p>
             <div className="max-w-[92%] space-y-3 rounded-2xl rounded-bl-md bg-muted px-4 py-3">
               <p>
-                Labor was <strong>31% of sales</strong> on Tuesday, against 19% on a normal Tuesday. Four people were on the
-                line from 2 to 5 PM while sales in that window were $410.
+                Labor was <strong>31% of sales</strong> on Tuesday, against 19% on a normal Tuesday.
+                Four people were on the line from 2 to 5 PM while sales in that window were $410.
               </p>
               <p>Next steps:</p>
               <ol className="list-decimal space-y-1 pl-5">
@@ -250,8 +287,9 @@ export function ManagerSection() {
           <div>
             <h2 className="text-title">Want a person on it, too?</h2>
             <p className="mt-3 text-muted-foreground">
-              On the Virtual Manager plan, a Restrolytics manager works inside your account 20 hours a week: chasing missing
-              invoices, following up on checklists, and sending you a weekly summary. You talk to them in the app.
+              On the Virtual Manager plan, a Restrolytics manager works inside your account 20 hours
+              a week: chasing missing invoices, following up on checklists, and sending you a weekly
+              summary. You talk to them in the app.
             </p>
           </div>
         </div>
@@ -297,7 +335,9 @@ export function Faq() {
               <AccordionTrigger className="py-5 text-left text-base font-semibold hover:no-underline">
                 {item.q}
               </AccordionTrigger>
-              <AccordionContent className="pb-5 text-base text-muted-foreground">{item.a}</AccordionContent>
+              <AccordionContent className="pb-5 text-base text-muted-foreground">
+                {item.a}
+              </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
@@ -313,7 +353,8 @@ export function ClosingCta() {
         <div className="max-w-xl">
           <h2 className="text-headline">See your own restaurant in it.</h2>
           <p className="mt-4 text-primary-foreground/75">
-            Thirty minutes on a call. Bring last week's Toast export and we'll load it while you watch.
+            Thirty minutes on a call. Bring last week's Toast export and we'll load it while you
+            watch.
           </p>
         </div>
         <Button size="lg" variant="highlight" asChild className="shrink-0">

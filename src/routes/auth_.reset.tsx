@@ -14,7 +14,9 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/auth_/reset")({
   ssr: false,
   component: ResetPage,
-  head: () => ({ meta: [{ title: "Set your password · Restrolytics" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Set your password · Restrolytics" }, { name: "robots", content: "noindex" }],
+  }),
 });
 
 function ResetPage() {
@@ -28,7 +30,10 @@ function ResetPage() {
   useEffect(() => {
     let settled = false;
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+      if (
+        session &&
+        (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION")
+      ) {
         settled = true;
         setStatus("ready");
       }
@@ -77,7 +82,10 @@ function ResetPage() {
   }
 
   return (
-    <AuthShell title="Set your password" description="Choose a password you'll use to sign in from now on.">
+    <AuthShell
+      title="Set your password"
+      description="Choose a password you'll use to sign in from now on."
+    >
       <form onSubmit={submit} className="space-y-4" noValidate aria-busy={status === "checking"}>
         <AuthField id="new-password" label="New password" hint="At least 8 characters.">
           <Input
@@ -102,12 +110,19 @@ function ResetPage() {
           />
         </AuthField>
         {error ? (
-          <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive"
+          >
             {error}
           </p>
         ) : null}
         <Button type="submit" size="lg" className="w-full" disabled={status !== "ready" || saving}>
-          {status === "checking" ? "Checking your link…" : saving ? "Saving…" : "Set password and continue"}
+          {status === "checking"
+            ? "Checking your link…"
+            : saving
+              ? "Saving…"
+              : "Set password and continue"}
         </Button>
       </form>
     </AuthShell>

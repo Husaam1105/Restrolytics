@@ -25,8 +25,18 @@ export const PLATFORMS: PlatformMeta[] = [
     docsUrl: "https://doc.toasttab.com/doc/devguide/apiOverview.html",
     fields: [
       { key: "client_id", label: "Client ID", placeholder: "Toast API client ID", secret: false },
-      { key: "client_secret", label: "Client secret", placeholder: "Toast API client secret", secret: true },
-      { key: "restaurant_guid", label: "Restaurant GUID", placeholder: "e.g. 3f2a…", secret: false },
+      {
+        key: "client_secret",
+        label: "Client secret",
+        placeholder: "Toast API client secret",
+        secret: true,
+      },
+      {
+        key: "restaurant_guid",
+        label: "Restaurant GUID",
+        placeholder: "e.g. 3f2a…",
+        secret: false,
+      },
     ],
   },
   {
@@ -37,7 +47,12 @@ export const PLATFORMS: PlatformMeta[] = [
     docsUrl: "https://developer.uber.com/docs/eats/introduction",
     fields: [
       { key: "client_id", label: "Client ID", placeholder: "Uber app client ID", secret: false },
-      { key: "client_secret", label: "Client secret", placeholder: "Uber app client secret", secret: true },
+      {
+        key: "client_secret",
+        label: "Client secret",
+        placeholder: "Uber app client secret",
+        secret: true,
+      },
       { key: "store_id", label: "Store ID", placeholder: "Uber Eats store ID", secret: false },
     ],
   },
@@ -48,9 +63,19 @@ export const PLATFORMS: PlatformMeta[] = [
     description: "Import DoorDash orders, commissions and payout summaries.",
     docsUrl: "https://developer.doordash.com/en-US/docs/drive/how_to/get_started/",
     fields: [
-      { key: "developer_id", label: "Developer ID", placeholder: "DoorDash developer ID", secret: false },
+      {
+        key: "developer_id",
+        label: "Developer ID",
+        placeholder: "DoorDash developer ID",
+        secret: false,
+      },
       { key: "key_id", label: "Key ID", placeholder: "DoorDash key ID", secret: false },
-      { key: "signing_secret", label: "Signing secret", placeholder: "DoorDash signing secret", secret: true },
+      {
+        key: "signing_secret",
+        label: "Signing secret",
+        placeholder: "DoorDash signing secret",
+        secret: true,
+      },
       { key: "store_id", label: "Store ID", placeholder: "DoorDash store ID", secret: false },
     ],
   },
@@ -62,7 +87,12 @@ export const PLATFORMS: PlatformMeta[] = [
     docsUrl: "https://developer.grubhub.com/",
     fields: [
       { key: "api_key", label: "API key", placeholder: "Grubhub API key", secret: true },
-      { key: "restaurant_id", label: "Restaurant ID", placeholder: "Grubhub restaurant ID", secret: false },
+      {
+        key: "restaurant_id",
+        label: "Restaurant ID",
+        placeholder: "Grubhub restaurant ID",
+        secret: false,
+      },
     ],
   },
 ];

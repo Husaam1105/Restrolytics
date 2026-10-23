@@ -13,10 +13,21 @@ async function active(supabase: Client, userId: string) {
   const { resolveActiveRestaurant, canManage } = await import("./tenant.server");
   const restaurant = await resolveActiveRestaurant(supabase, userId);
   const { timezone } = parseShiftSettings(restaurant.settings);
-  return { restaurant, timezone, today: localNow(timezone).date, isManager: canManage(restaurant.role) };
+  return {
+    restaurant,
+    timezone,
+    today: localNow(timezone).date,
+    isManager: canManage(restaurant.role),
+  };
 }
 
-async function dailySales(supabase: Client, restaurantId: string, from: string, to: string, timezone: string) {
+async function dailySales(
+  supabase: Client,
+  restaurantId: string,
+  from: string,
+  to: string,
+  timezone: string,
+) {
   const { data, error } = await supabase.rpc("sales_daily", {
     _restaurant_id: restaurantId,
     _from: from,
@@ -30,10 +41,15 @@ async function dailySales(supabase: Client, restaurantId: string, from: string, 
 export const getDashboardStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { restaurant, timezone, today, isManager } = await active(context.supabase, context.userId);
+    const { restaurant, timezone, today, isManager } = await active(
+      context.supabase,
+      context.userId,
+    );
 
     const [rows, lowStock] = await Promise.all([
-      isManager ? dailySales(context.supabase, restaurant.id, today, today, timezone) : Promise.resolve([]),
+      isManager
+        ? dailySales(context.supabase, restaurant.id, today, today, timezone)
+        : Promise.resolve([]),
       context.supabase.rpc("low_stock_items", { _restaurant_id: restaurant.id, _limit: 500 }),
     ]);
     if (lowStock.error) throw lowStock.error;
@@ -71,7 +87,10 @@ export const getInventoryAlerts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { restaurant } = await active(context.supabase, context.userId);
-    const { data, error } = await context.supabase.rpc("low_stock_items", { _restaurant_id: restaurant.id, _limit: 5 });
+    const { data, error } = await context.supabase.rpc("low_stock_items", {
+      _restaurant_id: restaurant.id,
+      _limit: 5,
+    });
     if (error) throw error;
     return { items: data ?? [] };
   });
@@ -79,17 +98,25 @@ export const getInventoryAlerts = createServerFn({ method: "GET" })
 export const getSalesChartData = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { restaurant, timezone, today, isManager } = await active(context.supabase, context.userId);
+    const { restaurant, timezone, today, isManager } = await active(
+      context.supabase,
+      context.userId,
+    );
     const days = 7;
     const from = addDays(today, -(days - 1));
-    const rows = isManager ? await dailySales(context.supabase, restaurant.id, from, today, timezone) : [];
+    const rows = isManager
+      ? await dailySales(context.supabase, restaurant.id, from, today, timezone)
+      : [];
 
     const byDay = new Map<string, number>();
     for (const r of rows) byDay.set(r.day, (byDay.get(r.day) ?? 0) + Number(r.gross));
 
     const points = Array.from({ length: days }, (_, i) => {
       const date = addDays(from, i);
-      const label = new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+      const label = new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
+        weekday: "short",
+        timeZone: "UTC",
+      });
       return { date, label, total: byDay.get(date) ?? 0 };
     });
     return { points };
@@ -98,9 +125,14 @@ export const getSalesChartData = createServerFn({ method: "GET" })
 export const getPlatformBreakdown = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { restaurant, timezone, today, isManager } = await active(context.supabase, context.userId);
+    const { restaurant, timezone, today, isManager } = await active(
+      context.supabase,
+      context.userId,
+    );
     const from = addDays(today, -29);
-    const rows = isManager ? await dailySales(context.supabase, restaurant.id, from, today, timezone) : [];
+    const rows = isManager
+      ? await dailySales(context.supabase, restaurant.id, from, today, timezone)
+      : [];
 
     const totals = new Map<string, number>();
     for (const r of rows) totals.set(r.platform, (totals.get(r.platform) ?? 0) + Number(r.gross));

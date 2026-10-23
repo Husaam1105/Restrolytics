@@ -55,7 +55,9 @@ export const Route = createFileRoute("/api/public/hooks/vendor-sync")({
               .from("vendors")
               .update({
                 sync_status: result.ok ? "connected" : "error",
-                ...(result.ok ? { last_synced_at: new Date().toISOString(), last_error: null } : { last_error: result.message }),
+                ...(result.ok
+                  ? { last_synced_at: new Date().toISOString(), last_error: null }
+                  : { last_error: result.message }),
               })
               .eq("id", vendor.id);
             if (result.ok) succeeded += 1;

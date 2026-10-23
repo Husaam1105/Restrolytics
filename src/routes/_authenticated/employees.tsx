@@ -3,23 +3,51 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Clock3, Copy, KeyRound, LogIn, Pencil, RefreshCw, Search, ShieldCheck, UserPlus, Users } from "lucide-react";
+import {
+  Clock3,
+  Copy,
+  KeyRound,
+  LogIn,
+  Pencil,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  UserPlus,
+  Users,
+} from "lucide-react";
 
 import { PageContainer, PageHeader } from "@/components/page";
 import { StatCard } from "@/components/stat-card";
 import { EmptyState, QueryBoundary } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { getEmployees, saveEmployee } from "@/lib/payroll.functions";
 import { AREA_LABELS, PAY_METHOD_LABELS, money, type PayArea, type PayMethod } from "@/lib/payroll";
-import { createStaffLogin, resetStaffPassword, STAFF_EMAIL_DOMAIN } from "@/lib/staff-accounts.functions";
+import {
+  createStaffLogin,
+  resetStaffPassword,
+  STAFF_EMAIL_DOMAIN,
+} from "@/lib/staff-accounts.functions";
 import { requireManagerRoute } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/employees")({
@@ -67,14 +95,30 @@ function initials(name: string) {
 
 /** A readable temporary password, e.g. "maple-river-4821". */
 function tempPassword() {
-  const words = ["basil", "maple", "river", "pepper", "olive", "cedar", "lemon", "sage", "amber", "ember", "harbor", "willow"];
+  const words = [
+    "basil",
+    "maple",
+    "river",
+    "pepper",
+    "olive",
+    "cedar",
+    "lemon",
+    "sage",
+    "amber",
+    "ember",
+    "harbor",
+    "willow",
+  ];
   const pick = () => words[crypto.getRandomValues(new Uint32Array(1))[0]! % words.length]!;
   const digits = String(1000 + (crypto.getRandomValues(new Uint32Array(1))[0]! % 9000));
   return `${pick()}-${pick()}-${digits}`;
 }
 
 function suggestUsername(fullName: string) {
-  const [first = "", last = ""] = fullName.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/);
+  const [first = "", last = ""] = fullName
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, "")
+    .split(/\s+/);
   return (first + (last ? `.${last[0]}` : "")).slice(0, 32);
 }
 
@@ -86,13 +130,15 @@ function EmployeesPage() {
   const [filter, setFilter] = useState<"all" | PayArea>("all");
   const [search, setSearch] = useState("");
 
-  const employees = query.data?.employees ?? [];
+  const employees = useMemo(() => query.data?.employees ?? [], [query.data]);
   const filtered = useMemo(
     () =>
       employees.filter((e) => {
         const areaMatch = filter === "all" || e.area === filter || e.area === "both";
         const term = search.trim().toLowerCase();
-        return areaMatch && (!term || `${e.fullName} ${e.position ?? ""}`.toLowerCase().includes(term));
+        return (
+          areaMatch && (!term || `${e.fullName} ${e.position ?? ""}`.toLowerCase().includes(term))
+        );
       }),
     [employees, filter, search],
   );
@@ -141,7 +187,11 @@ function EmployeesPage() {
                 value={linked}
                 icon={<LogIn />}
                 tone={employees.length - linked > 0 ? "warning" : "positive"}
-                note={employees.length - linked > 0 ? `${employees.length - linked} still need one` : "Everyone can sign in"}
+                note={
+                  employees.length - linked > 0
+                    ? `${employees.length - linked} still need one`
+                    : "Everyone can sign in"
+                }
               />
               <StatCard
                 label="Ready for payroll"
@@ -166,7 +216,10 @@ function EmployeesPage() {
               <section className="surface overflow-hidden">
                 <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="relative w-full sm:max-w-xs">
-                    <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                    <Search
+                      className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                      aria-hidden="true"
+                    />
                     <Input
                       className="pl-9"
                       placeholder="Search by name or job"
@@ -208,7 +261,9 @@ function EmployeesPage() {
                           <EmployeeRow
                             key={e.id}
                             employee={e}
-                            loginEmail={data.logins.find((l) => l.userId === e.userId)?.email ?? null}
+                            loginEmail={
+                              data.logins.find((l) => l.userId === e.userId)?.email ?? null
+                            }
                             onEdit={() => edit(e)}
                             onLogin={() => setLoginFor(e)}
                           />
@@ -221,7 +276,10 @@ function EmployeesPage() {
                   <span>
                     Showing {filtered.length} of {employees.length}
                   </span>
-                  <Link to="/timeclock" className="inline-flex items-center gap-1 font-medium text-foreground hover:underline">
+                  <Link
+                    to="/timeclock"
+                    className="inline-flex items-center gap-1 font-medium text-foreground hover:underline"
+                  >
                     <Clock3 className="size-3.5" aria-hidden="true" />
                     Time clock
                   </Link>
@@ -265,9 +323,13 @@ function EmployeeRow({
           <div className="min-w-0">
             <p className="font-semibold text-foreground">
               {e.fullName}
-              {!e.active ? <span className="ml-2 text-xs font-normal text-muted-foreground">Inactive</span> : null}
+              {!e.active ? (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">Inactive</span>
+              ) : null}
             </p>
-            <p className="truncate text-xs text-muted-foreground">{e.phone || "No phone on file"}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {e.phone || "No phone on file"}
+            </p>
           </div>
         </div>
       </td>
@@ -314,7 +376,8 @@ function EmployeeDialog({ form: initial, onClose }: { form: FormState; onClose: 
   const save = useServerFn(saveEmployee);
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
-  const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }));
+  const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setForm((f) => ({ ...f, [key]: value }));
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -357,7 +420,9 @@ function EmployeeDialog({ form: initial, onClose }: { form: FormState; onClose: 
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{form.id ? `Edit ${initial.fullName}` : "Add employee"}</DialogTitle>
-          <DialogDescription>Pay details are used for payroll. Give them app access afterwards from the list.</DialogDescription>
+          <DialogDescription>
+            Pay details are used for payroll. Give them app access afterwards from the list.
+          </DialogDescription>
         </DialogHeader>
         <form
           className="grid gap-4 sm:grid-cols-2"
@@ -367,10 +432,20 @@ function EmployeeDialog({ form: initial, onClose }: { form: FormState; onClose: 
           }}
         >
           <Field label="Name" htmlFor="emp-name" error={errors.fullName}>
-            <Input id="emp-name" autoComplete="off" value={form.fullName} onChange={(e) => set("fullName", e.target.value)} />
+            <Input
+              id="emp-name"
+              autoComplete="off"
+              value={form.fullName}
+              onChange={(e) => set("fullName", e.target.value)}
+            />
           </Field>
           <Field label="Job title" htmlFor="emp-position">
-            <Input id="emp-position" placeholder="Server, line cook…" value={form.position} onChange={(e) => set("position", e.target.value)} />
+            <Input
+              id="emp-position"
+              placeholder="Server, line cook…"
+              value={form.position}
+              onChange={(e) => set("position", e.target.value)}
+            />
           </Field>
           <Field label="Works in" htmlFor="emp-area">
             <Select value={form.area} onValueChange={(v) => set("area", v as PayArea)}>
@@ -410,16 +485,37 @@ function EmployeeDialog({ form: initial, onClose }: { form: FormState; onClose: 
             </Select>
           </Field>
           <Field label="Phone" htmlFor="emp-phone">
-            <Input id="emp-phone" type="tel" autoComplete="off" value={form.phone} onChange={(e) => set("phone", e.target.value)} />
+            <Input
+              id="emp-phone"
+              type="tel"
+              autoComplete="off"
+              value={form.phone}
+              onChange={(e) => set("phone", e.target.value)}
+            />
           </Field>
           <div className="sm:col-span-2">
             <Field label="Notes (only managers see these)" htmlFor="emp-notes">
-              <Textarea id="emp-notes" rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} />
+              <Textarea
+                id="emp-notes"
+                rows={3}
+                value={form.notes}
+                onChange={(e) => set("notes", e.target.value)}
+              />
             </Field>
           </div>
           <div className="flex flex-wrap gap-6 sm:col-span-2">
-            <Toggle id="emp-tips" label="Shares tips" checked={form.tipEligible} onChange={(v) => set("tipEligible", v)} />
-            <Toggle id="emp-active" label="Active" checked={form.active} onChange={(v) => set("active", v)} />
+            <Toggle
+              id="emp-tips"
+              label="Shares tips"
+              checked={form.tipEligible}
+              onChange={(v) => set("tipEligible", v)}
+            />
+            <Toggle
+              id="emp-active"
+              label="Active"
+              checked={form.active}
+              onChange={(v) => set("active", v)}
+            />
           </div>
           <DialogFooter className="gap-2 sm:col-span-2">
             <Button type="button" variant="outline" onClick={onClose}>
@@ -435,7 +531,15 @@ function EmployeeDialog({ form: initial, onClose }: { form: FormState; onClose: 
   );
 }
 
-function LoginDialog({ employee, loginEmail, onClose }: { employee: Employee; loginEmail: string | null; onClose: () => void }) {
+function LoginDialog({
+  employee,
+  loginEmail,
+  onClose,
+}: {
+  employee: Employee;
+  loginEmail: string | null;
+  onClose: () => void;
+}) {
   const queryClient = useQueryClient();
   const create = useServerFn(createStaffLogin);
   const reset = useServerFn(resetStaffPassword);
@@ -444,7 +548,8 @@ function LoginDialog({ employee, loginEmail, onClose }: { employee: Employee; lo
   const [password, setPassword] = useState(tempPassword);
   const [email, setEmail] = useState("");
   const [done, setDone] = useState<{ username: string; password: string } | null>(null);
-  const isStaffLogin = Boolean(employee.username) || Boolean(loginEmail?.endsWith(`@${STAFF_EMAIL_DOMAIN}`));
+  const isStaffLogin =
+    Boolean(employee.username) || Boolean(loginEmail?.endsWith(`@${STAFF_EMAIL_DOMAIN}`));
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["employees"] });
 
@@ -498,20 +603,23 @@ function LoginDialog({ employee, loginEmail, onClose }: { employee: Employee; lo
         <DialogHeader>
           <DialogTitle>App login for {employee.fullName}</DialogTitle>
           <DialogDescription>
-            Staff use it to clock in, see their schedule and confirm their pay. They never see sales or anyone else's pay.
+            Staff use it to clock in, see their schedule and confirm their pay. They never see sales
+            or anyone else's pay.
           </DialogDescription>
         </DialogHeader>
 
         {done ? (
           <div className="space-y-4">
             <div className="space-y-3 rounded-xl bg-success-soft p-4">
-              <p className="font-semibold text-success">Login ready. Give these to {employee.fullName.split(" ")[0]} in person.</p>
+              <p className="font-semibold text-success">
+                Login ready. Give these to {employee.fullName.split(" ")[0]} in person.
+              </p>
               <Credential label="Username" value={done.username} onCopy={copy} />
               <Credential label="Temporary password" value={done.password} onCopy={copy} />
             </div>
             <p className="text-sm text-muted-foreground">
-              They sign in at the Restrolytics sign-in page with the username (no email needed), then change the password under
-              My hours and details.
+              They sign in at the Restrolytics sign-in page with the username (no email needed),
+              then change the password under My hours and details.
             </p>
             <DialogFooter>
               <Button onClick={onClose}>Done</Button>
@@ -530,7 +638,12 @@ function LoginDialog({ employee, loginEmail, onClose }: { employee: Employee; lo
                   resetMutation.mutate();
                 }}
               >
-                <PasswordField value={password} onChange={setPassword} onNew={() => setPassword(tempPassword())} label="New temporary password" />
+                <PasswordField
+                  value={password}
+                  onChange={setPassword}
+                  onNew={() => setPassword(tempPassword())}
+                  label="New temporary password"
+                />
                 <DialogFooter>
                   <Button type="submit" disabled={resetMutation.isPending || password.length < 8}>
                     {resetMutation.isPending ? "Resetting…" : "Reset password"}
@@ -539,7 +652,8 @@ function LoginDialog({ employee, loginEmail, onClose }: { employee: Employee; lo
               </form>
             ) : (
               <p className="text-sm text-muted-foreground">
-                This person signs in with their own email, so they reset their password from the sign-in page.
+                This person signs in with their own email, so they reset their password from the
+                sign-in page.
               </p>
             )}
           </div>
@@ -571,9 +685,19 @@ function LoginDialog({ employee, loginEmail, onClose }: { employee: Employee; lo
                     onChange={(e) => setUsername(e.target.value.toLowerCase())}
                   />
                 </Field>
-                <PasswordField value={password} onChange={setPassword} onNew={() => setPassword(tempPassword())} label="Temporary password" />
+                <PasswordField
+                  value={password}
+                  onChange={setPassword}
+                  onNew={() => setPassword(tempPassword())}
+                  label="Temporary password"
+                />
                 <DialogFooter>
-                  <Button type="submit" disabled={createMutation.isPending || username.length < 3 || password.length < 8}>
+                  <Button
+                    type="submit"
+                    disabled={
+                      createMutation.isPending || username.length < 3 || password.length < 8
+                    }
+                  >
                     {createMutation.isPending ? "Creating…" : "Create login"}
                   </Button>
                 </DialogFooter>
@@ -589,13 +713,21 @@ function LoginDialog({ employee, loginEmail, onClose }: { employee: Employee; lo
               >
                 <p className="text-sm text-muted-foreground">
                   Invite them first under{" "}
-                  <Link to="/settings/access" className="font-medium text-link underline-offset-4 hover:underline">
+                  <Link
+                    to="/settings/access"
+                    className="font-medium text-link underline-offset-4 hover:underline"
+                  >
                     Team access
                   </Link>
                   . Once they've signed in, link that email here.
                 </p>
                 <Field label="Email they signed in with" htmlFor="login-email">
-                  <Input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input
+                    id="login-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </Field>
                 <DialogFooter>
                   <Button type="submit" disabled={linkMutation.isPending || !email.includes("@")}>
@@ -623,7 +755,11 @@ function PasswordField({
   label: string;
 }) {
   return (
-    <Field label={label} htmlFor="login-password" hint="At least 8 characters. They'll change it after signing in.">
+    <Field
+      label={label}
+      htmlFor="login-password"
+      hint="At least 8 characters. They'll change it after signing in."
+    >
       <div className="flex gap-2">
         <Input
           id="login-password"
@@ -633,7 +769,13 @@ function PasswordField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
-        <Button type="button" variant="outline" size="icon" onClick={onNew} aria-label="Generate a new password">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={onNew}
+          aria-label="Generate a new password"
+        >
           <RefreshCw />
         </Button>
       </div>
@@ -641,14 +783,28 @@ function PasswordField({
   );
 }
 
-function Credential({ label, value, onCopy }: { label: string; value: string; onCopy: (v: string) => void }) {
+function Credential({
+  label,
+  value,
+  onCopy,
+}: {
+  label: string;
+  value: string;
+  onCopy: (v: string) => void;
+}) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg bg-card px-3 py-2 shadow-[var(--shadow-ring)]">
       <div className="min-w-0">
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="truncate font-semibold tabular-nums select-all">{value}</p>
       </div>
-      <Button type="button" variant="ghost" size="icon-sm" onClick={() => onCopy(value)} aria-label={`Copy ${label.toLowerCase()}`}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => onCopy(value)}
+        aria-label={`Copy ${label.toLowerCase()}`}
+      >
         <Copy />
       </Button>
     </div>
@@ -683,7 +839,17 @@ function Field({
   );
 }
 
-function Toggle({ id, label, checked, onChange }: { id: string; label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({
+  id,
+  label,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <div className="flex items-center gap-2">
       <Switch id={id} checked={checked} onCheckedChange={onChange} />

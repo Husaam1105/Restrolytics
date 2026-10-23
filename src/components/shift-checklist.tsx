@@ -20,13 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { compressImage } from "@/lib/image";
 
 export function ShiftChecklist({
@@ -129,7 +123,15 @@ export function ShiftChecklist({
   return (
     <div className={embedded ? "min-w-0 space-y-4" : "mx-auto max-w-3xl space-y-6 px-4 py-6"}>
       <div>
-        <h2 className={embedded ? "text-lg font-semibold tracking-tight" : "text-2xl font-semibold tracking-tight"}>{title}</h2>
+        <h2
+          className={
+            embedded
+              ? "text-lg font-semibold tracking-tight"
+              : "text-2xl font-semibold tracking-tight"
+          }
+        >
+          {title}
+        </h2>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
 
@@ -203,9 +205,7 @@ export function ShiftChecklist({
                       >
                         <Input
                           value={values[task.id] ?? task.value ?? ""}
-                          onChange={(e) =>
-                            setValues((v) => ({ ...v, [task.id]: e.target.value }))
-                          }
+                          onChange={(e) => setValues((v) => ({ ...v, [task.id]: e.target.value }))}
                           inputMode={task.inputType === "text" ? "text" : "decimal"}
                           placeholder={
                             task.inputType === "temperature"
@@ -240,10 +240,7 @@ export function ShiftChecklist({
                     {task.notes.length > 0 && (
                       <ul className="mt-2 space-y-1.5">
                         {task.notes.map((n) => (
-                          <li
-                            key={n.id}
-                            className="rounded-md bg-muted px-2.5 py-1.5 text-xs"
-                          >
+                          <li key={n.id} className="rounded-md bg-muted px-2.5 py-1.5 text-xs">
                             <span className="block">{n.note}</span>
                             <span className="text-muted-foreground">
                               {n.author ?? "Manager"} ·{" "}
@@ -386,7 +383,6 @@ export function ShiftChecklist({
               Add
             </Button>
           </form>
-
         </CardContent>
       </Card>
     </div>

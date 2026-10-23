@@ -21,7 +21,10 @@ function SalesLayout() {
 
   return (
     <PageContainer>
-      <PageHeader title="Sales" description="Totals across every channel, and the detail behind each one." />
+      <PageHeader
+        title="Sales"
+        description="Totals across every channel, and the detail behind each one."
+      />
 
       <nav aria-label="Sales channels" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <ul className="flex w-max gap-1 rounded-xl bg-muted p-1">
@@ -34,7 +37,9 @@ function SalesLayout() {
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex min-h-9 items-center whitespace-nowrap rounded-lg px-3.5 text-sm font-semibold transition-colors",
-                    active ? "bg-card text-foreground shadow-[var(--shadow-ring),var(--shadow-xs)]" : "text-muted-foreground hover:text-foreground",
+                    active
+                      ? "bg-card text-foreground shadow-[var(--shadow-ring),var(--shadow-xs)]"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {tab.label}

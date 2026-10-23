@@ -29,9 +29,21 @@ import { StatCard } from "@/components/stat-card";
 import { EmptyState, ErrorState, LoadingState, QueryBoundary } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -68,11 +80,19 @@ function DashboardPage() {
   if (query.isError || !query.data) {
     return (
       <PageContainer>
-        <ErrorState title="The dashboard didn't load" error={query.error} onRetry={() => void query.refetch()} />
+        <ErrorState
+          title="The dashboard didn't load"
+          error={query.error}
+          onRetry={() => void query.refetch()}
+        />
       </PageContainer>
     );
   }
-  return query.data.isManager ? <ManagerDashboard data={query.data} /> : <StaffToday data={query.data} />;
+  return query.data.isManager ? (
+    <ManagerDashboard data={query.data} />
+  ) : (
+    <StaffToday data={query.data} />
+  );
 }
 
 type Stats = Awaited<ReturnType<typeof getDashboardStats>>;
@@ -97,14 +117,26 @@ function ManagerDashboard({ data }: { data: Stats }) {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Sales today" value={formatCurrency(data.todayRevenue)} icon={<Receipt />} note={`${formatCurrency(data.todayTips)} in tips`} />
-        <StatCard label="Orders today" value={data.todayOrders.toLocaleString("en-US")} icon={<ConciergeBell />} note="All channels" />
+        <StatCard
+          label="Sales today"
+          value={formatCurrency(data.todayRevenue)}
+          icon={<Receipt />}
+          note={`${formatCurrency(data.todayTips)} in tips`}
+        />
+        <StatCard
+          label="Orders today"
+          value={data.todayOrders.toLocaleString("en-US")}
+          icon={<ConciergeBell />}
+          note="All channels"
+        />
         <StatCard
           label="Low stock"
           value={data.lowStockCount}
           icon={<PackageCheck />}
           tone={data.lowStockCount > 0 ? "warning" : "positive"}
-          note={data.lowStockCount > 0 ? "At or below reorder level" : "Everything above reorder level"}
+          note={
+            data.lowStockCount > 0 ? "At or below reorder level" : "Everything above reorder level"
+          }
         />
       </div>
 
@@ -123,15 +155,27 @@ function ManagerDashboard({ data }: { data: Stats }) {
   );
 }
 
-const salesChartConfig = { total: { label: "Sales", color: "var(--color-chart-1)" } } satisfies ChartConfig;
+const salesChartConfig = {
+  total: { label: "Sales", color: "var(--color-chart-1)" },
+} satisfies ChartConfig;
 
 function SalesChart() {
-  const query = useQuery({ queryKey: ["dashboard", "sales-chart"], queryFn: () => getSalesChartData() });
+  const query = useQuery({
+    queryKey: ["dashboard", "sales-chart"],
+    queryFn: () => getSalesChartData(),
+  });
   return (
     <section className="surface p-5 sm:p-6" aria-labelledby="sales-7d">
-      <SectionHeader title={<span id="sales-7d">Sales, last 7 days</span>} description="Gross sales across every channel, by business day." />
+      <SectionHeader
+        title={<span id="sales-7d">Sales, last 7 days</span>}
+        description="Gross sales across every channel, by business day."
+      />
       <div className="mt-5">
-        <QueryBoundary query={query} loading={<Skeleton className="h-64 rounded-xl" />} errorTitle="Sales chart didn't load">
+        <QueryBoundary
+          query={query}
+          loading={<Skeleton className="h-64 rounded-xl" />}
+          errorTitle="Sales chart didn't load"
+        >
           {(chart) =>
             chart.points.every((p) => p.total === 0) ? (
               <EmptyState
@@ -146,19 +190,32 @@ function SalesChart() {
             ) : (
               <ChartContainer config={salesChartConfig} className="chart-enter h-64 w-full">
                 <BarChart data={chart.points} margin={{ left: 4, right: 4, top: 4 }}>
-                  <CartesianGrid vertical={false} strokeDasharray="0" stroke="var(--color-border)" />
+                  <CartesianGrid
+                    vertical={false}
+                    strokeDasharray="0"
+                    stroke="var(--color-border)"
+                  />
                   <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
                   <YAxis
                     width={56}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(v: number) => (v >= 1000 ? `$${Math.round(v / 100) / 10}k` : `$${v}`)}
+                    tickFormatter={(v: number) =>
+                      v >= 1000 ? `$${Math.round(v / 100) / 10}k` : `$${v}`
+                    }
                   />
                   <ChartTooltip
                     cursor={{ fill: "var(--color-muted)" }}
-                    content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />}
+                    content={
+                      <ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />
+                    }
                   />
-                  <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} maxBarSize={44} />
+                  <Bar
+                    dataKey="total"
+                    fill="var(--color-total)"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={44}
+                  />
                 </BarChart>
               </ChartContainer>
             )
@@ -170,17 +227,25 @@ function SalesChart() {
 }
 
 function ChannelShare() {
-  const query = useQuery({ queryKey: ["dashboard", "platform-breakdown"], queryFn: () => getPlatformBreakdown() });
+  const query = useQuery({
+    queryKey: ["dashboard", "platform-breakdown"],
+    queryFn: () => getPlatformBreakdown(),
+  });
   return (
     <section className="surface p-5 sm:p-6" aria-labelledby="channels-30d">
-      <SectionHeader title={<span id="channels-30d">Sales by channel</span>} description="Last 30 days." />
+      <SectionHeader
+        title={<span id="channels-30d">Sales by channel</span>}
+        description="Last 30 days."
+      />
       <div className="mt-5">
         <QueryBoundary
           query={query}
           loading={<LoadingState rows={4} />}
           errorTitle="Channel breakdown didn't load"
           isEmpty={(d) => d.data.length === 0}
-          empty={<p className="text-sm text-muted-foreground">No sales recorded in the last 30 days.</p>}
+          empty={
+            <p className="text-sm text-muted-foreground">No sales recorded in the last 30 days.</p>
+          }
         >
           {(d) => {
             const total = d.data.reduce((sum, c) => sum + c.total, 0);
@@ -193,7 +258,10 @@ function ChannelShare() {
                       <div className="flex items-baseline justify-between gap-3 text-sm">
                         <span className="font-medium">{channel.label}</span>
                         <span className="tabular-nums text-muted-foreground">
-                          <span className="font-semibold text-foreground">{formatCurrency(channel.total)}</span> ({share}%)
+                          <span className="font-semibold text-foreground">
+                            {formatCurrency(channel.total)}
+                          </span>{" "}
+                          ({share}%)
                         </span>
                       </div>
                       <div
@@ -201,7 +269,10 @@ function ChannelShare() {
                         role="img"
                         aria-label={`${channel.label}: ${share}% of sales`}
                       >
-                        <div className="h-full rounded-full bg-chart-1" style={{ width: `${Math.max(share, 2)}%` }} />
+                        <div
+                          className="h-full rounded-full bg-chart-1"
+                          style={{ width: `${Math.max(share, 2)}%` }}
+                        />
                       </div>
                     </li>
                   );
@@ -216,7 +287,10 @@ function ChannelShare() {
 }
 
 function RecentOrders() {
-  const query = useQuery({ queryKey: ["dashboard", "recent-sales"], queryFn: () => getRecentSales() });
+  const query = useQuery({
+    queryKey: ["dashboard", "recent-sales"],
+    queryFn: () => getRecentSales(),
+  });
   return (
     <section className="surface overflow-hidden" aria-labelledby="recent-orders">
       <div className="p-5 pb-3 sm:p-6 sm:pb-3">
@@ -234,7 +308,11 @@ function RecentOrders() {
         loading={<LoadingState rows={4} className="p-5" />}
         errorTitle="Recent orders didn't load"
         isEmpty={(d) => d.sales.length === 0}
-        empty={<p className="px-6 pb-6 text-sm text-muted-foreground">No orders yet. They appear here as soon as sales are imported.</p>}
+        empty={
+          <p className="px-6 pb-6 text-sm text-muted-foreground">
+            No orders yet. They appear here as soon as sales are imported.
+          </p>
+        }
       >
         {(d) => (
           <div className="overflow-x-auto">
@@ -250,7 +328,9 @@ function RecentOrders() {
               <TableBody>
                 {d.sales.map((sale) => (
                   <TableRow key={sale.id}>
-                    <TableCell className="pl-6 font-medium">{sale.order_number ?? "No number"}</TableCell>
+                    <TableCell className="pl-6 font-medium">
+                      {sale.order_number ?? "No number"}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{platformLabel(sale.platform)}</Badge>
                     </TableCell>
@@ -262,7 +342,9 @@ function RecentOrders() {
                         minute: "2-digit",
                       })}
                     </TableCell>
-                    <TableCell className="pr-6 text-right font-semibold tabular-nums">{formatCurrency(sale.total)}</TableCell>
+                    <TableCell className="pr-6 text-right font-semibold tabular-nums">
+                      {formatCurrency(sale.total)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -275,10 +357,16 @@ function RecentOrders() {
 }
 
 function LowStock() {
-  const query = useQuery({ queryKey: ["dashboard", "inventory-alerts"], queryFn: () => getInventoryAlerts() });
+  const query = useQuery({
+    queryKey: ["dashboard", "inventory-alerts"],
+    queryFn: () => getInventoryAlerts(),
+  });
   return (
     <section className="surface p-5 sm:p-6" aria-labelledby="low-stock">
-      <SectionHeader title={<span id="low-stock">Low stock</span>} description="At or below reorder level." />
+      <SectionHeader
+        title={<span id="low-stock">Low stock</span>}
+        description="At or below reorder level."
+      />
       <div className="mt-4">
         <QueryBoundary
           query={query}
@@ -290,7 +378,10 @@ function LowStock() {
           {(d) => (
             <ul className="divide-y">
               {d.items.map((item) => (
-                <li key={item.id} className="flex items-center justify-between gap-3 py-3 first:pt-0">
+                <li
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 py-3 first:pt-0"
+                >
                   <div className="min-w-0">
                     <p className="truncate font-medium">{item.name}</p>
                     <p className="text-xs text-muted-foreground tabular-nums">
@@ -321,19 +412,47 @@ function StaffToday({ data }: { data: Stats }) {
   const name = clock.data?.employee?.fullName.split(" ")[0];
 
   const shortcuts = [
-    { to: "/timeclock", icon: Timer, title: "Time clock", text: "Clock in, clock out and see your hours." },
-    { to: "/foh", icon: ConciergeBell, title: "Front of house", text: "Opening and closing checklists." },
+    {
+      to: "/timeclock",
+      icon: Timer,
+      title: "Time clock",
+      text: "Clock in, clock out and see your hours.",
+    },
+    {
+      to: "/foh",
+      icon: ConciergeBell,
+      title: "Front of house",
+      text: "Opening and closing checklists.",
+    },
     { to: "/boh", icon: ChefHat, title: "Kitchen", text: "Line, prep and closing checklists." },
     { to: "/shifts", icon: CalendarDays, title: "Schedule", text: "Your upcoming shifts." },
-    { to: "/inventory/storage", icon: Warehouse, title: "Stock counts", text: "Count a storage area." },
-    { to: "/copilot", icon: BrainCircuit, title: "Ask IQ", text: "About your hours, pay or tasks." },
+    {
+      to: "/inventory/storage",
+      icon: Warehouse,
+      title: "Stock counts",
+      text: "Count a storage area.",
+    },
+    {
+      to: "/copilot",
+      icon: BrainCircuit,
+      title: "Ask IQ",
+      text: "About your hours, pay or tasks.",
+    },
   ] as const;
 
   return (
     <PageContainer>
-      <PageHeader context={data.restaurantName} title={name ? `Hi, ${name}` : "Today"} description={longDate(data.today)} />
+      <PageHeader
+        context={data.restaurantName}
+        title={name ? `Hi, ${name}` : "Today"}
+        description={longDate(data.today)}
+      />
 
-      <QueryBoundary query={clock} loading={<Skeleton className="h-28 rounded-2xl" />} errorTitle="Your time clock didn't load">
+      <QueryBoundary
+        query={clock}
+        loading={<Skeleton className="h-28 rounded-2xl" />}
+        errorTitle="Your time clock didn't load"
+      >
         {(c) =>
           c.employee ? (
             <div className="grid gap-4 sm:grid-cols-2">
@@ -348,7 +467,12 @@ function StaffToday({ data }: { data: Stats }) {
                 }
                 icon={<Timer />}
               />
-              <StatCard label="Hours this week" value={c.weekHours.toFixed(2)} icon={<CalendarDays />} note="Including today" />
+              <StatCard
+                label="Hours this week"
+                value={c.weekHours.toFixed(2)}
+                icon={<CalendarDays />}
+                note="Including today"
+              />
             </div>
           ) : (
             <EmptyState
@@ -361,9 +485,14 @@ function StaffToday({ data }: { data: Stats }) {
 
       {data.lowStockCount > 0 ? (
         <div className="flex items-center gap-3 rounded-2xl bg-warning-soft px-5 py-4 text-sm">
-          <AlertTriangle className="size-5 shrink-0 text-warning-foreground dark:text-warning" aria-hidden="true" />
+          <AlertTriangle
+            className="size-5 shrink-0 text-warning-foreground dark:text-warning"
+            aria-hidden="true"
+          />
           <p>
-            <span className="font-semibold">{data.lowStockCount} item{data.lowStockCount === 1 ? "" : "s"} running low.</span>{" "}
+            <span className="font-semibold">
+              {data.lowStockCount} item{data.lowStockCount === 1 ? "" : "s"} running low.
+            </span>{" "}
             Let your manager know if you use the last of something.
           </p>
         </div>

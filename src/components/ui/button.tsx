@@ -19,7 +19,8 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground shadow-[var(--shadow-sm)] hover:bg-primary/90",
         brand: "bg-brand text-brand-foreground shadow-[var(--shadow-sm)] hover:bg-brand/90",
         highlight: "bg-highlight text-ink shadow-[var(--shadow-sm)] hover:bg-highlight/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-[var(--shadow-sm)] hover:bg-destructive/90",
+        destructive:
+          "bg-destructive text-destructive-foreground shadow-[var(--shadow-sm)] hover:bg-destructive/90",
         outline:
           "bg-card text-foreground shadow-[var(--shadow-ring),var(--shadow-xs)] hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/70",

@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function isPlatformStaff(supabase: { rpc: (fn: "is_platform_staff") => PromiseLike<{ data: unknown }> }) {
+async function isPlatformStaff(supabase: {
+  rpc: (fn: "is_platform_staff") => PromiseLike<{ data: unknown }>;
+}) {
   const { data } = await supabase.rpc("is_platform_staff");
   return data === true;
 }
@@ -44,16 +46,32 @@ export const iqManagerAssist = createServerFn({ method: "POST" })
   }))
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
-    if (!(await isPlatformStaff(context.supabase as never))) throw new Error("Only Restrolytics staff can use this.");
+    if (!(await isPlatformStaff(context.supabase as never)))
+      throw new Error("Only Restrolytics staff can use this.");
     const { aiErrorMessage, getChatModel, isAiConfigured } = await import("./ai.server");
     if (!isAiConfigured()) throw new Error("IQ isn't set up for this workspace yet.");
     const sb = context.supabase;
     const [{ data: rest }, { data: tasks }, { data: notes }] = await Promise.all([
       sb.from("restaurants").select("name").eq("id", data.restaurantId).maybeSingle(),
-      sb.from("manager_tasks").select("title, assigned_name, due_date, status, completion_note").eq("restaurant_id", data.restaurantId).order("created_at", { ascending: false }).limit(50),
-      sb.from("manager_notes").select("author_name, category, body, status, created_at").eq("restaurant_id", data.restaurantId).order("created_at", { ascending: false }).limit(50),
+      sb
+        .from("manager_tasks")
+        .select("title, assigned_name, due_date, status, completion_note")
+        .eq("restaurant_id", data.restaurantId)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      sb
+        .from("manager_notes")
+        .select("author_name, category, body, status, created_at")
+        .eq("restaurant_id", data.restaurantId)
+        .order("created_at", { ascending: false })
+        .limit(50),
     ]);
-    let messages: { author_name: string | null; from_manager: boolean; body: string; created_at: string }[] = [];
+    let messages: {
+      author_name: string | null;
+      from_manager: boolean;
+      body: string;
+      created_at: string;
+    }[] = [];
     if (data.threadId) {
       const { data: m } = await sb
         .from("manager_messages")
@@ -81,4 +99,3 @@ CONVERSATION: ${JSON.stringify(messages)}`;
       throw new Error(aiErrorMessage(e, "IQ couldn't help right now. Please try again."));
     }
   });
-

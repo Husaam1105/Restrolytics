@@ -86,7 +86,9 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           >
             <AlertDialogHeader>
               <AlertDialogTitle>{request?.title}</AlertDialogTitle>
-              {request?.description ? <AlertDialogDescription>{request.description}</AlertDialogDescription> : null}
+              {request?.description ? (
+                <AlertDialogDescription>{request.description}</AlertDialogDescription>
+              ) : null}
             </AlertDialogHeader>
             {request?.kind === "prompt" ? (
               <div className="space-y-2">
@@ -102,8 +104,14 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
               </div>
             ) : null}
             <AlertDialogFooter className="gap-2">
-              <AlertDialogCancel type="button">{request?.cancelLabel ?? "Cancel"}</AlertDialogCancel>
-              <Button type="submit" variant={request?.destructive ? "destructive" : "default"} disabled={blocked}>
+              <AlertDialogCancel type="button">
+                {request?.cancelLabel ?? "Cancel"}
+              </AlertDialogCancel>
+              <Button
+                type="submit"
+                variant={request?.destructive ? "destructive" : "default"}
+                disabled={blocked}
+              >
                 {request?.confirmLabel}
               </Button>
             </AlertDialogFooter>

@@ -8,7 +8,8 @@
  */
 import { addDays, weekStartDate } from "./payroll";
 
-export type RangeId = "today" | "yesterday" | "this_week" | "last_week" | "this_month" | "last_month" | "custom";
+export type RangeId =
+  "today" | "yesterday" | "this_week" | "last_week" | "this_month" | "last_month" | "custom";
 
 export const RANGES: { id: RangeId; label: string }[] = [
   { id: "today", label: "Today" },
@@ -31,7 +32,11 @@ function addMonths(monthFirst: string, months: number) {
 }
 
 /** Inclusive from/to dates for a preset. "custom" falls back to today. */
-export function rangeDates(id: string, today: string, weekStartsOn = 1): { from: string; to: string } {
+export function rangeDates(
+  id: string,
+  today: string,
+  weekStartsOn = 1,
+): { from: string; to: string } {
   switch (id) {
     case "yesterday": {
       const d = addDays(today, -1);

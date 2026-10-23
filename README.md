@@ -17,13 +17,13 @@ Setting up a fresh Supabase project (schema, auth providers, storage) is covered
 
 ## Scripts
 
-| Command | What it does |
-|---|---|
-| `npm run dev` | Dev server with HMR |
-| `npm run build` | Production build into `.output/` |
-| `npm start` | Run the built Node server |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` | ESLint |
+| Command             | What it does                     |
+| ------------------- | -------------------------------- |
+| `npm run dev`       | Dev server with HMR              |
+| `npm run build`     | Production build into `.output/` |
+| `npm start`         | Run the built Node server        |
+| `npm run typecheck` | `tsc --noEmit`                   |
+| `npm run lint`      | ESLint                           |
 
 ## Deploying
 

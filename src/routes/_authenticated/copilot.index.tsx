@@ -14,7 +14,10 @@ export const Route = createFileRoute("/_authenticated/copilot/")({
   head: () => ({
     meta: [
       { title: "IQ Copilot · Restrolytics" },
-      { name: "description", content: "Daily briefing, alerts and answers from your own restaurant data." },
+      {
+        name: "description",
+        content: "Daily briefing, alerts and answers from your own restaurant data.",
+      },
     ],
   }),
   component: CopilotHome,
@@ -53,10 +56,13 @@ function CopilotHome() {
 
       {!aiReady ? (
         <div role="status" className="flex gap-3 rounded-2xl bg-warning-soft px-5 py-4 text-sm">
-          <Info className="mt-0.5 size-5 shrink-0 text-warning-foreground dark:text-warning" aria-hidden="true" />
+          <Info
+            className="mt-0.5 size-5 shrink-0 text-warning-foreground dark:text-warning"
+            aria-hidden="true"
+          />
           <p>
-            <span className="font-semibold">IQ isn&apos;t switched on for this workspace yet.</span> Your Restrolytics manager can
-            still help in the meantime.
+            <span className="font-semibold">IQ isn&apos;t switched on for this workspace yet.</span>{" "}
+            Your Restrolytics manager can still help in the meantime.
           </p>
         </div>
       ) : null}
@@ -74,7 +80,13 @@ function CopilotHome() {
               </p>
             </div>
             <Button
-              onClick={() => ask(isStaff ? "Give me my briefing for today: my shift, hours and open tasks." : "Give me today's manager briefing.")}
+              onClick={() =>
+                ask(
+                  isStaff
+                    ? "Give me my briefing for today: my shift, hours and open tasks."
+                    : "Give me today's manager briefing.",
+                )
+              }
               disabled={asking}
             >
               <CalendarCheck />
@@ -88,14 +100,21 @@ function CopilotHome() {
               {query.isPending ? (
                 <LoadingState rows={2} />
               ) : query.isError ? (
-                <ErrorState title="Alerts didn't load" error={query.error} onRetry={() => void query.refetch()} />
+                <ErrorState
+                  title="Alerts didn't load"
+                  error={query.error}
+                  onRetry={() => void query.refetch()}
+                />
               ) : data?.alerts.length ? (
                 <div className="grid gap-3 md:grid-cols-2">
                   {data.alerts.map((a) => (
                     <article key={a.title} className="surface flex flex-col gap-3 p-4">
                       <div className="flex items-start gap-2.5">
                         {a.level === "warning" ? (
-                          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning-foreground dark:text-warning" aria-label="Warning" />
+                          <AlertTriangle
+                            className="mt-0.5 size-4 shrink-0 text-warning-foreground dark:text-warning"
+                            aria-label="Warning"
+                          />
                         ) : (
                           <Info className="mt-0.5 size-4 shrink-0 text-link" aria-label="Note" />
                         )}
@@ -104,14 +123,22 @@ function CopilotHome() {
                           <p className="text-sm text-muted-foreground">{a.detail}</p>
                         </div>
                       </div>
-                      <Button size="sm" variant="outline" className="mt-auto self-start" onClick={() => ask(a.ask)} disabled={asking}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-auto self-start"
+                        onClick={() => ask(a.ask)}
+                        disabled={asking}
+                      >
                         Ask IQ what to do
                       </Button>
                     </article>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Nothing needs your attention right now.</p>
+                <p className="text-sm text-muted-foreground">
+                  Nothing needs your attention right now.
+                </p>
               )}
             </section>
           ) : null}
@@ -120,7 +147,14 @@ function CopilotHome() {
             <SectionHeader title={<span id="try-heading">Try asking</span>} />
             <div className="flex flex-wrap gap-2">
               {questions.map((q) => (
-                <Button key={q} size="sm" variant="secondary" className="font-normal" onClick={() => ask(q)} disabled={asking}>
+                <Button
+                  key={q}
+                  size="sm"
+                  variant="secondary"
+                  className="font-normal"
+                  onClick={() => ask(q)}
+                  disabled={asking}
+                >
                   {q}
                 </Button>
               ))}
@@ -132,7 +166,9 @@ function CopilotHome() {
               <Headset className="mt-0.5 size-5 shrink-0 text-link" aria-hidden="true" />
               <div>
                 <h2 className="font-semibold">Restrolytics manager</h2>
-                <p className="text-sm text-muted-foreground">Chat with a real person, see assigned tasks and log notes for review.</p>
+                <p className="text-sm text-muted-foreground">
+                  Chat with a real person, see assigned tasks and log notes for review.
+                </p>
               </div>
             </div>
             <Button asChild variant="outline" className="shrink-0">
