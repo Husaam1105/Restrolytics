@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { likeExact } from "./item-match";
 
 type Cookies = Map<string, string>;
 
@@ -251,7 +252,8 @@ export async function runVendorSync(admin: SupabaseClient, vendor: VendorRow) {
         .from("inventory_items")
         .select("id, current_stock, last_ordered_at")
         .eq("restaurant_id", vendor.restaurant_id)
-        .ilike("name", item.name)
+        .ilike("name", likeExact(item.name))
+        .limit(1)
         .maybeSingle();
 
       let inventoryItemId = existingItem?.id ?? null;

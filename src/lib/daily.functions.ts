@@ -63,14 +63,23 @@ export const getDayReport = createServerFn({ method: "GET" })
     const { end } = dayRangeUtc(to, shift.timezone);
     const manager = canManage(restaurant.role);
 
-    const [salesRes, issuesRes, entriesRes, poolsRes] = await Promise.all([
-      supabase
-        .from("sales")
-        .select("id, platform, order_number, total, tax, tip, status, created_at")
-        .eq("restaurant_id", restaurant.id)
-        .gte("created_at", start)
-        .lt("created_at", end)
-        .order("created_at", { ascending: false }),
+    const none = { data: [], error: null } as const;
+    // Money (sales, wages) is for owners and managers only.
+    const [dailyRes, failedRes, issuesRes, entriesRes, poolsRes] = await Promise.all([
+      manager
+        ? supabase.rpc("sales_daily", { _restaurant_id: restaurant.id, _from: from, _to: to, _tz: shift.timezone })
+        : none,
+      manager
+        ? supabase
+            .from("sales")
+            .select("id, platform, order_number, total, status, created_at")
+            .eq("restaurant_id", restaurant.id)
+            .in("status", FAILED_STATUSES)
+            .gte("created_at", start)
+            .lt("created_at", end)
+            .order("created_at", { ascending: false })
+            .limit(200)
+        : none,
       supabase
         .from("day_issues")
         .select("id, category, amount, description, platform, created_by_email, created_at")
@@ -84,24 +93,25 @@ export const getDayReport = createServerFn({ method: "GET" })
         .eq("restaurant_id", restaurant.id)
         .gte("work_date", from)
         .lte("work_date", to),
-      supabase
-        .from("tip_pools")
-        .select("area, amount")
-        .eq("restaurant_id", restaurant.id)
-        .gte("pool_date", from)
-        .lte("pool_date", to),
+      manager
+        ? supabase
+            .from("tip_pools")
+            .select("area, amount")
+            .eq("restaurant_id", restaurant.id)
+            .gte("pool_date", from)
+            .lte("pool_date", to)
+        : none,
     ]);
+    for (const res of [dailyRes, failedRes, issuesRes, entriesRes, poolsRes]) if (res.error) throw res.error;
 
-    const sales = salesRes.data ?? [];
-    const goodSales = sales.filter((s) => !FAILED_STATUSES.includes(String(s.status).toLowerCase()));
-    const failedSales = sales.filter((s) => FAILED_STATUSES.includes(String(s.status).toLowerCase()));
+    const failedSales = failedRes.data ?? [];
 
     const byPlatform = new Map<
       string,
       { platform: string; label: string; orders: number; gross: number; tax: number; tips: number; net: number }
     >();
-    for (const sale of goodSales) {
-      const key = String(sale.platform);
+    for (const day of dailyRes.data ?? []) {
+      const key = String(day.platform);
       const row =
         byPlatform.get(key) ??
         {
@@ -113,10 +123,10 @@ export const getDayReport = createServerFn({ method: "GET" })
           tips: 0,
           net: 0,
         };
-      row.orders += 1;
-      row.gross += Number(sale.total ?? 0);
-      row.tax += Number(sale.tax ?? 0);
-      row.tips += Number(sale.tip ?? 0);
+      row.orders += Number(day.orders);
+      row.gross += Number(day.gross);
+      row.tax += Number(day.tax);
+      row.tips += Number(day.tips);
       row.net = row.gross - row.tax - row.tips;
       byPlatform.set(key, row);
     }
@@ -127,15 +137,17 @@ export const getDayReport = createServerFn({ method: "GET" })
     const gross = platforms.reduce((sum, p) => sum + p.gross, 0);
     const tax = platforms.reduce((sum, p) => sum + p.tax, 0);
     const tips = platforms.reduce((sum, p) => sum + p.tips, 0);
+    const orderCount = platforms.reduce((sum, p) => sum + p.orders, 0);
 
     // Who worked, and what the labour cost was.
     const employeeIds = [...new Set((entriesRes.data ?? []).map((e) => e.employee_id))];
-    const { data: employeeRows } = employeeIds.length
+    const { data: employeeRows, error: employeeError } = employeeIds.length
       ? await supabase
           .from("employees")
           .select("id, full_name, area, position, hourly_rate, pay_method, tip_eligible")
           .in("id", employeeIds)
-      : { data: [] as never[] };
+      : { data: [] as never[], error: null };
+    if (employeeError) throw employeeError;
 
     const employees = new Map((employeeRows ?? []).map((e) => [e.id, e]));
 
@@ -170,7 +182,7 @@ export const getDayReport = createServerFn({ method: "GET" })
           position: employee.position ?? null,
           minutes: 0,
           hours: 0,
-          rate: Number(employee.hourly_rate ?? 0),
+          rate: manager ? Number(employee.hourly_rate ?? 0) : 0,
           wages: 0,
           payMethod: employee.pay_method,
           tipEligible: Boolean(employee.tip_eligible),
@@ -223,8 +235,8 @@ export const getDayReport = createServerFn({ method: "GET" })
         tax,
         tips,
         netSales: Math.round((gross - tax - tips) * 100) / 100,
-        orders: goodSales.length,
-        averageTicket: goodSales.length ? Math.round((gross / goodSales.length) * 100) / 100 : 0,
+        orders: orderCount,
+        averageTicket: orderCount ? Math.round((gross / orderCount) * 100) / 100 : 0,
         labourHours,
         labourCost,
         tipPool,

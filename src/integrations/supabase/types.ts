@@ -1980,11 +1980,15 @@ export type Database = {
         Args: { _from: string; _restaurant_id: string; _to: string; _tz?: string }
         Returns: {
           day: string
+          failed: number
           fees: number
           gross: number
           orders: number
           payout: number
+          payout_orders: number
           platform: string
+          promotions: number
+          tax: number
           tips: number
         }[]
       }

@@ -370,21 +370,31 @@ GRANT EXECUTE ON FUNCTION public.complete_inventory_count(uuid) TO authenticated
 --     the API row cap can't truncate them. RLS on sales still applies.
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.sales_daily(_restaurant_id uuid, _from date, _to date, _tz text DEFAULT 'UTC')
-RETURNS TABLE (day date, platform text, orders bigint, gross numeric, tips numeric, fees numeric, payout numeric)
+RETURNS TABLE (
+  day date, platform text, orders bigint, failed bigint, gross numeric, tax numeric, tips numeric,
+  fees numeric, promotions numeric, payout numeric, payout_orders bigint
+)
 LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public AS $$
-  SELECT (s.created_at AT TIME ZONE _tz)::date AS day,
-         s.platform,
-         COUNT(*) AS orders,
-         COALESCE(SUM(s.total), 0) AS gross,
-         COALESCE(SUM(s.tip), 0) AS tips,
-         COALESCE(SUM(s.fees), 0) AS fees,
-         COALESCE(SUM(s.payout), 0) AS payout
-    FROM public.sales s
-   WHERE s.restaurant_id = _restaurant_id
-     AND s.status <> 'cancelled'
-     AND s.created_at >= (_from::timestamp AT TIME ZONE _tz)
-     AND s.created_at <  ((_to + 1)::timestamp AT TIME ZONE _tz)
-   GROUP BY 1, 2
-   ORDER BY 1, 2
+  WITH s AS (
+    SELECT (created_at AT TIME ZONE _tz)::date AS day, platform, total, tax, tip, fees, promotions, payout,
+           lower(status) IN ('refunded','cancelled','canceled','voided','void','error','failed') AS is_failed
+      FROM public.sales
+     WHERE restaurant_id = _restaurant_id
+       AND created_at >= (_from::timestamp AT TIME ZONE _tz)
+       AND created_at <  ((_to + 1)::timestamp AT TIME ZONE _tz)
+  )
+  SELECT day, platform,
+         COUNT(*) FILTER (WHERE NOT is_failed),
+         COUNT(*) FILTER (WHERE is_failed),
+         COALESCE(SUM(total) FILTER (WHERE NOT is_failed), 0),
+         COALESCE(SUM(tax) FILTER (WHERE NOT is_failed), 0),
+         COALESCE(SUM(tip) FILTER (WHERE NOT is_failed), 0),
+         COALESCE(SUM(fees) FILTER (WHERE NOT is_failed AND payout IS NOT NULL), 0),
+         COALESCE(SUM(promotions) FILTER (WHERE NOT is_failed AND payout IS NOT NULL), 0),
+         COALESCE(SUM(payout) FILTER (WHERE NOT is_failed), 0),
+         COUNT(*) FILTER (WHERE NOT is_failed AND payout IS NOT NULL)
+    FROM s
+   GROUP BY day, platform
+   ORDER BY day, platform
 $$;
 GRANT EXECUTE ON FUNCTION public.sales_daily(uuid, date, date, text) TO authenticated;

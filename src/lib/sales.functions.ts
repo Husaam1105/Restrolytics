@@ -26,11 +26,42 @@ const FEE_LABELS: [string, string][] = [
   ["offer_redemption", "Offer redemption fee"],
 ];
 
-function windowStart(days: number) {
-  const start = new Date();
-  start.setUTCDate(start.getUTCDate() - (days - 1));
-  start.setUTCHours(0, 0, 0, 0);
-  return start.toISOString();
+type DailyRow = {
+  day: string;
+  platform: string;
+  orders: number;
+  failed: number;
+  gross: number;
+  tax: number;
+  tips: number;
+  fees: number;
+  promotions: number;
+  payout: number;
+  payout_orders: number;
+};
+
+/** Totals in the same shape as summarize(), from database-side daily rows (no row cap). */
+function summarizeDaily(rows: DailyRow[]) {
+  const t = { orders: 0, gross: 0, tax: 0, tips: 0, failed: 0, fees: 0, promotions: 0, payout: 0, payoutOrders: 0 };
+  for (const r of rows) {
+    t.orders += Number(r.orders);
+    t.failed += Number(r.failed);
+    t.gross += Number(r.gross);
+    t.tax += Number(r.tax);
+    t.tips += Number(r.tips);
+    t.fees += Number(r.fees);
+    t.promotions += Number(r.promotions);
+    t.payout += Number(r.payout);
+    t.payoutOrders += Number(r.payout_orders);
+  }
+  return { ...t, net: t.gross - t.tax - t.tips };
+}
+
+/** The restaurant's timezone and today's local date. */
+async function restaurantClock(settings: unknown) {
+  const { localNow, parseShiftSettings } = await import("./operating-day");
+  const timezone = parseShiftSettings(settings).timezone;
+  return { timezone, today: localNow(timezone).date };
 }
 
 function normalizeDays(value: unknown) {
@@ -73,17 +104,14 @@ export const getSalesOverview = createServerFn({ method: "GET" })
   .inputValidator((data: { days?: number } | undefined) => ({ days: normalizeDays(data?.days) }))
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
-    const { resolveActiveRestaurant, canManage } = await import("./tenant.server");
-    const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
-    const since = windowStart(data.days);
+    const { requireManager, canManage } = await import("./tenant.server");
+    const restaurant = await requireManager(context.supabase, context.userId);
+    const { addDays } = await import("./payroll");
+    const { timezone, today } = await restaurantClock(restaurant.settings);
+    const since = addDays(today, -(data.days - 1));
 
     const [salesRes, connectionsRes, cateringRes] = await Promise.all([
-      context.supabase
-        .from("sales")
-        .select("id, platform, order_number, total, tax, tip, status, created_at")
-        .eq("restaurant_id", restaurant.id)
-        .gte("created_at", since)
-        .order("created_at", { ascending: false }),
+      context.supabase.rpc("sales_daily", { _restaurant_id: restaurant.id, _from: since, _to: today, _tz: timezone }),
       context.supabase
         .from("platform_connections")
         .select("platform, status, last_synced_at")
@@ -92,13 +120,14 @@ export const getSalesOverview = createServerFn({ method: "GET" })
         .from("catering_orders")
         .select("id, total, status, event_date")
         .eq("restaurant_id", restaurant.id)
-        .gte("event_date", since.slice(0, 10)),
+        .gte("event_date", since)
+        .lte("event_date", today),
     ]);
     if (salesRes.error) throw salesRes.error;
     if (connectionsRes.error) throw connectionsRes.error;
     if (cateringRes.error) throw cateringRes.error;
 
-    const rows = (salesRes.data ?? []) as SaleRow[];
+    const rows = (salesRes.data ?? []) as DailyRow[];
     const connections = new Map(
       (connectionsRes.data ?? []).map((c) => [c.platform, c] as const),
     );
@@ -112,7 +141,7 @@ export const getSalesOverview = createServerFn({ method: "GET" })
         kind: channel.kind,
         connected: connection?.status === "connected",
         lastSyncedAt: connection?.last_synced_at ?? null,
-        ...summarize(own),
+        ...summarizeDaily(own),
       };
     });
 
@@ -122,9 +151,11 @@ export const getSalesOverview = createServerFn({ method: "GET" })
       gross: cateringOrders.reduce((sum, o) => sum + Number(o.total ?? 0), 0),
     };
 
-    const totals = summarize(rows);
+    const totals = summarizeDaily(rows);
     return {
       days: data.days,
+      from: since,
+      to: today,
       canManage: canManage(restaurant.role),
       restaurantName: restaurant.name,
       totals: { ...totals, grossWithCatering: totals.gross + catering.gross },
@@ -134,27 +165,31 @@ export const getSalesOverview = createServerFn({ method: "GET" })
   });
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ORDER_LIST_LIMIT = 500;
 
 export const getChannelSales = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string; from?: string; to?: string }) => {
-    const today = new Date().toISOString().slice(0, 10);
-    const from = typeof data.from === "string" && DATE_RE.test(data.from) ? data.from : today;
-    const to = typeof data.to === "string" && DATE_RE.test(data.to) ? data.to : from;
-    return { slug: String(data.slug), from, to: to < from ? from : to };
+    const from = typeof data.from === "string" && DATE_RE.test(data.from) ? data.from : null;
+    const to = typeof data.to === "string" && DATE_RE.test(data.to) ? data.to : null;
+    return { slug: String(data.slug), from, to };
   })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const channel = SALES_CHANNELS.find((c) => c.slug === data.slug);
     if (!channel) throw new Error("Unknown sales channel");
 
-    const { resolveActiveRestaurant } = await import("./tenant.server");
-    const { dayRangeUtc, parseShiftSettings } = await import("./operating-day");
-    const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
-    const timezone = parseShiftSettings(restaurant.settings).timezone;
-    const { start } = dayRangeUtc(data.from, timezone);
-    const { end } = dayRangeUtc(data.to, timezone);
+    const { requireManager } = await import("./tenant.server");
+    const { dayRangeUtc } = await import("./operating-day");
+    const restaurant = await requireManager(context.supabase, context.userId);
+    const { timezone, today } = await restaurantClock(restaurant.settings);
+    // Default to the restaurant's own "today", not the server's UTC date.
+    const from = data.from ?? today;
+    const to = data.to && data.to >= from ? data.to : from;
+    const { start } = dayRangeUtc(from, timezone);
+    const { end } = dayRangeUtc(to, timezone);
 
-    const [salesRes, connectionRes] = await Promise.all([
+    const [dailyRes, salesRes, connectionRes] = await Promise.all([
+      context.supabase.rpc("sales_daily", { _restaurant_id: restaurant.id, _from: from, _to: to, _tz: timezone }),
       context.supabase
         .from("sales")
         .select("id, platform, order_number, total, tax, tip, status, created_at, payout, fees, promotions, fee_breakdown")
@@ -163,7 +198,7 @@ export const getChannelSales = createServerFn({ method: "GET" })
         .gte("created_at", start)
         .lt("created_at", end)
         .order("created_at", { ascending: false })
-        .limit(500),
+        .limit(ORDER_LIST_LIMIT),
       context.supabase
         .from("platform_connections")
         .select("id, platform, status, account_label, last_synced_at, last_error")
@@ -171,17 +206,11 @@ export const getChannelSales = createServerFn({ method: "GET" })
         .in("platform", [channel.slug, channel.platformKey])
         .maybeSingle(),
     ]);
+    if (dailyRes.error) throw dailyRes.error;
     if (salesRes.error) throw salesRes.error;
 
+    const daily = ((dailyRes.data ?? []) as DailyRow[]).filter((r) => r.platform === channel.platformKey);
     const rows = (salesRes.data ?? []) as SaleRow[];
-    const byDay = new Map<string, { date: string; orders: number; gross: number }>();
-    for (const row of rows) {
-      const date = row.created_at.slice(0, 10);
-      const entry = byDay.get(date) ?? { date, orders: 0, gross: 0 };
-      entry.orders += 1;
-      entry.gross += Number(row.total ?? 0);
-      byDay.set(date, entry);
-    }
 
     const feeTotals = new Map<string, number>();
     for (const row of rows) {
@@ -196,14 +225,21 @@ export const getChannelSales = createServerFn({ method: "GET" })
       amount: feeTotals.get(key) ?? 0,
     })).filter((f) => f.amount !== 0);
 
+    const totals = summarizeDaily(daily);
     return {
-      from: data.from,
-      to: data.to,
+      from,
+      to,
+      today,
       channel: { slug: channel.slug, label: channel.label, kind: channel.kind },
       connection: connectionRes.data ?? null,
-      totals: summarize(rows),
+      totals,
       feeBreakdown,
-      days_breakdown: Array.from(byDay.values()).sort((a, b) => (a.date < b.date ? 1 : -1)),
+      // Fee breakdown and the order list come from the newest orders only.
+      ordersShown: rows.length,
+      ordersTruncated: rows.length < totals.orders + totals.failed,
+      days_breakdown: daily
+        .map((r) => ({ date: r.day, orders: Number(r.orders), gross: Number(r.gross) }))
+        .sort((a, b) => (a.date < b.date ? 1 : -1)),
       orders: rows.map((row) => ({
         id: row.id,
         orderNumber: row.order_number,

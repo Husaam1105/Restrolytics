@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { likeExact } from "./item-match";
 
 export type ParsedInvoiceLine = { name: string; quantity: number; unitPrice: number };
 
@@ -76,7 +77,8 @@ export const saveInvoice = createServerFn({ method: "POST" })
         .from("inventory_items")
         .select("id, current_stock, last_ordered_at")
         .eq("restaurant_id", vendor.restaurant_id)
-        .ilike("name", line.name)
+        .ilike("name", likeExact(line.name))
+        .limit(1)
         .maybeSingle();
 
       let inventoryItemId = existing?.id ?? null;
