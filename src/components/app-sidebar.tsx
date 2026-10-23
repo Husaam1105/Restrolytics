@@ -1,31 +1,32 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Banknote,
-  Headset,
-  Bike,
+  BrainCircuit,
   ChefHat,
-  Clock,
+  ClipboardCheck,
+  Gauge,
+  Headset,
   IdCard,
   LayoutDashboard,
-  BrainCircuit,
-  Timer,
-  Truck,
-  Warehouse,
-  Gauge,
-  Megaphone,
-  MoonStar,
+  MonitorCog,
   Package,
   Plug,
   Receipt,
-  Settings,
-  Sunrise,
+  CalendarDays,
+  ConciergeBell,
+  ShieldCheck,
+  Timer,
+  Truck,
   UtensilsCrossed,
-  Users,
+  Warehouse,
+  Bike,
+  type LucideIcon,
 } from "lucide-react";
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -38,192 +39,184 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { BrandMark } from "@/components/brand-mark";
 
-const shiftChildren = [
-  { title: "Time clock", url: "/timeclock", icon: Timer },
-  { title: "Front of house", url: "/foh", icon: Sunrise },
-  { title: "Kitchen staff", url: "/boh", icon: ChefHat },
-  { title: "Schedule", url: "/shifts", icon: MoonStar },
-];
+type NavItem = {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  /** Match only this exact path (for section roots that are also a child). */
+  exact?: boolean;
+  children?: NavItem[];
+};
 
-const copilotChildren = [
-  { title: "Ask IQ", url: "/copilot", icon: BrainCircuit },
-  { title: "Live manager", url: "/copilot/manager", icon: Headset },
-];
+type NavGroup = { label?: string; items: NavItem[] };
 
-const inventoryChildren = [
-  { title: "Overview", url: "/inventory", icon: Gauge },
-  { title: "Vendors", url: "/inventory/vendors", icon: Truck },
-  { title: "Storage areas", url: "/inventory/storage", icon: Warehouse },
-];
-
-const salesChildren = [
-  { title: "Toast POS", url: "/sales/toast", icon: Receipt },
-  { title: "Uber Eats", url: "/sales/ubereats", icon: Bike },
-  { title: "DoorDash", url: "/sales/doordash", icon: Bike },
-  { title: "Grubhub", url: "/sales/grubhub", icon: Bike },
-  { title: "Catering", url: "/sales/catering", icon: UtensilsCrossed },
-];
-
-const settingsChildren = [
-  { title: "Employees & access", url: "/settings/access", icon: Users },
-  { title: "Integrations", url: "/settings/integrations", icon: Plug },
-];
-
-function buildNav(role?: string | null) {
+function buildNav(role: string | null | undefined, isPlatformStaff: boolean): NavGroup[] {
   const isManager = role === "owner" || role === "manager";
 
-  const main: Array<{
-    title: string;
-    url: string;
-    icon: typeof LayoutDashboard;
-    children?: typeof shiftChildren;
-  }> = [
-    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-    { title: "IQ Copilot", url: "/copilot", icon: BrainCircuit, children: copilotChildren },
-    { title: "Sales", url: "/sales", icon: Receipt, children: salesChildren },
-    { title: "Inventory", url: "/inventory", icon: Package, children: inventoryChildren },
-    { title: "Marketing", url: "/marketing", icon: Megaphone },
-    { title: "Shifts", url: "/shifts", icon: Clock, children: shiftChildren },
+  const iq: NavItem = {
+    title: "IQ Copilot",
+    url: "/copilot",
+    icon: BrainCircuit,
+    children: [
+      { title: "Ask IQ", url: "/copilot", icon: BrainCircuit, exact: true },
+      { title: "Live manager", url: "/copilot/manager", icon: Headset },
+    ],
+  };
+
+  const shiftWork: NavItem[] = [
+    { title: "Time clock", url: "/timeclock", icon: Timer },
+    { title: "Front of house", url: "/foh", icon: ConciergeBell },
+    { title: "Kitchen", url: "/boh", icon: ChefHat },
+    { title: "Schedule", url: "/shifts", icon: CalendarDays },
   ];
 
-  const people: Array<{ title: string; url: string; icon: typeof LayoutDashboard }> = [];
-  if (isManager) {
-    people.unshift(
-      { title: "Employees", url: "/employees", icon: IdCard },
-      { title: "Payroll", url: "/payroll", icon: Banknote },
-    );
+  if (!isManager) {
+    // Staff see what their shift needs, nothing they can't use.
+    return [
+      {
+        items: [
+          { title: "Today", url: "/dashboard", icon: LayoutDashboard },
+          ...shiftWork,
+          { title: "Stock counts", url: "/inventory/storage", icon: Warehouse },
+          iq,
+        ],
+      },
+    ];
   }
 
-  const settings = isManager
-    ? [{ title: "Settings", url: "/settings", icon: Settings, children: settingsChildren }]
-    : [];
+  const groups: NavGroup[] = [
+    {
+      items: [
+        { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+        iq,
+        {
+          title: "Sales",
+          url: "/sales",
+          icon: Receipt,
+          children: [
+            { title: "Overview", url: "/sales", icon: Gauge, exact: true },
+            { title: "Toast POS", url: "/sales/toast", icon: Receipt },
+            { title: "Uber Eats", url: "/sales/ubereats", icon: Bike },
+            { title: "DoorDash", url: "/sales/doordash", icon: Bike },
+            { title: "Grubhub", url: "/sales/grubhub", icon: Bike },
+            { title: "Catering", url: "/sales/catering", icon: UtensilsCrossed },
+          ],
+        },
+        {
+          title: "Inventory",
+          url: "/inventory",
+          icon: Package,
+          children: [
+            { title: "Overview", url: "/inventory", icon: Gauge, exact: true },
+            { title: "Vendors", url: "/inventory/vendors", icon: Truck },
+            { title: "Storage and counts", url: "/inventory/storage", icon: Warehouse },
+          ],
+        },
+        {
+          title: "Shifts",
+          url: "/shifts",
+          icon: ClipboardCheck,
+          children: shiftWork,
+        },
+      ],
+    },
+    {
+      label: "People and pay",
+      items: [
+        { title: "Employees", url: "/employees", icon: IdCard },
+        { title: "Payroll", url: "/payroll", icon: Banknote },
+      ],
+    },
+    {
+      label: "Settings",
+      items: [
+        { title: "Team access", url: "/settings/access", icon: ShieldCheck },
+        { title: "Integrations", url: "/settings/integrations", icon: Plug },
+      ],
+    },
+  ];
 
-  return { main, people, settings };
+  if (isPlatformStaff) {
+    groups.push({
+      label: "Restrolytics",
+      items: [{ title: "Manager console", url: "/manager-console", icon: MonitorCog }],
+    });
+  }
+  return groups;
 }
 
-export function AppSidebar({ role }: { role?: string | null }) {
-  const { main, people, settings } = buildNav(role);
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
-  const currentPath = useRouterState({
-    select: (router) => router.location.pathname,
-  });
+export function AppSidebar({ role, isPlatformStaff = false }: { role?: string | null; isPlatformStaff?: boolean }) {
+  const groups = buildNav(role, isPlatformStaff);
+  const { state, isMobile, setOpenMobile } = useSidebar();
+  // The mobile drawer always shows labels, whatever the desktop collapse state.
+  const collapsed = state === "collapsed" && !isMobile;
+  const path = useRouterState({ select: (router) => router.location.pathname });
 
-  const isActive = (path: string) =>
-    currentPath === path || (path !== "/" && currentPath.startsWith(path));
+  const matches = (item: NavItem) =>
+    item.exact ? path === item.url : path === item.url || path.startsWith(`${item.url}/`);
+  const sectionActive = (item: NavItem) => matches(item) || Boolean(item.children?.some(matches));
+  const close = () => isMobile && setOpenMobile(false);
 
   return (
-    <Sidebar collapsible="icon" className="border-sidebar-border">
-      <SidebarHeader className="px-3 pt-4">
-        <div className="flex items-center gap-2 px-1 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <ChefHat className="h-5 w-5" />
-          </div>
-          {!collapsed && <span className="font-display text-lg font-semibold">Restrolytics</span>}
-        </div>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="px-3 pt-4 pb-2">
+        <Link to="/dashboard" onClick={close} className="flex items-center rounded-lg px-1 py-2" aria-label="Restrolytics dashboard">
+          <BrandMark
+            glyphClassName="[&_path]:fill-sidebar-primary [&_rect:last-child]:fill-sidebar"
+            wordmarkClassName={collapsed ? "sr-only" : "text-sidebar-foreground"}
+          />
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {main.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </Link>
-                  </SidebarMenuButton>
-                  {item.children && !collapsed && (
-                    <SidebarMenuSub>
-                      {item.children.map((child) => (
-                        <SidebarMenuSubItem key={child.url}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={child.url === "/inventory" || child.url === "/copilot" ? currentPath === child.url : isActive(child.url)}
-                          >
-                            <Link
-                              to={child.url}
-                              className="flex items-center gap-2"
-                            >
-                              <child.icon className="h-3.5 w-3.5 shrink-0" />
-                              <span>{child.title}</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  )}
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {people.length > 0 && (
-        <SidebarGroup>
-          <SidebarGroupLabel>People &amp; pay</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {people.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        )}
-
-        {settings.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Settings</SidebarGroupLabel>
+        {groups.map((group, i) => (
+          <SidebarGroup key={group.label ?? i}>
+            {group.label ? (
+              <SidebarGroupLabel className="text-sidebar-muted-foreground">{group.label}</SidebarGroupLabel>
+            ) : null}
             <SidebarGroupContent>
               <SidebarMenu>
-                {settings.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                      <Link to={item.url} className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4 shrink-0" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </Link>
-                    </SidebarMenuButton>
-                    {item.children && !collapsed && (
-                      <SidebarMenuSub>
-                        {item.children.map((child) => (
-                          <SidebarMenuSubItem key={child.url}>
-                            <SidebarMenuSubButton asChild isActive={child.url === "/inventory" || child.url === "/copilot" ? currentPath === child.url : isActive(child.url)}>
-                              <Link to={child.url} className="flex items-center gap-2">
-                                <child.icon className="h-3.5 w-3.5 shrink-0" />
-                                <span>{child.title}</span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    )}
-                  </SidebarMenuItem>
-                ))}
+                {group.items.map((item) => {
+                  const active = sectionActive(item);
+                  return (
+                    <SidebarMenuItem key={item.url + item.title}>
+                      <SidebarMenuButton asChild isActive={active && !item.children} tooltip={item.title}>
+                        <Link
+                          to={item.url}
+                          onClick={close}
+                          aria-current={matches(item) && !item.children ? "page" : undefined}
+                          className={active ? "font-semibold" : undefined}
+                        >
+                          <item.icon aria-hidden="true" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      {item.children && active && !collapsed ? (
+                        <SidebarMenuSub>
+                          {item.children.map((child) => (
+                            <SidebarMenuSubItem key={child.url + child.title}>
+                              <SidebarMenuSubButton asChild isActive={matches(child)}>
+                                <Link to={child.url} onClick={close} aria-current={matches(child) ? "page" : undefined}>
+                                  <span>{child.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      ) : null}
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        )}
+        ))}
       </SidebarContent>
+      <SidebarFooter className="px-4 pb-4 text-xs text-sidebar-muted-foreground group-data-[collapsible=icon]:hidden">
+        Need help? Ask your Restrolytics manager under IQ Copilot.
+      </SidebarFooter>
     </Sidebar>
   );
 }

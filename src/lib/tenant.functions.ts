@@ -14,13 +14,18 @@ export const getWorkspace = createServerFn({ method: "GET" })
 
     const memberships = await listMemberships(context.supabase, context.userId);
 
-    const [{ data: profile, error: profileError }, { data: canCreate, error: canCreateError }] = await Promise.all([
+    const [
+      { data: profile, error: profileError },
+      { data: canCreate, error: canCreateError },
+      { data: platformStaff },
+    ] = await Promise.all([
       context.supabase
         .from("profiles")
         .select("active_restaurant_id, full_name")
         .eq("user_id", context.userId)
         .maybeSingle(),
       context.supabase.rpc("can_create_restaurant"),
+      context.supabase.rpc("is_platform_staff"),
     ]);
     if (profileError) throw profileError;
     if (canCreateError) throw canCreateError;
@@ -43,6 +48,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       activeName: active?.name ?? null,
       role: active?.role ?? null,
       canCreateRestaurant: canCreate === true,
+      isPlatformStaff: platformStaff === true,
     };
   });
 

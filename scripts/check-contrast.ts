@@ -40,6 +40,10 @@ const PAIRS: Pair[] = [
   ["chart-3", "card", 3],
   ["chart-4", "card", 3],
   ["chart-5", "card", 3],
+  // Soft badges
+  ["success", "success-soft", 4.5],
+  ["destructive", "destructive-soft", 4.5],
+  ["link", "brand-soft", 4.5],
 ];
 
 // Pairs that only exist on dark marketing bands, checked in light mode only.
@@ -47,7 +51,11 @@ const LIGHT_ONLY: Pair[] = [
   ["highlight", "ink", 4.5],
   ["ink-foreground", "ink", 4.5],
   ["ink-muted", "ink", 4.5],
+  ["warning-foreground", "warning-soft", 4.5],
 ];
+
+// Dark mode swaps the warning badge to warning-coloured text.
+const DARK_ONLY: Pair[] = [["warning", "warning-soft", 4.5]];
 
 function oklchToRgb(l: number, c: number, h: number) {
   const hr = (h * Math.PI) / 180;
@@ -89,7 +97,7 @@ const dark = new Map([...light, ...parseBlock(css, ".dark")]);
 let failures = 0;
 for (const [mode, tokens, pairs] of [
   ["light", light, [...PAIRS, ...LIGHT_ONLY]],
-  ["dark", dark, PAIRS],
+  ["dark", dark, [...PAIRS, ...DARK_ONLY]],
 ] as const) {
   for (const [fg, bg, min] of pairs) {
     const a = tokens.get(fg);
