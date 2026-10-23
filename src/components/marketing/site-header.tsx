@@ -13,8 +13,8 @@ const NAV = [
   { label: "Contact", href: "/contact" },
 ];
 
-/** Public-site header. Sits on the ink hero; turns solid once you scroll. */
-export function SiteHeader({ tone = "ink" }: { tone?: "ink" | "paper" }) {
+/** Public-site header. Light by default (`tone="ink"` for dark pages); gains a divider once you scroll. */
+export function SiteHeader({ tone = "paper" }: { tone?: "ink" | "paper" }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 

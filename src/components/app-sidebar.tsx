@@ -163,10 +163,7 @@ export function AppSidebar({ role, isPlatformStaff = false }: { role?: string | 
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 pt-4 pb-2">
         <Link to="/dashboard" onClick={close} className="flex items-center rounded-lg px-1 py-2" aria-label="Restrolytics dashboard">
-          <BrandMark
-            glyphClassName="[&_path]:fill-sidebar-primary [&_rect:last-child]:fill-sidebar"
-            wordmarkClassName={collapsed ? "sr-only" : "text-sidebar-foreground"}
-          />
+          <BrandMark wordmarkClassName={collapsed ? "sr-only" : "text-sidebar-foreground"} />
         </Link>
       </SidebarHeader>
 

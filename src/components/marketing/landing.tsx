@@ -16,37 +16,42 @@ import {
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { TicketRail } from "./ticket-rail";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-ink text-ink-foreground">
-      <div className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 sm:pt-20 lg:px-8 lg:pt-24">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-end">
-          <h1 className="text-display max-w-[14ch]">The whole night, added up before you lock the door.</h1>
-          <div className="max-w-md space-y-7 lg:pb-2">
-            <p className="text-lg leading-relaxed text-ink-muted">
-              Restrolytics brings your Toast and delivery-app sales, labor, stock counts and checklists into one place.
-              IQ, the built-in copilot, reads all of it and tells you what to fix for tomorrow.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button size="lg" variant="highlight" asChild>
-                <Link to="/contact">Book a walkthrough</Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="ghost"
-                asChild
-                className="text-ink-foreground shadow-[0_0_0_1px_oklch(1_0_0/0.18)] hover:bg-white/10 hover:text-ink-foreground"
-              >
-                <Link to="/pricing">See pricing</Link>
-              </Button>
-            </div>
+    <section className="relative overflow-hidden border-b bg-background">
+      <div className="mx-auto grid max-w-7xl items-center gap-14 px-4 pt-14 pb-20 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.05fr] lg:px-8 lg:pt-24 lg:pb-28">
+        <div className="max-w-xl">
+          <h1 className="text-display text-foreground">The whole night, added up before you lock the door.</h1>
+          <p className="text-lead mt-7 max-w-md">
+            Restrolytics brings your Toast and delivery-app sales, labor, stock counts and checklists into one place. IQ, the
+            built-in copilot, reads all of it and tells you what to fix for tomorrow.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button size="lg" asChild>
+              <Link to="/contact">Book a walkthrough</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/pricing">See pricing</Link>
+            </Button>
           </div>
         </div>
 
-        <TicketRail className="mt-16 sm:mt-20" />
-        <p className="pb-6 text-xs text-ink-muted">Example evening. Yours will have your own tickets and totals.</p>
+        <div className="relative rounded-[2rem] bg-brand-soft p-5 pb-20 sm:p-8 sm:pb-20 lg:pb-14">
+          <DayReportPreview />
+          <figure
+            aria-label="Example IQ answer"
+            className="surface-raised absolute right-3 -bottom-6 w-[min(22rem,88%)] p-4 sm:-right-4 lg:-right-8"
+          >
+            <p className="ml-auto w-fit rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm text-primary-foreground">
+              What should I fix for tomorrow?
+            </p>
+            <p className="mt-3 rounded-2xl rounded-bl-md bg-muted px-3.5 py-2.5 text-sm">
+              Garlic fries were 86'd on Uber Eats from 8:40. Add a case to Friday's order, and move one close shift to 5 PM.
+            </p>
+            <figcaption className="mt-2 text-xs text-muted-foreground">Example answer from IQ</figcaption>
+          </figure>
+        </div>
       </div>
     </section>
   );
