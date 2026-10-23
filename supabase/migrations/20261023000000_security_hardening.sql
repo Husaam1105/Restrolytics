@@ -269,6 +269,14 @@ DROP TABLE IF EXISTS public.usage_logs;
 DROP TABLE IF EXISTS public.inventory_transactions;
 
 -- ---------------------------------------------------------------------------
+-- Exact, case-insensitive item lookup without LIKE patterns (PostgREST treats
+-- `*`, `%` and `_` as wildcards). Matches the unique (restaurant_id, lower(name)) index.
+-- ---------------------------------------------------------------------------
+ALTER TABLE public.inventory_items
+  ADD COLUMN IF NOT EXISTS name_key text GENERATED ALWAYS AS (lower(name)) STORED;
+CREATE INDEX IF NOT EXISTS inventory_items_name_key_idx ON public.inventory_items (restaurant_id, name_key);
+
+-- ---------------------------------------------------------------------------
 -- 6a. Low stock (PostgREST can't compare two columns in a filter).
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.low_stock_items(_restaurant_id uuid, _limit int DEFAULT 50)

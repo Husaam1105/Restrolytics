@@ -1,4 +1,8 @@
-/** Escapes LIKE wildcards so `ilike(column, likeExact(name))` is an exact, case-insensitive match. */
-export function likeExact(value: string) {
-  return value.trim().replace(/[\\%_]/g, (c) => `\\${c}`);
+/**
+ * Key for an exact, case-insensitive item lookup against the generated
+ * `inventory_items.name_key` column (= lower(name)). Use with `.eq`, never a
+ * LIKE pattern: PostgREST treats `*`, `%` and `_` in like/ilike as wildcards.
+ */
+export function itemNameKey(name: string) {
+  return name.trim().toLowerCase();
 }

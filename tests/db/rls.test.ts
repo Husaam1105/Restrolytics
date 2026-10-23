@@ -119,6 +119,12 @@ describe("inventory", () => {
     expect(rows.map((r) => r.name)).toEqual(["Flour"]);
   });
 
+  it("name_key matches item names exactly, wildcards included", async () => {
+    await db.exec(`INSERT INTO inventory_items (restaurant_id, name, unit) VALUES ('${R1}', 'Juice 100%*', 'case'), ('${R1}', 'Juice 1000', 'case')`);
+    const exact = await db.query(`SELECT 1 FROM inventory_items WHERE restaurant_id = '${R1}' AND name_key = 'juice 100%*'`);
+    expect(exact.rows).toHaveLength(1);
+  });
+
   it("completing a count for one area keeps stock held in other areas", async () => {
     const { rows: items } = await db.query<{ id: string }>(`SELECT id FROM inventory_items WHERE name = 'Flour'`);
     const item = items[0]!.id;

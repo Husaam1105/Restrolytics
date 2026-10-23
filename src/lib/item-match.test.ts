@@ -1,14 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { likeExact } from "./item-match";
+import { itemNameKey } from "./item-match";
 
-describe("likeExact", () => {
-  it("escapes LIKE wildcards and backslashes", () => {
-    expect(likeExact("100% Juice")).toBe("100\\% Juice");
-    expect(likeExact("Item_A")).toBe("Item\\_A");
-    expect(likeExact("C:\\path")).toBe("C:\\\\path");
-  });
-
-  it("trims surrounding whitespace", () => {
-    expect(likeExact("  Roma Tomatoes ")).toBe("Roma Tomatoes");
+describe("itemNameKey", () => {
+  it("lowercases and trims, leaving wildcard characters as plain text", () => {
+    expect(itemNameKey("  Roma Tomatoes ")).toBe("roma tomatoes");
+    expect(itemNameKey("100% Juice *Case*")).toBe("100% juice *case*");
   });
 });

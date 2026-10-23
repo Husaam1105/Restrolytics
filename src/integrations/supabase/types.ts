@@ -443,6 +443,7 @@ export type Database = {
           last_ordered_at: string | null
           last_ordered_quantity: number | null
           name: string
+          name_key: string | null
           notes: string | null
           par_level: number
           quality_rating: number | null
