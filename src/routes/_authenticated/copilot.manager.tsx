@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Headset, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { ChatPane, ensureThread, NotesPanel, TasksPanel } from "@/components/manager/manager-panels";
+import { PageContainer, PageHeader } from "@/components/page";
+import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getManagerContext } from "@/lib/manager.functions";
@@ -31,28 +32,42 @@ function ManagerPage() {
       ensureThread(restaurantId!, room, room === "direct" ? { id: ctx.data!.userId, name: ctx.data!.name } : undefined),
   });
 
-  if (ctx.isLoading) return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
-  if (!ctx.data?.restaurant) return <p className="text-sm text-muted-foreground">Join a restaurant to use Restrolytics Manager.</p>;
+  if (ctx.isLoading) {
+    return (
+      <PageContainer>
+        <LoadingState rows={3} />
+      </PageContainer>
+    );
+  }
+  if (!ctx.data?.restaurant) {
+    return (
+      <PageContainer>
+        <EmptyState title="Join a restaurant to talk to a manager" description="Once you're on a team, your Restrolytics manager is here." />
+      </PageContainer>
+    );
+  }
   const me = { userId: ctx.data.userId, name: ctx.data.name, isPlatformStaff: false };
   const isManager = ctx.data.restaurant.role !== "staff";
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Headset className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold">Restrolytics Manager</h1>
-            <p className="text-sm text-muted-foreground">A real person from Restrolytics, here to help {ctx.data.restaurant.name}.</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline"><Link to="/copilot">Back to IQ</Link></Button>
-          {ctx.data.isPlatformStaff ? <Button asChild><Link to="/manager-console">Open manager console</Link></Button> : null}
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        context="IQ Copilot"
+        title="Live manager"
+        description={`A real person from Restrolytics, here to help ${ctx.data.restaurant.name}.`}
+        actions={
+          <>
+            <Button asChild variant="outline">
+              <Link to="/copilot">Back to IQ</Link>
+            </Button>
+            {ctx.data.isPlatformStaff ? (
+              <Button asChild>
+                <Link to="/manager-console">Open manager console</Link>
+              </Button>
+            ) : null}
+          </>
+        }
+      />
       <Tabs defaultValue="chat">
         <TabsList>
           <TabsTrigger value="chat">Chat</TabsTrigger>
@@ -60,15 +75,24 @@ function ManagerPage() {
           <TabsTrigger value="notes">Notes for review</TabsTrigger>
         </TabsList>
         <TabsContent value="chat" className="space-y-3">
-          <div className="flex gap-2">
-            <Button size="sm" variant={room === "team" ? "default" : "outline"} onClick={() => setRoom("team")}>Team channel</Button>
-            <Button size="sm" variant={room === "direct" ? "default" : "outline"} onClick={() => setRoom("direct")}>Private with manager</Button>
+          <div className="flex gap-2" role="group" aria-label="Conversation">
+            <Button size="sm" aria-pressed={room === "team"} variant={room === "team" ? "default" : "outline"} onClick={() => setRoom("team")}>
+              Team channel
+            </Button>
+            <Button size="sm" aria-pressed={room === "direct"} variant={room === "direct" ? "default" : "outline"} onClick={() => setRoom("direct")}>
+              Private with manager
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {room === "team" ? "Everyone at your restaurant sees this channel." : "Only you and the Restrolytics manager see this chat."}
           </p>
-          {thread.error ? <p className="text-sm text-destructive">{(thread.error as Error).message}</p> : null}
-          {thread.data ? <ChatPane key={thread.data} threadId={thread.data} me={me} /> : <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+          {thread.error ? (
+            <ErrorState title="This conversation didn't open" error={thread.error} onRetry={() => void thread.refetch()} />
+          ) : thread.data ? (
+            <ChatPane key={thread.data} threadId={thread.data} me={me} />
+          ) : (
+            <LoadingState rows={3} />
+          )}
         </TabsContent>
         <TabsContent value="tasks">
           <TasksPanel restaurantId={ctx.data.restaurant.id} me={me} canAssign={isManager} />
@@ -77,6 +101,6 @@ function ManagerPage() {
           <NotesPanel restaurantId={ctx.data.restaurant.id} me={me} canReview={isManager} />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

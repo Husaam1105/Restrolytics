@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Loader2 } from "lucide-react";
+import { MessagesSquare } from "lucide-react";
 import { toast } from "sonner";
 
 import iqLogo from "@/assets/iq-copilot.png";
@@ -13,6 +13,10 @@ import { Message, MessageContent, MessageResponse } from "@/components/ai-elemen
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { ThreadList } from "@/components/copilot/thread-list";
+import { PageContainer } from "@/components/page";
+import { ErrorState, LoadingState } from "@/components/states";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { getCopilotMessages } from "@/lib/copilot.functions";
 
@@ -31,24 +35,44 @@ export const Route = createFileRoute("/_authenticated/copilot/$threadId")({
 function ThreadPage() {
   const { threadId } = Route.useParams();
   const fetchMessages = useServerFn(getCopilotMessages);
-  const { data, isLoading, error } = useQuery({
+  const [chatsOpen, setChatsOpen] = useState(false);
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["copilot-messages", threadId],
     queryFn: () => fetchMessages({ data: { id: threadId } }),
     staleTime: Infinity,
   });
   return (
-    <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-      <aside className="hidden lg:block">
-        <ThreadList activeId={threadId} />
-      </aside>
-      {error ? (
-        <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
-      ) : isLoading || !data ? (
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      ) : (
-        <ChatWindow key={threadId} threadId={threadId} initial={data.messages as UIMessage[]} />
-      )}
-    </div>
+    <PageContainer className="space-y-4">
+      {/* Phones and tablets: the chat list lives in a sheet. */}
+      <div className="lg:hidden">
+        <Sheet open={chatsOpen} onOpenChange={setChatsOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm">
+              <MessagesSquare />
+              Your chats
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80 p-4">
+            <SheetHeader className="px-0">
+              <SheetTitle>Your chats</SheetTitle>
+            </SheetHeader>
+            <ThreadList activeId={threadId} onNavigate={() => setChatsOpen(false)} />
+          </SheetContent>
+        </Sheet>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+        <aside className="hidden lg:block">
+          <ThreadList activeId={threadId} />
+        </aside>
+        {error ? (
+          <ErrorState title="This chat didn't load" error={error} onRetry={() => void refetch()} />
+        ) : isLoading || !data ? (
+          <LoadingState rows={4} />
+        ) : (
+          <ChatWindow key={threadId} threadId={threadId} initial={data.messages as UIMessage[]} />
+        )}
+      </div>
+    </PageContainer>
   );
 }
 
@@ -68,7 +92,7 @@ function ChatWindow({ threadId, initial }: { threadId: string; initial: UIMessag
       },
     }),
     onFinish: () => qc.invalidateQueries({ queryKey: ["copilot-threads"] }),
-    onError: (e) => toast.error(e.message || "IQ couldn't answer. Please try again."),
+    onError: (e) => toast.error(readableError(e)),
   });
   const busy = status === "submitted" || status === "streaming";
 
@@ -85,14 +109,14 @@ function ChatWindow({ threadId, initial }: { threadId: string; initial: UIMessag
   }, [q, initial.length, sendMessage, threadId]);
 
   return (
-    <div className="flex h-[calc(100vh-10rem)] min-h-[480px] flex-col rounded-lg border bg-card">
+    <div className="surface flex h-[calc(100dvh-13rem)] min-h-[420px] flex-col overflow-hidden">
       <Conversation className="flex-1">
         <ConversationContent>
           {messages.length === 0 ? (
             <ConversationEmptyState
-              icon={<img src={iqLogo} alt="IQ" className="h-12 w-12" />}
+              icon={<img src={iqLogo} alt="" className="h-12 w-12" />}
               title="Ask IQ anything"
-              description="Sales, fees, labor, schedule, inventory, tasks — answered from your data."
+              description="Sales, fees, labor, schedule, stock and tasks, answered from your own data."
             />
           ) : null}
           {messages.map((m) => (
@@ -132,4 +156,15 @@ function ChatWindow({ threadId, initial }: { threadId: string; initial: UIMessag
       </div>
     </div>
   );
+}
+
+/** The API returns {"error": "..."} JSON; show that sentence, not the raw payload. */
+function readableError(e: Error) {
+  try {
+    const parsed = JSON.parse(e.message) as { error?: string };
+    if (parsed.error) return parsed.error;
+  } catch {
+    // not JSON
+  }
+  return e.message || "IQ couldn't answer. Try again in a moment.";
 }

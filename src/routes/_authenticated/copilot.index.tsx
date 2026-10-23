@@ -1,19 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CalendarCheck, Info, Loader2 } from "lucide-react";
+import { AlertTriangle, CalendarCheck, Headset, Info } from "lucide-react";
 
 import iqLogo from "@/assets/iq-copilot.png";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThreadList, useNewThread } from "@/components/copilot/thread-list";
+import { PageContainer, PageHeader, SectionHeader } from "@/components/page";
+import { ErrorState, LoadingState } from "@/components/states";
+import { Button } from "@/components/ui/button";
 import { getCopilotAlerts } from "@/lib/copilot.functions";
 
 export const Route = createFileRoute("/_authenticated/copilot/")({
   head: () => ({
     meta: [
       { title: "IQ Copilot · Restrolytics" },
-      { name: "description", content: "Your virtual restaurant manager: daily briefing, alerts and answers from your own data." },
+      { name: "description", content: "Daily briefing, alerts and answers from your own restaurant data." },
     ],
   }),
   component: CopilotHome,
@@ -34,107 +35,117 @@ const MANAGER_QUESTIONS = [
 function CopilotHome() {
   const fetchAlerts = useServerFn(getCopilotAlerts);
   const newThread = useNewThread();
-  const { data, isLoading } = useQuery({ queryKey: ["copilot-alerts"], queryFn: () => fetchAlerts() });
+  const query = useQuery({ queryKey: ["copilot-alerts"], queryFn: () => fetchAlerts() });
+  const data = query.data;
   const isStaff = data?.role === "staff";
+  const aiReady = data?.aiReady ?? true;
   const questions = isStaff ? STAFF_QUESTIONS : MANAGER_QUESTIONS;
   const ask = (q: string) => newThread.mutate(q);
+  const asking = newThread.isPending || !aiReady;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <img src={iqLogo} alt="IQ" className="h-14 w-14 rounded-lg border bg-card p-1" />
-          <div>
-            <h1 className="text-2xl font-semibold">IQ Copilot</h1>
-            <p className="text-sm text-muted-foreground">
-              Your virtual manager{data?.restaurant ? ` for ${data.restaurant}` : ""}. Ask anything about your sales,
-              staff, inventory and tasks.
-            </p>
-          </div>
+    <PageContainer>
+      <PageHeader
+        context={data?.restaurant}
+        title="IQ Copilot"
+        description="Ask about your sales, staff, stock and tasks. IQ answers from your own data and says when something isn't there."
+      />
+
+      {!aiReady ? (
+        <div role="status" className="flex gap-3 rounded-2xl bg-warning-soft px-5 py-4 text-sm">
+          <Info className="mt-0.5 size-5 shrink-0 text-warning-foreground dark:text-warning" aria-hidden="true" />
+          <p>
+            <span className="font-semibold">IQ isn&apos;t switched on for this workspace yet.</span> Your Restrolytics manager can
+            still help in the meantime.
+          </p>
         </div>
+      ) : null}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
-            <div>
-              <CardTitle className="text-base">Restrolytics Manager (live)</CardTitle>
-              <CardDescription>Chat with a real manager, see assigned tasks and log notes for review.</CardDescription>
-            </div>
-            <Button asChild variant="outline">
-              <Link to="/copilot/manager">Open</Link>
-            </Button>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
-            <div>
-              <CardTitle className="text-base">Daily briefing</CardTitle>
-              <CardDescription>
+      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+        <div className="space-y-6">
+          <section className="surface flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
+            <img src={iqLogo} alt="" className="size-14 shrink-0 rounded-xl bg-brand-soft p-1.5" />
+            <div className="min-w-0 flex-1">
+              <h2 className="font-display text-lg font-bold [font-stretch:85%]">Daily briefing</h2>
+              <p className="text-sm text-muted-foreground">
                 {isStaff
-                  ? "Your shifts, hours and open tasks for today."
-                  : "Yesterday's sales, errors, labor, 86'd items, low stock and today's schedule."}
-              </CardDescription>
+                  ? "Your shift, your hours and your open tasks for today."
+                  : "Yesterday's sales, errors, labor, items that ran out, low stock and today's schedule."}
+              </p>
             </div>
             <Button
-              onClick={() =>
-                ask(isStaff ? "Give me my briefing for today: my shift, hours and open tasks." : "Give me today's manager briefing.")
-              }
-              disabled={newThread.isPending}
+              onClick={() => ask(isStaff ? "Give me my briefing for today: my shift, hours and open tasks." : "Give me today's manager briefing.")}
+              disabled={asking}
             >
-              <CalendarCheck className="mr-2 h-4 w-4" /> Get briefing
+              <CalendarCheck />
+              Get my briefing
             </Button>
-          </CardHeader>
-        </Card>
+          </section>
 
-        {!isStaff ? (
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-muted-foreground">Alerts & suggestions</h2>
-            {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            ) : data?.alerts.length ? (
-              <div className="grid gap-3 md:grid-cols-2">
-                {data.alerts.map((a) => (
-                  <Card key={a.title}>
-                    <CardContent className="flex h-full flex-col gap-3 p-4">
-                      <div className="flex items-start gap-2">
+          {!isStaff ? (
+            <section className="space-y-3" aria-labelledby="alerts-heading">
+              <SectionHeader title={<span id="alerts-heading">Needs your attention</span>} />
+              {query.isPending ? (
+                <LoadingState rows={2} />
+              ) : query.isError ? (
+                <ErrorState title="Alerts didn't load" error={query.error} onRetry={() => void query.refetch()} />
+              ) : data?.alerts.length ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {data.alerts.map((a) => (
+                    <article key={a.title} className="surface flex flex-col gap-3 p-4">
+                      <div className="flex items-start gap-2.5">
                         {a.level === "warning" ? (
-                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning-foreground dark:text-warning" aria-label="Warning" />
                         ) : (
-                          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                          <Info className="mt-0.5 size-4 shrink-0 text-link" aria-label="Note" />
                         )}
                         <div>
-                          <p className="font-medium">{a.title}</p>
+                          <h3 className="font-semibold">{a.title}</h3>
                           <p className="text-sm text-muted-foreground">{a.detail}</p>
                         </div>
                       </div>
-                      <Button size="sm" variant="outline" className="mt-auto self-start" onClick={() => ask(a.ask)} disabled={newThread.isPending}>
+                      <Button size="sm" variant="outline" className="mt-auto self-start" onClick={() => ask(a.ask)} disabled={asking}>
                         Ask IQ what to do
                       </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Nothing needs your attention right now.</p>
-            )}
-          </div>
-        ) : null}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nothing needs your attention right now.</p>
+              )}
+            </section>
+          ) : null}
 
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground">Try asking</h2>
-          <div className="flex flex-wrap gap-2">
-            {questions.map((q) => (
-              <Button key={q} size="sm" variant="secondary" className="font-normal" onClick={() => ask(q)} disabled={newThread.isPending}>
-                {q}
-              </Button>
-            ))}
-          </div>
+          <section className="space-y-3" aria-labelledby="try-heading">
+            <SectionHeader title={<span id="try-heading">Try asking</span>} />
+            <div className="flex flex-wrap gap-2">
+              {questions.map((q) => (
+                <Button key={q} size="sm" variant="secondary" className="font-normal" onClick={() => ask(q)} disabled={asking}>
+                  {q}
+                </Button>
+              ))}
+            </div>
+          </section>
+
+          <section className="surface flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="flex gap-3">
+              <Headset className="mt-0.5 size-5 shrink-0 text-link" aria-hidden="true" />
+              <div>
+                <h2 className="font-semibold">Restrolytics manager</h2>
+                <p className="text-sm text-muted-foreground">Chat with a real person, see assigned tasks and log notes for review.</p>
+              </div>
+            </div>
+            <Button asChild variant="outline" className="shrink-0">
+              <Link to="/copilot/manager">Open live manager</Link>
+            </Button>
+          </section>
         </div>
+
+        <aside className="space-y-3" aria-label="Your chats">
+          <SectionHeader title="Your chats" />
+          <ThreadList />
+        </aside>
       </div>
-      <aside className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground">Your chats</h2>
-        <ThreadList />
-      </aside>
-    </div>
+    </PageContainer>
   );
 }

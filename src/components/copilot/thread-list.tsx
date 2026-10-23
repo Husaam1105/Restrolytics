@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { MessageSquarePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { useConfirm } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { createCopilotThread, deleteCopilotThread, listCopilotThreads } from "@/lib/copilot.functions";
 import { cn } from "@/lib/utils";
@@ -22,49 +23,78 @@ export function useNewThread() {
   });
 }
 
-export function ThreadList({ activeId }: { activeId?: string }) {
+export function ThreadList({ activeId, onNavigate }: { activeId?: string; onNavigate?: () => void }) {
   const list = useServerFn(listCopilotThreads);
   const del = useServerFn(deleteCopilotThread);
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const newThread = useNewThread();
-  const { data = [] } = useQuery({ queryKey: ["copilot-threads"], queryFn: () => list() });
+  const { data = [], isError, refetch } = useQuery({ queryKey: ["copilot-threads"], queryFn: () => list() });
   const remove = useMutation({
     mutationFn: (id: string) => del({ data: { id } }),
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ["copilot-threads"] });
+      toast.success("Chat deleted");
       if (id === activeId) navigate({ to: "/copilot" });
     },
+    onError: (e) => toast.error((e as Error).message),
   });
+
+  const deleteThread = async (id: string, title: string) => {
+    const ok = await confirm({
+      title: `Delete "${title}"?`,
+      description: "The whole conversation is removed. This can't be undone.",
+      confirmLabel: "Delete chat",
+      destructive: true,
+    });
+    if (ok) remove.mutate(id);
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <Button onClick={() => newThread.mutate(undefined)} disabled={newThread.isPending} className="w-full justify-start">
-        <MessageSquarePlus className="mr-2 h-4 w-4" /> New chat
+        <MessageSquarePlus />
+        New chat
       </Button>
-      <div className="flex flex-col gap-1">
-        {data.length === 0 ? <p className="px-2 py-1 text-sm text-muted-foreground">No chats yet.</p> : null}
+      <nav aria-label="Your chats" className="flex flex-col gap-0.5">
+        {isError ? (
+          <button type="button" onClick={() => void refetch()} className="px-2 py-1 text-left text-sm text-destructive underline-offset-4 hover:underline">
+            Chats didn&apos;t load. Try again
+          </button>
+        ) : data.length === 0 ? (
+          <p className="px-2 py-1 text-sm text-muted-foreground">No chats yet.</p>
+        ) : null}
         {data.map((t) => (
           <div
             key={t.id}
             className={cn(
-              "group flex items-center gap-1 rounded-md pr-1 text-sm hover:bg-muted",
-              t.id === activeId && "bg-muted font-medium",
+              "group flex min-h-10 items-center gap-1 rounded-lg pr-1 text-sm transition-colors hover:bg-muted",
+              t.id === activeId && "bg-accent font-semibold text-accent-foreground",
             )}
           >
-            <Link to="/copilot/$threadId" params={{ threadId: t.id }} className="min-w-0 flex-1 truncate px-2 py-2">
+            <Link
+              to="/copilot/$threadId"
+              params={{ threadId: t.id }}
+              onClick={onNavigate}
+              aria-current={t.id === activeId ? "page" : undefined}
+              className="min-w-0 flex-1 truncate px-2.5 py-2"
+            >
               {t.title}
             </Link>
-            <button
-              type="button"
-              aria-label="Delete chat"
-              onClick={() => remove.mutate(t.id)}
-              className="rounded p-1 text-muted-foreground opacity-0 hover:text-foreground group-hover:opacity-100 focus:opacity-100"
+            {/* Always visible on touch screens; revealed on hover/focus with a mouse. */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Delete chat "${t.title}"`}
+              onClick={() => void deleteThread(t.id, t.title)}
+              className="text-muted-foreground opacity-100 hover:text-destructive [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
             >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+              <Trash2 />
+            </Button>
           </div>
         ))}
-      </div>
+      </nav>
     </div>
   );
 }
