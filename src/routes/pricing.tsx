@@ -1,3 +1,4 @@
+import { canonical } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BadgeCheck, Camera, Check, Megaphone, Users } from "lucide-react";
 
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/pricing")({
       { property: "og:title", content: "Restrolytics pricing" },
       { property: "og:description", content: "Team workspace, virtual manager and marketing packages, priced per location." },
     ],
+    links: canonical("/pricing"),
   }),
 });
 

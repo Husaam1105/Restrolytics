@@ -12,6 +12,9 @@ import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { themeBootScript } from "@/lib/theme";
 import { ConfirmProvider } from "@/components/confirm-dialog";
+import { absoluteUrl } from "@/lib/seo";
+import { BrandGlyph } from "@/components/brand-mark";
+import { Button } from "@/components/ui/button";
 
 import appCss from "../styles.css?url";
 import { reportError } from "@/lib/error-reporting";
@@ -19,23 +22,22 @@ import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main id="main" className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
+        <BrandGlyph className="mx-auto size-12" />
+        <p className="text-figure mt-6 text-6xl text-link">404</p>
+        <h1 className="text-title mt-3">This page isn&apos;t on the menu</h1>
+        <p className="mt-2 text-muted-foreground">The link may be old, or the page has moved.</p>
+        <div className="mt-8 flex flex-wrap justify-center gap-2">
+          <Button asChild>
+            <Link to="/dashboard">Go to your dashboard</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/">Restrolytics home</Link>
+          </Button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -46,33 +48,28 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main id="main" className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+        <BrandGlyph className="mx-auto size-12" />
+        <h1 className="text-title mt-6">This page didn&apos;t load</h1>
+        <p className="mt-2 text-muted-foreground">
+          Something failed on our side. Try again, and if it keeps happening, email hello@restrolytics.com.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
+        <div className="mt-8 flex flex-wrap justify-center gap-2">
+          <Button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
+          </Button>
+          <Button variant="outline" asChild>
+            <a href="/">Restrolytics home</a>
+          </Button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -80,21 +77,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Restrolytics" },
-      { name: "description", content: "Restaurant operations, sales, inventory, shifts, and payroll in one workspace." },
-      { name: "author", content: "Restrolytics" },
-      { property: "og:title", content: "Restrolytics" },
-      { property: "og:description", content: "Restaurant operations, sales, inventory, shifts, and payroll in one workspace." },
+      {
+        name: "description",
+        content: "Sales, stock, shifts and payroll for restaurants, with a copilot that knows your numbers.",
+      },
+      { name: "theme-color", content: "#fdfafb" },
+      { property: "og:site_name", content: "Restrolytics" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: absoluteUrl("/og.png") },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: absoluteUrl("/og.png") },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,

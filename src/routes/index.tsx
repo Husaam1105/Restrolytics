@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { absoluteUrl, canonical } from "@/lib/seo";
+
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { ClosingCta, Faq, Hero, IqSection, ManagerSection, Operations, Sources } from "@/components/marketing/landing";
@@ -16,8 +18,27 @@ export const Route = createFileRoute("/")({
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: "The whole night, added up before you lock the door" },
       { property: "og:description", content: DESCRIPTION },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: absoluteUrl("/") },
+    ],
+    links: canonical("/"),
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            { "@type": "Organization", name: "Restrolytics", url: absoluteUrl("/"), email: "hello@restrolytics.com" },
+            {
+              "@type": "SoftwareApplication",
+              name: "Restrolytics",
+              applicationCategory: "BusinessApplication",
+              operatingSystem: "Web",
+              description: DESCRIPTION,
+              offers: { "@type": "Offer", price: "199", priceCurrency: "USD", description: "Per location, per month" },
+            },
+          ],
+        }),
+      },
     ],
   }),
 });

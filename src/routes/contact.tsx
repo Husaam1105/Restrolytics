@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { canonical } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { Mail, Phone } from "lucide-react";
 
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/contact")({
         content: "Book a 30-minute Restrolytics walkthrough. Bring last week's Toast export and see your own numbers.",
       },
     ],
+    links: canonical("/contact"),
   }),
 });
 
