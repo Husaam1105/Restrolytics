@@ -122,7 +122,7 @@ function summarize(rows: SaleRow[]) {
 }
 
 export const getSalesOverview = createServerFn({ method: "GET" })
-  .inputValidator((data: { days?: number } | undefined) => ({ days: normalizeDays(data?.days) }))
+  .validator((data: { days?: number } | undefined) => ({ days: normalizeDays(data?.days) }))
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const { requireManager, canManage } = await import("./tenant.server");
@@ -192,7 +192,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const ORDER_LIST_LIMIT = 500;
 
 export const getChannelSales = createServerFn({ method: "GET" })
-  .inputValidator((data: { slug: string; from?: string; to?: string }) => {
+  .validator((data: { slug: string; from?: string; to?: string }) => {
     const from = typeof data.from === "string" && DATE_RE.test(data.from) ? data.from : null;
     const to = typeof data.to === "string" && DATE_RE.test(data.to) ? data.to : null;
     return { slug: String(data.slug), from, to };
@@ -289,7 +289,7 @@ export const getChannelSales = createServerFn({ method: "GET" })
   });
 
 export const importPlatformReport = createServerFn({ method: "POST" })
-  .inputValidator((data: { slug: string; text: string }) => {
+  .validator((data: { slug: string; text: string }) => {
     if (typeof data?.text !== "string" || data.text.length > 5_000_000)
       throw new Error("File too large");
     return { slug: String(data.slug), text: data.text };
@@ -313,7 +313,7 @@ export const importPlatformReport = createServerFn({ method: "POST" })
   });
 
 export const getChannelInsights = createServerFn({ method: "GET" })
-  .inputValidator((data: { slug: string }) => ({ slug: String(data.slug) }))
+  .validator((data: { slug: string }) => ({ slug: String(data.slug) }))
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const channel = SALES_CHANNELS.find((c) => c.slug === data.slug);
@@ -363,7 +363,7 @@ export const getChannelInsights = createServerFn({ method: "GET" })
   });
 
 export const importToastSummary = createServerFn({ method: "POST" })
-  .inputValidator((data: { summary: import("./toast-summary").ToastSummary }) => {
+  .validator((data: { summary: import("./toast-summary").ToastSummary }) => {
     const s = data?.summary;
     if (!s || !DATE_RE.test(s.startDate) || !DATE_RE.test(s.endDate))
       throw new Error("Invalid report");
@@ -391,7 +391,7 @@ export const importToastSummary = createServerFn({ method: "POST" })
   });
 
 export const getToastSummaries = createServerFn({ method: "GET" })
-  .inputValidator((data: { from: string; to: string }) => {
+  .validator((data: { from: string; to: string }) => {
     if (!DATE_RE.test(data.from) || !DATE_RE.test(data.to)) throw new Error("Invalid dates");
     return data;
   })
@@ -412,7 +412,7 @@ export const getToastSummaries = createServerFn({ method: "GET" })
   });
 
 export const listItemOutages = createServerFn({ method: "GET" })
-  .inputValidator((data: { platform: string; from: string; to: string }) => {
+  .validator((data: { platform: string; from: string; to: string }) => {
     if (!DATE_RE.test(data.from) || !DATE_RE.test(data.to)) throw new Error("Invalid dates");
     return { platform: String(data.platform).slice(0, 40), from: data.from, to: data.to };
   })
@@ -434,7 +434,7 @@ export const listItemOutages = createServerFn({ method: "GET" })
   });
 
 export const addItemOutage = createServerFn({ method: "POST" })
-  .inputValidator((data: { platform: string; itemName: string; date: string; note?: string }) => {
+  .validator((data: { platform: string; itemName: string; date: string; note?: string }) => {
     const itemName = String(data.itemName ?? "")
       .trim()
       .slice(0, 120);
@@ -468,7 +468,7 @@ export const addItemOutage = createServerFn({ method: "POST" })
   });
 
 export const updateItemOutage = createServerFn({ method: "POST" })
-  .inputValidator((data: { id: string; action: "back" | "delete" }) => ({
+  .validator((data: { id: string; action: "back" | "delete" }) => ({
     id: String(data.id),
     action: data.action === "delete" ? ("delete" as const) : ("back" as const),
   }))
@@ -486,7 +486,7 @@ export const updateItemOutage = createServerFn({ method: "POST" })
 const TOAST_KINDS = { pmix: "toast_pmix", removed: "toast_removed" } as const;
 
 export const importToastReport = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     (data: { kind: "pmix" | "removed"; report: { startDate: string; endDate: string } }) => {
       if (!(data?.kind in TOAST_KINDS)) throw new Error("Unknown report");
       const r = data.report;
@@ -516,7 +516,7 @@ export const importToastReport = createServerFn({ method: "POST" })
   });
 
 export const getToastReports = createServerFn({ method: "GET" })
-  .inputValidator((data: { from: string; to: string }) => {
+  .validator((data: { from: string; to: string }) => {
     if (!DATE_RE.test(data.from) || !DATE_RE.test(data.to)) throw new Error("Invalid dates");
     return data;
   })

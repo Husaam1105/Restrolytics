@@ -166,8 +166,9 @@ function SummaryView({ s }: { s: ToastSummary }) {
   const diningRows = s.dining.filter((d) => d.netSales > 0 || d.orders > 0);
   const paymentRows = s.payments
     .filter((p) => p.total > 0)
+    // Imports saved before the label change used "Type · Sub" instead of "Type (Sub)".
     .map((p) => ({
-      name: p.type.split(" · ").pop() ?? p.type,
+      name: /\(([^)]+)\)$/.exec(p.type)?.[1] ?? p.type.split(" · ").pop() ?? p.type,
       total: Math.round(p.total * 100) / 100,
     }));
   return (

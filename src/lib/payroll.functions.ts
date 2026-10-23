@@ -142,7 +142,7 @@ const employeeSchema = z.object({
 
 export const saveEmployee = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: EmployeeInput) => employeeSchema.parse(input))
+  .validator((input: EmployeeInput) => employeeSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -205,7 +205,7 @@ export const saveEmployee = createServerFn({ method: "POST" })
 /** Everything the manager payroll screen needs for one week or a combined date range. */
 export const getPayrollWeek = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: { weekStart?: string | null; rangeStart?: string | null; rangeEnd?: string | null }) =>
       z
         .object({
@@ -427,7 +427,7 @@ function computeTipShares(
  */
 export const saveHours = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { employeeId: string; workDate: string; hours: number }) =>
+  .validator((input: { employeeId: string; workDate: string; hours: number }) =>
     z
       .object({
         employeeId: z.string().uuid(),
@@ -491,7 +491,7 @@ export const saveHours = createServerFn({ method: "POST" })
 
 export const saveTipPool = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { poolDate: string; area: PoolArea; amount: number }) =>
+  .validator((input: { poolDate: string; area: PoolArea; amount: number }) =>
     z
       .object({
         poolDate: isoDate,
@@ -529,7 +529,7 @@ export const saveTipPool = createServerFn({ method: "POST" })
 
 export const savePayrollSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { weekStartsOn: number }) =>
+  .validator((input: { weekStartsOn: number }) =>
     z.object({ weekStartsOn: z.coerce.number().int().min(0).max(6) }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -550,7 +550,7 @@ export const savePayrollSettings = createServerFn({ method: "POST" })
 /** Builds (or rebuilds) the pay sheet for a week from the recorded hours and tips. */
 export const buildPayrollWeek = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { weekStart: string }) => input)
+  .validator((input: { weekStart: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -672,7 +672,7 @@ export const buildPayrollWeek = createServerFn({ method: "POST" })
 
 export const updatePayrollLine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       lineId: string;
       adjustments?: number;
@@ -731,7 +731,7 @@ export const updatePayrollLine = createServerFn({ method: "POST" })
 /** Marking cash as handed over — this is the payout record. */
 export const markPayoutPaid = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { lineId: string; paid: boolean }) =>
+  .validator((input: { lineId: string; paid: boolean }) =>
     z.object({ lineId: z.string().uuid(), paid: z.boolean() }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -762,7 +762,7 @@ export const markPayoutPaid = createServerFn({ method: "POST" })
 
 export const closePayrollWeek = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { periodId: string; status: "draft" | "paid" }) =>
+  .validator((input: { periodId: string; status: "draft" | "paid" }) =>
     z.object({ periodId: z.string().uuid(), status: z.enum(["draft", "paid"]) }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -886,7 +886,7 @@ export const getMyTimeclock = createServerFn({ method: "GET" })
 
 export const clockIn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { employeeId?: string | null }) => input)
+  .validator((input: { employeeId?: string | null }) => input)
   .handler(async ({ data, context }) => {
     const { resolveActiveRestaurant, canManage } = await import("./tenant.server");
     const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
@@ -927,7 +927,7 @@ export const clockIn = createServerFn({ method: "POST" })
 
 export const clockOut = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { employeeId?: string | null }) => input)
+  .validator((input: { employeeId?: string | null }) => input)
   .handler(async ({ data, context }) => {
     const { resolveActiveRestaurant, canManage } = await import("./tenant.server");
     const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
@@ -967,9 +967,7 @@ export const clockOut = createServerFn({ method: "POST" })
 
 export const acknowledgePay = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { lineId: string }) =>
-    z.object({ lineId: z.string().uuid() }).parse(input),
-  )
+  .validator((input: { lineId: string }) => z.object({ lineId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: ok, error } = await context.supabase.rpc("acknowledge_pay", {
       _line_id: data.lineId,

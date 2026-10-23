@@ -86,7 +86,7 @@ export function parseToastSummary(sheets: Record<string, Rows>, fileName: string
       .filter((r) => str(r["Payment type"]) && str(r["Payment type"]) !== "Total")
       .map((r) => ({
         type: str(r["Payment sub type"])
-          ? `${str(r["Payment type"])} · ${str(r["Payment sub type"])}`
+          ? `${str(r["Payment type"])} (${str(r["Payment sub type"])})`
           : str(r["Payment type"]),
         count: num(r["Count"]),
         amount: num(r["Amount"]),

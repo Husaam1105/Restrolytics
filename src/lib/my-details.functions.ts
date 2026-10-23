@@ -23,7 +23,7 @@ export const getMyDetails = createServerFn({ method: "GET" })
 
 export const saveMyDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => schema.parse(d))
+  .validator((d) => schema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin

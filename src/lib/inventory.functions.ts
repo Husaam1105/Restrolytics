@@ -102,7 +102,7 @@ export const listVendors = createServerFn({ method: "GET" })
 
 export const getVendorDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { vendorId: string }) => input)
+  .validator((input: { vendorId: string }) => input)
   .handler(async ({ data, context }) => {
     const { data: vendor, error } = await context.supabase
       .from("vendors")
@@ -141,7 +141,7 @@ export const getVendorDetail = createServerFn({ method: "GET" })
 
 export const saveVendor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       id?: string;
       name: string;
@@ -191,7 +191,7 @@ export const saveVendor = createServerFn({ method: "POST" })
 
 export const deleteVendor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { vendorId: string }) => input)
+  .validator((input: { vendorId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -206,7 +206,7 @@ export const deleteVendor = createServerFn({ method: "POST" })
 
 export const saveVendorCredentials = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { vendorId: string; username: string; password: string }) => input)
+  .validator((input: { vendorId: string; username: string; password: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -243,7 +243,7 @@ export const saveVendorCredentials = createServerFn({ method: "POST" })
 
 export const syncVendor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { vendorId: string }) => input)
+  .validator((input: { vendorId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -284,7 +284,7 @@ export const syncVendor = createServerFn({ method: "POST" })
 
 export const saveInventoryItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       id?: string;
       vendorId: string;
@@ -349,7 +349,7 @@ export const saveInventoryItem = createServerFn({ method: "POST" })
 
 export const deleteInventoryItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { itemId: string }) => input)
+  .validator((input: { itemId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);

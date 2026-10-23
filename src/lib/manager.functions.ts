@@ -39,7 +39,7 @@ export const getManagerContext = createServerFn({ method: "GET" })
 
 /** IQ helps Restrolytics staff: suggest a reply for a thread, or summarize open work. */
 export const iqManagerAssist = createServerFn({ method: "POST" })
-  .inputValidator((d: { restaurantId: string; threadId?: string; mode: "reply" | "summary" }) => ({
+  .validator((d: { restaurantId: string; threadId?: string; mode: "reply" | "summary" }) => ({
     restaurantId: String(d.restaurantId),
     threadId: d.threadId ? String(d.threadId) : undefined,
     mode: d.mode === "reply" ? ("reply" as const) : ("summary" as const),

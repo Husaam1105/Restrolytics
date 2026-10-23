@@ -101,7 +101,7 @@ export const getCatering = createServerFn({ method: "GET" })
   });
 
 export const saveCateringOrder = createServerFn({ method: "POST" })
-  .inputValidator((data: CateringOrderInput) => orderSchema.parse(data))
+  .validator((data: CateringOrderInput) => orderSchema.parse(data))
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const { requireManager } = await import("./tenant.server");
@@ -142,7 +142,7 @@ export const saveCateringOrder = createServerFn({ method: "POST" })
   });
 
 export const deleteCateringOrder = createServerFn({ method: "POST" })
-  .inputValidator((data: { id: string }) => data)
+  .validator((data: { id: string }) => data)
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const { requireManager } = await import("./tenant.server");
@@ -157,7 +157,7 @@ export const deleteCateringOrder = createServerFn({ method: "POST" })
   });
 
 export const addCateringPayment = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     (data: {
       orderId: string;
       amount: number;
@@ -193,7 +193,7 @@ export const addCateringPayment = createServerFn({ method: "POST" })
   });
 
 export const deleteCateringPayment = createServerFn({ method: "POST" })
-  .inputValidator((data: { id: string }) => data)
+  .validator((data: { id: string }) => data)
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const { requireManager } = await import("./tenant.server");

@@ -20,7 +20,7 @@ export const listPlatformConnections = createServerFn({ method: "GET" })
 
 export const connectPlatform = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { platform: string; credentials: Record<string, string> }) => input)
+  .validator((input: { platform: string; credentials: Record<string, string> }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -59,7 +59,7 @@ export const connectPlatform = createServerFn({ method: "POST" })
 
 export const disconnectPlatform = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { connectionId: string }) => input)
+  .validator((input: { connectionId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -84,7 +84,7 @@ export const disconnectPlatform = createServerFn({ method: "POST" })
 
 export const syncPlatform = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { connectionId: string }) => input)
+  .validator((input: { connectionId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);

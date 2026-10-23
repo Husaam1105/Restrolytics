@@ -35,7 +35,7 @@ function normalizeDate(value: unknown, fallback: string) {
 }
 
 export const getDayReport = createServerFn({ method: "GET" })
-  .inputValidator((data: { date?: string; from?: string; to?: string } | undefined) => ({
+  .validator((data: { date?: string; from?: string; to?: string } | undefined) => ({
     date: data?.date ?? null,
     from: data?.from ?? null,
     to: data?.to ?? null,
@@ -270,7 +270,7 @@ export const getDayReport = createServerFn({ method: "GET" })
   });
 
 export const logDayIssue = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     (data: {
       date: string;
       category: IssueCategory;
@@ -304,7 +304,7 @@ export const logDayIssue = createServerFn({ method: "POST" })
   });
 
 export const deleteDayIssue = createServerFn({ method: "POST" })
-  .inputValidator((data: { id: string }) => data)
+  .validator((data: { id: string }) => data)
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const { requireManager } = await import("./tenant.server");

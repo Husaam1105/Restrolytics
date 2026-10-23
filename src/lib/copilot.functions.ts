@@ -32,7 +32,7 @@ export const createCopilotThread = createServerFn({ method: "POST" })
   });
 
 export const deleteCopilotThread = createServerFn({ method: "POST" })
-  .inputValidator((d: { id: string }) => ({ id: String(d.id) }))
+  .validator((d: { id: string }) => ({ id: String(d.id) }))
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const { error } = await context.supabase
@@ -45,7 +45,7 @@ export const deleteCopilotThread = createServerFn({ method: "POST" })
   });
 
 export const getCopilotMessages = createServerFn({ method: "GET" })
-  .inputValidator((d: { id: string }) => ({ id: String(d.id) }))
+  .validator((d: { id: string }) => ({ id: String(d.id) }))
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const { data: thread } = await context.supabase

@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "db:check": "tsx tests/db/check-migrations.ts",
     "check:contrast": "tsx scripts/check-contrast.ts",
     "build:og": "tsx scripts/build-og.ts"

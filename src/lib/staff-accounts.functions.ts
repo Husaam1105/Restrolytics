@@ -39,7 +39,7 @@ async function employeeInRestaurant(
 /** Manager creates a username + password login for an employee who has no email. */
 export const createStaffLogin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { employeeId: string; username: string; password: string }) =>
+  .validator((input: { employeeId: string; username: string; password: string }) =>
     z.object({ employeeId: z.string().uuid(), username, password }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -118,7 +118,7 @@ export const createStaffLogin = createServerFn({ method: "POST" })
 /** Manager sets a new password for a staff username login (not for email accounts). */
 export const resetStaffPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { employeeId: string; password: string }) =>
+  .validator((input: { employeeId: string; password: string }) =>
     z.object({ employeeId: z.string().uuid(), password }).parse(input),
   )
   .handler(async ({ data, context }) => {

@@ -17,7 +17,7 @@ export type InputType = "none" | "text" | "number" | "temperature";
 
 export const getShiftChecklist = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { area: TaskArea; shift: TaskShift }) => input)
+  .validator((input: { area: TaskArea; shift: TaskShift }) => input)
   .handler(async ({ data, context }) => {
     const { resolveActiveRestaurant } = await import("./tenant.server");
     const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
@@ -118,7 +118,7 @@ export const getShiftChecklist = createServerFn({ method: "GET" })
 
 export const addTaskNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { taskId: string; note: string }) => input)
+  .validator((input: { taskId: string; note: string }) => input)
   .handler(async ({ data, context }) => {
     const note = data.note.trim();
     if (!note) throw new Error("Comment is required");
@@ -141,7 +141,7 @@ export const addTaskNote = createServerFn({ method: "POST" })
 
 export const setTaskCompletion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { taskId: string; completed: boolean; value?: string | null }) => input)
+  .validator((input: { taskId: string; completed: boolean; value?: string | null }) => input)
   .handler(async ({ data, context }) => {
     const { resolveActiveRestaurant } = await import("./tenant.server");
     const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
@@ -175,7 +175,7 @@ export const setTaskCompletion = createServerFn({ method: "POST" })
 /** Attach a photo to a task as proof of completion; also marks the task done. */
 export const uploadTaskPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { taskId: string; dataUrl: string; fileName?: string }) => input)
+  .validator((input: { taskId: string; dataUrl: string; fileName?: string }) => input)
   .handler(async ({ data, context }) => {
     const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(data.dataUrl);
     if (!match) throw new Error("Please choose a photo (JPG, PNG or HEIC).");
@@ -218,7 +218,7 @@ export const uploadTaskPhoto = createServerFn({ method: "POST" })
 
 export const addShiftTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       area: TaskArea;
       shift: TaskShift;
@@ -268,7 +268,7 @@ export const addShiftTask = createServerFn({ method: "POST" })
 
 export const removeShiftTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { taskId: string }) => input)
+  .validator((input: { taskId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -292,7 +292,7 @@ export const getShiftSettings = createServerFn({ method: "GET" })
 
 export const saveShiftSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { timezone: string; openTime: string; closeTime: string }) => {
+  .validator((input: { timezone: string; openTime: string; closeTime: string }) => {
     const timezone = input.timezone.trim();
     // An unknown zone used to fall back to UTC silently and shift every day.
     try {

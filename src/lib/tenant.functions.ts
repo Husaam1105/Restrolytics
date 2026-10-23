@@ -60,7 +60,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
 
 export const createRestaurant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { name: string; location?: string }) => input)
+  .validator((input: { name: string; location?: string }) => input)
   .handler(async ({ data, context }) => {
     const name = data.name.trim();
     if (!name) throw new Error("Restaurant name is required.");
@@ -117,7 +117,7 @@ export const createRestaurant = createServerFn({ method: "POST" })
 
 export const switchRestaurant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { restaurantId: string }) => input)
+  .validator((input: { restaurantId: string }) => input)
   .handler(async ({ data, context }) => {
     const { data: membership, error } = await context.supabase
       .from("restaurant_members")
@@ -182,7 +182,7 @@ export const getTeam = createServerFn({ method: "GET" })
 
 export const inviteMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { email: string; role: MemberRole }) => input)
+  .validator((input: { email: string; role: MemberRole }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -235,7 +235,7 @@ export const inviteMember = createServerFn({ method: "POST" })
 
 export const cancelInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { inviteId: string }) => input)
+  .validator((input: { inviteId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -250,7 +250,7 @@ export const cancelInvite = createServerFn({ method: "POST" })
 
 export const updateMemberRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { memberId: string; role: MemberRole }) => input)
+  .validator((input: { memberId: string; role: MemberRole }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -267,7 +267,7 @@ export const updateMemberRole = createServerFn({ method: "POST" })
 
 export const removeMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { memberId: string }) => input)
+  .validator((input: { memberId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);

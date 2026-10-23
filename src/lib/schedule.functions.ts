@@ -43,7 +43,7 @@ const shiftSchema = z
 
 export const getSchedule = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { range: ScheduleRange }) => input)
+  .validator((input: { range: ScheduleRange }) => input)
   .handler(async ({ data, context }) => {
     const { resolveActiveRestaurant, canManage } = await import("./tenant.server");
     const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
@@ -110,7 +110,7 @@ export const getSchedule = createServerFn({ method: "GET" })
 
 export const saveScheduleShift = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: ScheduleShiftInput) => shiftSchema.parse(input))
+  .validator((input: ScheduleShiftInput) => shiftSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -147,7 +147,7 @@ export const saveScheduleShift = createServerFn({ method: "POST" })
 
 export const deleteScheduleShift = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) => input)
+  .validator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);

@@ -47,7 +47,7 @@ export const getStorageOverview = createServerFn({ method: "GET" })
 
 export const saveLocation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id?: string; name: string; sortOrder?: number }) => input)
+  .validator((input: { id?: string; name: string; sortOrder?: number }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -70,7 +70,7 @@ export const saveLocation = createServerFn({ method: "POST" })
 
 export const deleteLocation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) => input)
+  .validator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -85,7 +85,7 @@ export const deleteLocation = createServerFn({ method: "POST" })
 
 export const setLocationItems = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { locationId: string; itemIds: string[] }) => input)
+  .validator((input: { locationId: string; itemIds: string[] }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -121,7 +121,7 @@ export const setLocationItems = createServerFn({ method: "POST" })
 
 export const getCount = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { countId: string }) => input)
+  .validator((input: { countId: string }) => input)
   .handler(async ({ data, context }) => {
     const { data: count, error } = await context.supabase
       .from("inventory_counts")
@@ -140,7 +140,7 @@ export const getCount = createServerFn({ method: "GET" })
 
 export const startCount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { locationId: string | null }) => input)
+  .validator((input: { locationId: string | null }) => input)
   .handler(async ({ data, context }) => {
     const restaurant = await restaurantFor(context);
     const { data: row, error } = await context.supabase
@@ -159,7 +159,7 @@ export const startCount = createServerFn({ method: "POST" })
 
 export const saveCount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       countId: string;
       complete: boolean;
@@ -230,7 +230,7 @@ export const saveCount = createServerFn({ method: "POST" })
 
 export const deleteCount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { countId: string }) => input)
+  .validator((input: { countId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);

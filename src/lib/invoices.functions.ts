@@ -7,7 +7,7 @@ export type ParsedInvoiceLine = { name: string; quantity: number; unitPrice: num
 /** Reads a photo or PDF of an invoice and returns the line items for review. */
 export const parseInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { dataUrl: string; mimeType: string }) => input)
+  .validator((input: { dataUrl: string; mimeType: string }) => input)
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -23,7 +23,7 @@ export const parseInvoice = createServerFn({ method: "POST" })
 /** Saves a reviewed invoice as a vendor order and folds the items into inventory. */
 export const saveInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       vendorId: string;
       invoiceNumber?: string;
