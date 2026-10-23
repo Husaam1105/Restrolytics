@@ -14,19 +14,12 @@ export const Route = createFileRoute("/_authenticated/sales/")({
   component: SalesOverview,
   head: () => ({
     meta: [
-      { title: "Sales overview — Restaurant CRM" },
+      { title: "Sales overview · Restrolytics" },
       {
         name: "description",
         content:
           "Total sales with a breakdown by Toast POS, Uber Eats, DoorDash, Grubhub and catering.",
       },
-      { property: "og:title", content: "Sales overview — Restaurant CRM" },
-      {
-        property: "og:description",
-        content: "Total sales split by channel, with catering and delivery side by side.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

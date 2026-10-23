@@ -26,12 +26,8 @@ export const Route = createFileRoute("/_authenticated/inventory/storage/$locatio
   component: LocationPage,
   head: () => ({
     meta: [
-      { title: "Storage Location — Restrolytics Inventory" },
+      { title: "Storage area · Restrolytics" },
       { name: "description", content: "Items kept in this storage location in shelf order, with counts and value." },
-      { property: "og:title", content: "Storage Location — Restrolytics Inventory" },
-      { property: "og:description", content: "Items kept in this storage location in shelf order, with counts and value." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

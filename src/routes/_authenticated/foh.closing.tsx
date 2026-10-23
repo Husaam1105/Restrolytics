@@ -6,21 +6,14 @@ export const Route = createFileRoute("/_authenticated/foh/closing")({
     <ShiftChecklist
       area="foh"
       shift="closing"
-      title="FOH — Closing tasks"
+      title="Front of house closing"
       description="Front of house shutdown, cash-out and cleaning."
     />
   ),
   head: () => ({
     meta: [
-      { title: "FOH Closing Tasks — Restaurant CRM" },
+      { title: "Front of house closing checklist · Restrolytics" },
       { name: "description", content: "Front of house closing checklist for your restaurant." },
-      { property: "og:title", content: "FOH Closing Tasks — Restaurant CRM" },
-      {
-        property: "og:description",
-        content: "Front of house closing checklist for your restaurant.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

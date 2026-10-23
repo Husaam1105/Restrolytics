@@ -37,18 +37,11 @@ export const Route = createFileRoute("/_authenticated/inventory/$vendorId")({
   component: VendorPage,
   head: () => ({
     meta: [
-      { title: "Vendor Inventory — Restaurant CRM" },
+      { title: "Vendor · Restrolytics" },
       {
         name: "description",
         content: "Items ordered from this vendor with quantity, quality, last order date and next order date.",
       },
-      { property: "og:title", content: "Vendor Inventory — Restaurant CRM" },
-      {
-        property: "og:description",
-        content: "Items ordered from this vendor with quantity, quality, last order date and next order date.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

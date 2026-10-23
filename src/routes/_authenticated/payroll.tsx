@@ -62,18 +62,11 @@ export const Route = createFileRoute("/_authenticated/payroll")({
   component: PayrollPage,
   head: () => ({
     meta: [
-      { title: "Payroll — Restaurant CRM" },
+      { title: "Payroll · Restrolytics" },
       {
         name: "description",
         content: "Weekly hours, tip splits and cash payouts for front and back of house.",
       },
-      { property: "og:title", content: "Payroll — Restaurant CRM" },
-      {
-        property: "og:description",
-        content: "Weekly hours, tip splits and cash payouts for front and back of house.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

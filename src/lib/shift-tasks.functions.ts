@@ -350,7 +350,8 @@ export const getShiftProgress = createServerFn({ method: "GET" })
       .eq("active", true)
       .maybeSingle();
     const isStaff = role === "staff";
-    const myArea = (emp?.area as TaskArea | undefined) ?? null;
+    // Employees can work "both" areas; keep that value so the reminder covers both lists.
+    const myArea = (emp?.area as TaskArea | "both" | undefined) ?? null;
 
     return {
       date,

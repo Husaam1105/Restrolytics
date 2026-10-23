@@ -9,18 +9,11 @@ export const Route = createFileRoute("/_authenticated/settings/")({
   component: SettingsHome,
   head: () => ({
     meta: [
-      { title: "Settings — Restaurant CRM" },
+      { title: "Settings · Restrolytics" },
       {
         name: "description",
         content: "Manage employees, who can sign in, and the accounts your restaurant connects to.",
       },
-      { property: "og:title", content: "Settings — Restaurant CRM" },
-      {
-        property: "og:description",
-        content: "Employees, access and connected accounts in one place.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

@@ -16,12 +16,8 @@ export const Route = createFileRoute("/_authenticated/inventory/count/$countId")
   component: CountPage,
   head: () => ({
     meta: [
-      { title: "Inventory Count — Restrolytics" },
+      { title: "Stock count · Restrolytics" },
       { name: "description", content: "Count items shelf by shelf in each storage location and update on-hand stock." },
-      { property: "og:title", content: "Inventory Count — Restrolytics" },
-      { property: "og:description", content: "Count items shelf by shelf in each storage location and update on-hand stock." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

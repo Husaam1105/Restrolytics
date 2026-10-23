@@ -41,8 +41,6 @@ export const Route = createFileRoute("/_authenticated/sales/$slug")({
         { name: "description", content: `Orders, tips and totals for ${label}.` },
         { property: "og:title", content: `${label} sales — Restaurant CRM` },
         { property: "og:description", content: `Orders, tips and totals for ${label}.` },
-        { property: "og:type", content: "website" },
-        { name: "twitter:card", content: "summary" },
       ],
     };
   },

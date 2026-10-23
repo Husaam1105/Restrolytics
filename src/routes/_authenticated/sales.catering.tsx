@@ -37,18 +37,11 @@ export const Route = createFileRoute("/_authenticated/sales/catering")({
   component: CateringPage,
   head: () => ({
     meta: [
-      { title: "Catering orders & payments — Restaurant CRM" },
+      { title: "Catering orders & payments · Restrolytics" },
       {
         name: "description",
         content: "Book catering events, track deposits and payments, and see what is still owed.",
       },
-      { property: "og:title", content: "Catering orders & payments — Restaurant CRM" },
-      {
-        property: "og:description",
-        content: "Catering events with headcount, totals, payments and outstanding balances.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

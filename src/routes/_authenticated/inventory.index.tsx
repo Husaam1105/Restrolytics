@@ -9,12 +9,8 @@ export const Route = createFileRoute("/_authenticated/inventory/")({
   component: InventoryDashboard,
   head: () => ({
     meta: [
-      { title: "Inventory dashboard — Restrolytics" },
+      { title: "Inventory dashboard · Restrolytics" },
       { name: "description", content: meta },
-      { property: "og:title", content: "Inventory dashboard — Restrolytics" },
-      { property: "og:description", content: meta },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

@@ -6,18 +6,14 @@ export const Route = createFileRoute("/_authenticated/boh/closing")({
     <ShiftChecklist
       area="boh"
       shift="closing"
-      title="BOH — Closing tasks"
+      title="Kitchen closing"
       description="Line breakdown, storage, cleaning and temperature logs."
     />
   ),
   head: () => ({
     meta: [
-      { title: "BOH Closing Tasks — Restaurant CRM" },
+      { title: "Kitchen closing checklist · Restrolytics" },
       { name: "description", content: "Back of house closing checklist for your kitchen." },
-      { property: "og:title", content: "BOH Closing Tasks — Restaurant CRM" },
-      { property: "og:description", content: "Back of house closing checklist for your kitchen." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

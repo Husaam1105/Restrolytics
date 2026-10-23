@@ -12,12 +12,8 @@ import { getCopilotAlerts } from "@/lib/copilot.functions";
 export const Route = createFileRoute("/_authenticated/copilot/")({
   head: () => ({
     meta: [
-      { title: "IQ Copilot — Restrolytics" },
+      { title: "IQ Copilot · Restrolytics" },
       { name: "description", content: "Your virtual restaurant manager: daily briefing, alerts and answers from your own data." },
-      { property: "og:title", content: "IQ Copilot — Restrolytics" },
-      { property: "og:description", content: "Daily briefing, alerts and answers from your restaurant data." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: CopilotHome,

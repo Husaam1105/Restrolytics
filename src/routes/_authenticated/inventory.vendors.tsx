@@ -29,18 +29,11 @@ export const Route = createFileRoute("/_authenticated/inventory/vendors")({
   component: InventoryPage,
   head: () => ({
     meta: [
-      { title: "Vendors — Restrolytics Inventory" },
+      { title: "Vendors · Restrolytics" },
       {
         name: "description",
         content: "Track every vendor, the items you order, quantities, quality and the next order date.",
       },
-      { property: "og:title", content: "Vendors — Restrolytics Inventory" },
-      {
-        property: "og:description",
-        content: "Track every vendor, the items you order, quantities, quality and the next order date.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

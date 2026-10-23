@@ -9,12 +9,8 @@ export const Route = createFileRoute("/_authenticated/inventory/storage/")({
   component: StorageAreasPage,
   head: () => ({
     meta: [
-      { title: "Storage areas — Restrolytics Inventory" },
+      { title: "Storage areas · Restrolytics" },
       { name: "description", content: meta },
-      { property: "og:title", content: "Storage areas — Restrolytics Inventory" },
-      { property: "og:description", content: meta },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

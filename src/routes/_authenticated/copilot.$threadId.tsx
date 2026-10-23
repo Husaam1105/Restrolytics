@@ -21,12 +21,8 @@ export const Route = createFileRoute("/_authenticated/copilot/$threadId")({
     typeof s['q'] === "string" && s['q'] ? { q: (s['q'] as string).slice(0, 500) } : {},
   head: () => ({
     meta: [
-      { title: "Chat with IQ — Restrolytics" },
+      { title: "Chat with IQ · Restrolytics" },
       { name: "description", content: "Ask IQ, your virtual restaurant manager, about sales, labor, inventory and tasks." },
-      { property: "og:title", content: "Chat with IQ — Restrolytics" },
-      { property: "og:description", content: "Answers from your restaurant's own data." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ThreadPage,

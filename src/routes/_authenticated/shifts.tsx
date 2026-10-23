@@ -21,15 +21,8 @@ export const Route = createFileRoute("/_authenticated/shifts")({
   component: ShiftsPage,
   head: () => ({
     meta: [
-      { title: "Shifts — Restaurant CRM" },
+      { title: "Shifts · Restrolytics" },
       { name: "description", content: "Service hours and daily checklist progress for your team." },
-      { property: "og:title", content: "Shifts — Restaurant CRM" },
-      {
-        property: "og:description",
-        content: "Service hours and daily checklist progress for your team.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

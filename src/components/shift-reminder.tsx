@@ -8,10 +8,10 @@ import { formatTime } from "@/lib/operating-day";
 import { Button } from "@/components/ui/button";
 
 const labels: Record<string, string> = {
-  "foh-opening": "FOH opening",
-  "foh-closing": "FOH closing",
-  "boh-opening": "BOH opening",
-  "boh-closing": "BOH closing",
+  "foh-opening": "Front opening",
+  "foh-closing": "Front closing",
+  "boh-opening": "Kitchen opening",
+  "boh-closing": "Kitchen closing",
 };
 
 export function ShiftReminder() {
@@ -27,15 +27,16 @@ export function ShiftReminder() {
 
   const relevant = data.groups.filter(
     (g) =>
-      g.area === data.myArea &&
+      // Staff who work "both" areas are responsible for both sets of lists.
+      (data.myArea === "both" || g.area === data.myArea) &&
       (data.phase === "closed" ? true : g.shift === "opening" || data.phase === "open"),
   );
   const pending = relevant.filter((g) => g.completed < g.total);
 
   if (pending.length === 0) {
     return (
-      <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-2 text-sm text-muted-foreground">
-        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+      <div className="flex items-center gap-2 border-b bg-success-soft/60 px-4 py-2 text-sm text-muted-foreground">
+        <CheckCircle2 className="size-4 shrink-0 text-success" aria-hidden="true" />
         All checklists are done for today. They reset after closing at{" "}
         {formatTime(data.settings.closeTime)}.
       </div>
@@ -43,19 +44,22 @@ export function ShiftReminder() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm">
-      <AlertCircle className="h-4 w-4 text-amber-600" />
+    <div role="status" className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b bg-warning-soft px-4 py-2 text-sm">
+      <AlertCircle className="size-4 shrink-0 text-warning-foreground dark:text-warning" aria-hidden="true" />
       <span className="font-medium">
         {data.phase === "before-open"
-          ? `Doors open at ${formatTime(data.settings.openTime)} — finish opening tasks:`
+          ? `Doors open at ${formatTime(data.settings.openTime)}. Finish the opening lists:`
           : data.phase === "closed"
-            ? "Service is over — close out the checklists:"
+            ? "Service is over. Close out the checklists:"
             : "Tasks still open for today:"}
       </span>
       {pending.map((g) => (
-        <Button key={`${g.area}-${g.shift}`} asChild variant="outline" size="sm" className="h-7">
+        <Button key={`${g.area}-${g.shift}`} asChild variant="outline" size="sm">
           <Link to={`/${g.area}/${g.shift}` as string}>
-            {labels[`${g.area}-${g.shift}`]} {g.completed}/{g.total}
+            {labels[`${g.area}-${g.shift}`]}{" "}
+            <span className="tabular-nums text-muted-foreground">
+              {g.completed}/{g.total}
+            </span>
           </Link>
         </Button>
       ))}

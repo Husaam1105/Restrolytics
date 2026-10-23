@@ -18,12 +18,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/manager-console")({
   head: () => ({
     meta: [
-      { title: "Manager console — Restrolytics" },
+      { title: "Manager console · Restrolytics" },
       { name: "description", content: "Restrolytics staff console for live chat, task assignment and note review across restaurants." },
-      { property: "og:title", content: "Manager console — Restrolytics" },
-      { property: "og:description", content: "Support every restaurant team from one place." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Console,

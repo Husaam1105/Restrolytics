@@ -12,12 +12,8 @@ import { getManagerContext } from "@/lib/manager.functions";
 export const Route = createFileRoute("/_authenticated/copilot/manager")({
   head: () => ({
     meta: [
-      { title: "Restrolytics Manager — Live help for your team" },
+      { title: "Live manager · Restrolytics" },
       { name: "description", content: "Chat live with your Restrolytics manager, track assigned tasks and log notes for review." },
-      { property: "og:title", content: "Restrolytics Manager" },
-      { property: "og:description", content: "Live manager chat, assigned tasks and notes for review." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ManagerPage,

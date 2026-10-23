@@ -32,18 +32,11 @@ export const Route = createFileRoute("/_authenticated/settings/integrations")({
   component: IntegrationsPage,
   head: () => ({
     meta: [
-      { title: "Integrations — Restaurant CRM" },
+      { title: "Integrations · Restrolytics" },
       {
         name: "description",
         content: "Connect Toast POS, Uber Eats, DoorDash and Grubhub so orders land in one place.",
       },
-      { property: "og:title", content: "Integrations — Restaurant CRM" },
-      {
-        property: "og:description",
-        content: "Connect your POS and delivery accounts to sync orders automatically.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

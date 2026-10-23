@@ -22,7 +22,6 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authenticated/employees'
 import { Route as AuthenticatedManagerConsoleRouteImport } from './routes/_authenticated/manager-console'
-import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedPayrollRouteImport } from './routes/_authenticated/payroll'
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedShiftsRouteImport } from './routes/_authenticated/shifts'
@@ -118,11 +117,6 @@ const AuthenticatedManagerConsoleRoute =
     path: '/manager-console',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMarketingRoute = AuthenticatedMarketingRouteImport.update({
-  id: '/marketing',
-  path: '/marketing',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedPayrollRoute = AuthenticatedPayrollRouteImport.update({
   id: '/payroll',
   path: '/payroll',
@@ -296,7 +290,6 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/employees': typeof AuthenticatedEmployeesRoute
   '/manager-console': typeof AuthenticatedManagerConsoleRoute
-  '/marketing': typeof AuthenticatedMarketingRoute
   '/payroll': typeof AuthenticatedPayrollRoute
   '/sales': typeof AuthenticatedSalesRouteWithChildren
   '/shifts': typeof AuthenticatedShiftsRoute
@@ -340,7 +333,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/employees': typeof AuthenticatedEmployeesRoute
   '/manager-console': typeof AuthenticatedManagerConsoleRoute
-  '/marketing': typeof AuthenticatedMarketingRoute
   '/payroll': typeof AuthenticatedPayrollRoute
   '/shifts': typeof AuthenticatedShiftsRoute
   '/timeclock': typeof AuthenticatedTimeclockRoute
@@ -385,7 +377,6 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/employees': typeof AuthenticatedEmployeesRoute
   '/_authenticated/manager-console': typeof AuthenticatedManagerConsoleRoute
-  '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/payroll': typeof AuthenticatedPayrollRoute
   '/_authenticated/sales': typeof AuthenticatedSalesRouteWithChildren
   '/_authenticated/shifts': typeof AuthenticatedShiftsRoute
@@ -431,7 +422,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/employees'
     | '/manager-console'
-    | '/marketing'
     | '/payroll'
     | '/sales'
     | '/shifts'
@@ -475,7 +465,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/employees'
     | '/manager-console'
-    | '/marketing'
     | '/payroll'
     | '/shifts'
     | '/timeclock'
@@ -519,7 +508,6 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/employees'
     | '/_authenticated/manager-console'
-    | '/_authenticated/marketing'
     | '/_authenticated/payroll'
     | '/_authenticated/sales'
     | '/_authenticated/shifts'
@@ -659,13 +647,6 @@ declare module '@tanstack/react-router' {
       path: '/manager-console'
       fullPath: '/manager-console'
       preLoaderRoute: typeof AuthenticatedManagerConsoleRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/marketing': {
-      id: '/_authenticated/marketing'
-      path: '/marketing'
-      fullPath: '/marketing'
-      preLoaderRoute: typeof AuthenticatedMarketingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/payroll': {
@@ -893,7 +874,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRoute
   AuthenticatedManagerConsoleRoute: typeof AuthenticatedManagerConsoleRoute
-  AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedPayrollRoute: typeof AuthenticatedPayrollRoute
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRouteWithChildren
   AuthenticatedShiftsRoute: typeof AuthenticatedShiftsRoute
@@ -922,7 +902,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEmployeesRoute: AuthenticatedEmployeesRoute,
   AuthenticatedManagerConsoleRoute: AuthenticatedManagerConsoleRoute,
-  AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedPayrollRoute: AuthenticatedPayrollRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRouteWithChildren,
   AuthenticatedShiftsRoute: AuthenticatedShiftsRoute,
