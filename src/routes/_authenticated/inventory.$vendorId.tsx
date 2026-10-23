@@ -30,8 +30,10 @@ import {
 } from "@/lib/inventory.functions";
 import { DAY_LABELS, describeSchedule, formatDate, nextOrderDate, orderUrgency, type VendorItem } from "@/lib/vendors";
 import { InvoiceCapture } from "@/components/invoice-capture";
+import { requireManagerRoute } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/inventory/$vendorId")({
+  beforeLoad: requireManagerRoute,
   component: VendorPage,
   head: () => ({
     meta: [

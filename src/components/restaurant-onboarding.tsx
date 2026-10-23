@@ -11,7 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 /** Shown when a signed-in user has no restaurant yet. */
-export function RestaurantOnboarding({ email }: { email?: string | null }) {
+export function RestaurantOnboarding({
+  email,
+  canCreate,
+  onSignOut,
+}: {
+  email?: string | null;
+  canCreate: boolean;
+  onSignOut: () => void;
+}) {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const queryClient = useQueryClient();
@@ -27,6 +35,34 @@ export function RestaurantOnboarding({ email }: { email?: string | null }) {
     },
     onError: (error: Error) => toast.error(error.message),
   });
+
+  if (!canCreate) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>You're signed in, but not on a team yet</CardTitle>
+            <CardDescription>
+              {email ? `Signed in as ${email}. ` : ""}
+              Restrolytics is invite-only. Ask your manager to invite this exact email address, then
+              refresh this page. New restaurant? Our team sets up your account with you.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button asChild>
+              <a href="mailto:hello@restrolytics.com?subject=Restrolytics%20access">Contact Restrolytics</a>
+            </Button>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Refresh
+            </Button>
+            <Button variant="ghost" onClick={onSignOut}>
+              Sign out
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">

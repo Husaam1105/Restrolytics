@@ -27,8 +27,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { requireManagerRoute } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/settings/access")({
+  beforeLoad: requireManagerRoute,
   component: TeamPage,
   head: () => ({
     meta: [

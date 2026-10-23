@@ -2,8 +2,10 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { IdCard, Plug, Users } from "lucide-react";
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { requireManagerRoute } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
+  beforeLoad: requireManagerRoute,
   component: SettingsHome,
   head: () => ({
     meta: [

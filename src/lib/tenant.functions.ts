@@ -14,11 +14,16 @@ export const getWorkspace = createServerFn({ method: "GET" })
 
     const memberships = await listMemberships(context.supabase, context.userId);
 
-    const { data: profile } = await context.supabase
-      .from("profiles")
-      .select("active_restaurant_id, full_name")
-      .eq("user_id", context.userId)
-      .maybeSingle();
+    const [{ data: profile, error: profileError }, { data: canCreate, error: canCreateError }] = await Promise.all([
+      context.supabase
+        .from("profiles")
+        .select("active_restaurant_id, full_name")
+        .eq("user_id", context.userId)
+        .maybeSingle(),
+      context.supabase.rpc("can_create_restaurant"),
+    ]);
+    if (profileError) throw profileError;
+    if (canCreateError) throw canCreateError;
 
     const restaurants = memberships.map((m) => ({
       id: m.restaurants!.id,
@@ -37,6 +42,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       activeId: active?.id ?? null,
       activeName: active?.name ?? null,
       role: active?.role ?? null,
+      canCreateRestaurant: canCreate === true,
     };
   });
 
@@ -46,6 +52,13 @@ export const createRestaurant = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const name = data.name.trim();
     if (!name) throw new Error("Restaurant name is required.");
+    if (name.length > 120) throw new Error("Keep the restaurant name under 120 characters.");
+
+    const { data: allowed, error: allowedError } = await context.supabase.rpc("can_create_restaurant");
+    if (allowedError) throw allowedError;
+    if (!allowed) {
+      throw new Error("Restrolytics is invite-only. Ask your Restrolytics contact to set up your restaurant.");
+    }
 
     const { data: restaurant, error } = await context.supabase
       .from("restaurants")
@@ -79,7 +92,8 @@ export const createRestaurant = createServerFn({ method: "POST" })
 
     // Give the new restaurant its starter FOH/BOH checklists.
     const { allSeedRows } = await import("./shift-defaults");
-    await context.supabase.from("shift_tasks").insert(allSeedRows(restaurant.id));
+    const { error: seedError } = await context.supabase.from("shift_tasks").insert(allSeedRows(restaurant.id));
+    if (seedError) console.error("createRestaurant: seeding checklists failed", seedError.message);
 
     return restaurant;
   });

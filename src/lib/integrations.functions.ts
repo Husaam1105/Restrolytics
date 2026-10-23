@@ -59,14 +59,22 @@ export const disconnectPlatform = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    const { error } = await context.supabase
+    const { data: removed, error } = await context.supabase
       .from("platform_connections")
       .delete()
-      .eq("id", data.connectionId).eq("restaurant_id", restaurant.id);
+      .eq("id", data.connectionId)
+      .eq("restaurant_id", restaurant.id)
+      .select("id");
     if (error) throw error;
+    if (!removed?.length) throw new Error("That connection doesn't exist.");
 
+    // Secrets are deleted only for the connection we just confirmed and removed.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("platform_connection_secrets").delete().eq("connection_id", data.connectionId);
+    const { error: secretError } = await supabaseAdmin
+      .from("platform_connection_secrets")
+      .delete()
+      .eq("connection_id", removed[0]!.id);
+    if (secretError) throw secretError;
     return { success: true };
   });
 

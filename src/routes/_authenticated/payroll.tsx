@@ -55,8 +55,10 @@ import {
   money,
   type PoolArea,
 } from "@/lib/payroll";
+import { requireManagerRoute } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/payroll")({
+  beforeLoad: requireManagerRoute,
   component: PayrollPage,
   head: () => ({
     meta: [

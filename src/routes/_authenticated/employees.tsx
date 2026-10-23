@@ -21,8 +21,10 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getEmployees, saveEmployee } from "@/lib/payroll.functions";
 import { AREA_LABELS, PAY_METHOD_LABELS, money, type PayArea, type PayMethod } from "@/lib/payroll";
+import { requireManagerRoute } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/employees")({
+  beforeLoad: requireManagerRoute,
   component: EmployeesPage,
   head: () => ({
     meta: [

@@ -1,11 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { getWorkspace } from "@/lib/tenant.functions";
+import { workspaceQuery } from "@/lib/workspace";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -27,12 +26,7 @@ function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const fetchWorkspace = useServerFn(getWorkspace);
-
-  const { data: workspace, isPending } = useQuery({
-    queryKey: ["workspace"],
-    queryFn: () => fetchWorkspace(),
-  });
+  const { data: workspace, isPending, isError, refetch, isRefetching } = useQuery(workspaceQuery);
 
   const handleSignOut = async () => {
     await queryClient.cancelQueries();
@@ -50,8 +44,36 @@ function AuthenticatedLayout() {
     );
   }
 
-  if (!workspace || workspace.restaurants.length === 0) {
-    return <RestaurantOnboarding email={workspace?.email ?? user.email ?? null} />;
+  // A failed load must never look like "you have no restaurants".
+  if (isError || !workspace) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="max-w-sm text-center">
+          <h1 className="font-display text-xl font-semibold">We couldn't load your workspace</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Check your connection and try again. If it keeps happening, sign out and back in.
+          </p>
+          <div className="mt-6 flex justify-center gap-2">
+            <Button onClick={() => refetch()} disabled={isRefetching}>
+              {isRefetching ? "Retrying…" : "Try again"}
+            </Button>
+            <Button variant="outline" onClick={handleSignOut}>
+              Sign out
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (workspace.restaurants.length === 0) {
+    return (
+      <RestaurantOnboarding
+        email={workspace.email ?? user.email ?? null}
+        canCreate={workspace.canCreateRestaurant}
+        onSignOut={handleSignOut}
+      />
+    );
   }
 
   return (
@@ -64,6 +86,7 @@ function AuthenticatedLayout() {
             <RestaurantSwitcher
               restaurants={workspace.restaurants}
               activeId={workspace.activeId}
+              canCreate={workspace.canCreateRestaurant}
             />
             <div className="flex shrink-0 items-center gap-3">
               <span className="hidden max-w-[200px] truncate text-sm text-muted-foreground sm:inline">

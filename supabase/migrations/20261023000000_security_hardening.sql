@@ -221,6 +221,23 @@ CREATE POLICY "managers update invites" ON public.restaurant_invites
   );
 
 -- ---------------------------------------------------------------------------
+-- 4b. Restrolytics is invite-only. New restaurants are created by
+--     Restrolytics staff, or by an existing owner adding another location.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.can_create_restaurant()
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT public.is_platform_staff()
+      OR EXISTS (SELECT 1 FROM public.restaurant_members WHERE user_id = auth.uid() AND role = 'owner')
+$$;
+REVOKE EXECUTE ON FUNCTION public.can_create_restaurant() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.can_create_restaurant() TO authenticated, service_role;
+
+DROP POLICY IF EXISTS "authenticated create restaurants" ON public.restaurants;
+CREATE POLICY "owners and platform staff create restaurants" ON public.restaurants
+  FOR INSERT TO authenticated
+  WITH CHECK (owner_id = auth.uid() AND public.can_create_restaurant());
+
+-- ---------------------------------------------------------------------------
 -- 5. Money is for owners and managers.
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "members read sales" ON public.sales;

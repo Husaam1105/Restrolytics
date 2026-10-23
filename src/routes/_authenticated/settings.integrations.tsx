@@ -25,8 +25,10 @@ import {
   listPlatformConnections,
   syncPlatform,
 } from "@/lib/integrations.functions";
+import { requireManagerRoute } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/settings/integrations")({
+  beforeLoad: requireManagerRoute,
   component: IntegrationsPage,
   head: () => ({
     meta: [

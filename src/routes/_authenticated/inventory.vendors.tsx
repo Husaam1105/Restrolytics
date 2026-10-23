@@ -22,8 +22,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { listVendors, saveVendor, syncVendor } from "@/lib/inventory.functions";
 import { InventoryNav } from "@/components/inventory-overview";
 import { DAY_LABELS, VENDOR_PRESETS, describeSchedule, formatDate } from "@/lib/vendors";
+import { requireManagerRoute } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/inventory/vendors")({
+  beforeLoad: requireManagerRoute,
   component: InventoryPage,
   head: () => ({
     meta: [

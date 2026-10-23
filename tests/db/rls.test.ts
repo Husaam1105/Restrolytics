@@ -136,6 +136,17 @@ describe("inventory", () => {
   });
 });
 
+describe("invite-only", () => {
+  it("staff (and strangers) cannot create restaurants; owners can add another", async () => {
+    await expect(
+      asUser(db, STAFF, () => db.exec(`INSERT INTO restaurants (owner_id, name) VALUES ('${STAFF}', 'Mine')`)),
+    ).rejects.toThrow(/row-level security/);
+    await asUser(db, OWNER, () => db.exec(`INSERT INTO restaurants (owner_id, name) VALUES ('${OWNER}', 'A2')`));
+    const { rows } = await db.query(`SELECT 1 FROM restaurants WHERE name = 'A2'`);
+    expect(rows).toHaveLength(1);
+  });
+});
+
 describe("cross-tenant links", () => {
   it("a manager cannot log hours against another restaurant's employee", async () => {
     await db.exec(`INSERT INTO employees (id, restaurant_id, full_name) VALUES ('20000000-0000-0000-0000-000000000009', '${R2}', 'Other')`);

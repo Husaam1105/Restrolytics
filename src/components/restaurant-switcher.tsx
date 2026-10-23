@@ -41,9 +41,11 @@ type RestaurantOption = {
 export function RestaurantSwitcher({
   restaurants,
   activeId,
+  canCreate,
 }: {
   restaurants: RestaurantOption[];
   activeId: string | null;
+  canCreate: boolean;
 }) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -120,11 +122,15 @@ export function RestaurantSwitcher({
               </span>
             </DropdownMenuItem>
           ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setAddOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add another restaurant
-          </DropdownMenuItem>
+          {canCreate && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setAddOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add another restaurant
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

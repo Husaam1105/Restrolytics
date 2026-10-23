@@ -2,8 +2,10 @@ import { Link, Outlet, createFileRoute, useRouterState } from "@tanstack/react-r
 
 import { SALES_CHANNELS } from "@/lib/sales";
 import { cn } from "@/lib/utils";
+import { requireManagerRoute } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/sales")({
+  beforeLoad: requireManagerRoute,
   component: SalesLayout,
 });
 

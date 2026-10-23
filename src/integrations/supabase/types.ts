@@ -1944,6 +1944,7 @@ export type Database = {
     }
     Functions: {
       acknowledge_pay: { Args: { _line_id: string }; Returns: boolean }
+      can_create_restaurant: { Args: never; Returns: boolean }
       can_manage_restaurant: {
         Args: { _restaurant_id: string }
         Returns: boolean
