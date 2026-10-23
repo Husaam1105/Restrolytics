@@ -1,5 +1,6 @@
 import { Link, Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
 
+import { PageContainer, PageHeader } from "@/components/page";
 import { SALES_CHANNELS } from "@/lib/sales";
 import { cn } from "@/lib/utils";
 import { requireManagerRoute } from "@/lib/workspace";
@@ -19,36 +20,32 @@ function SalesLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 lg:px-8 lg:py-8">
-      <div className="border-b pb-5">
-        <p className="mb-1 text-xs font-bold uppercase text-coral">Performance</p>
-        <h1 className="font-display text-3xl font-bold">Sales</h1>
-        <p className="text-sm text-muted-foreground">
-          Total sales and the breakdown behind each channel.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader title="Sales" description="Totals across every channel, and the detail behind each one." />
 
-      <nav className="flex gap-1 overflow-x-auto rounded-lg border bg-surface-subtle p-1 shadow-xs">
-        {tabs.map((tab) => {
-          const active = tab.to === "/sales" ? path === "/sales" : path.startsWith(tab.to);
-          return (
-            <Link
-              key={tab.to}
-              to={tab.to}
-              className={cn(
-                "whitespace-nowrap rounded-md px-3.5 py-2 text-sm font-semibold transition-all",
-                active
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-background hover:text-foreground",
-              )}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
+      <nav aria-label="Sales channels" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <ul className="flex w-max gap-1 rounded-xl bg-muted p-1">
+          {tabs.map((tab) => {
+            const active = tab.to === "/sales" ? path === "/sales" : path.startsWith(tab.to);
+            return (
+              <li key={tab.to}>
+                <Link
+                  to={tab.to}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex min-h-9 items-center whitespace-nowrap rounded-lg px-3.5 text-sm font-semibold transition-colors",
+                    active ? "bg-card text-foreground shadow-[var(--shadow-ring),var(--shadow-xs)]" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {tab.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
 
       <Outlet />
-    </div>
+    </PageContainer>
   );
 }

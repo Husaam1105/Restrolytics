@@ -1,5 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date.");
+const orderSchema = z.object({
+  id: z.string().uuid().nullish(),
+  customerName: z.string().trim().min(1, "Add the customer's name.").max(160),
+  contact: z.string().trim().max(200).nullish(),
+  eventDate: isoDate,
+  eventTime: z.string().trim().max(40).nullish(),
+  headcount: z.coerce.number().int("Headcount is a whole number.").min(0).max(100000).nullish(),
+  location: z.string().trim().max(300).nullish(),
+  total: z.coerce.number().min(0, "The total can't be negative.").max(1_000_000),
+  status: z.enum(["quoted", "confirmed", "delivered", "cancelled"]),
+  notes: z.string().trim().max(2000).nullish(),
+});
+const paymentSchema = z.object({
+  orderId: z.string().uuid(),
+  amount: z.coerce.number().positive("Enter an amount above zero.").max(1_000_000),
+  method: z.enum(["cash", "card", "check", "transfer", "other"]),
+  paidAt: isoDate,
+  note: z.string().trim().max(500).nullish(),
+});
 
 export type CateringOrderInput = {
   id?: string | null;
@@ -79,35 +101,34 @@ export const getCatering = createServerFn({ method: "GET" })
   });
 
 export const saveCateringOrder = createServerFn({ method: "POST" })
-  .inputValidator((data: CateringOrderInput) => data)
+  .inputValidator((data: CateringOrderInput) => orderSchema.parse(data))
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
 
-    if (!data.customerName?.trim()) throw new Error("Customer name is required");
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(data.eventDate)) throw new Error("Pick an event date");
-
     const row = {
       restaurant_id: restaurant.id,
-      customer_name: data.customerName.trim(),
-      contact: data.contact?.trim() || null,
+      customer_name: data.customerName,
+      contact: data.contact || null,
       event_date: data.eventDate,
-      event_time: data.eventTime?.trim() || null,
+      event_time: data.eventTime || null,
       headcount: data.headcount ?? null,
-      location: data.location?.trim() || null,
-      total: Number(data.total ?? 0),
+      location: data.location || null,
+      total: Math.round(data.total * 100) / 100,
       status: data.status,
-      notes: data.notes?.trim() || null,
+      notes: data.notes || null,
     };
 
     if (data.id) {
-      const { error } = await context.supabase
+      const { data: updated, error } = await context.supabase
         .from("catering_orders")
         .update(row)
         .eq("id", data.id)
-        .eq("restaurant_id", restaurant.id);
+        .eq("restaurant_id", restaurant.id)
+        .select("id");
       if (error) throw error;
+      if (!updated?.length) throw new Error("That catering order no longer exists.");
       return { id: data.id };
     }
 
@@ -138,21 +159,28 @@ export const deleteCateringOrder = createServerFn({ method: "POST" })
 export const addCateringPayment = createServerFn({ method: "POST" })
   .inputValidator(
     (data: { orderId: string; amount: number; method: string; paidAt: string; note?: string | null }) =>
-      data,
+      paymentSchema.parse(data),
   )
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
-    if (!(Number(data.amount) > 0)) throw new Error("Enter an amount");
+    const { data: order, error: orderError } = await context.supabase
+      .from("catering_orders")
+      .select("id")
+      .eq("id", data.orderId)
+      .eq("restaurant_id", restaurant.id)
+      .maybeSingle();
+    if (orderError) throw orderError;
+    if (!order) throw new Error("That catering order isn't in this restaurant.");
 
     const { error } = await context.supabase.from("catering_payments").insert({
       restaurant_id: restaurant.id,
       order_id: data.orderId,
-      amount: Number(data.amount),
+      amount: Math.round(data.amount * 100) / 100,
       method: data.method,
       paid_at: data.paidAt,
-      note: data.note?.trim() || null,
+      note: data.note || null,
       created_by: context.userId,
     });
     if (error) throw error;

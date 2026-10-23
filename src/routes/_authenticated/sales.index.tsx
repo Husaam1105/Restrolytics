@@ -2,11 +2,15 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { ChevronRight, ConciergeBell, HandCoins, Receipt, UtensilsCrossed } from "lucide-react";
 
+import { SectionHeader } from "@/components/page";
+import { StatCard } from "@/components/stat-card";
+import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { getSalesOverview } from "@/lib/sales.functions";
 import { money } from "@/lib/sales";
 
@@ -15,149 +19,151 @@ export const Route = createFileRoute("/_authenticated/sales/")({
   head: () => ({
     meta: [
       { title: "Sales overview · Restrolytics" },
-      {
-        name: "description",
-        content:
-          "Total sales with a breakdown by Toast POS, Uber Eats, DoorDash, Grubhub and catering.",
-      },
+      { name: "description", content: "Total sales with a breakdown by Toast POS, Uber Eats, DoorDash, Grubhub and catering." },
     ],
   }),
 });
 
-const RANGES = [
+// Rolling windows for "how are we trending". Calendar periods (this week,
+// last month…) live on each channel page via the shared date presets.
+const WINDOWS = [
   { days: 7, label: "Last 7 days" },
   { days: 30, label: "Last 30 days" },
   { days: 90, label: "Last 90 days" },
 ];
 
+const chartConfig = { gross: { label: "Sales", color: "var(--color-chart-1)" } } satisfies ChartConfig;
+
 function SalesOverview() {
   const fetchOverview = useServerFn(getSalesOverview);
   const [days, setDays] = useState(30);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["sales-overview", days],
-    queryFn: () => fetchOverview({ data: { days } }),
-  });
-
+  const query = useQuery({ queryKey: ["sales-overview", days], queryFn: () => fetchOverview({ data: { days } }) });
+  const data = query.data;
   const total = data?.totals.grossWithCatering ?? 0;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
-        {RANGES.map((range) => (
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Period">
+        {WINDOWS.map((w) => (
           <Button
-            key={range.days}
+            key={w.days}
             size="sm"
-            variant={days === range.days ? "default" : "outline"}
-            onClick={() => setDays(range.days)}
+            aria-pressed={days === w.days}
+            variant={days === w.days ? "default" : "outline"}
+            onClick={() => setDays(w.days)}
           >
-            {range.label}
+            {w.label}
           </Button>
         ))}
       </div>
 
-      <div className="grid overflow-hidden rounded-lg border bg-border sm:grid-cols-2 lg:grid-cols-4 lg:gap-px">
-        <Tile label="Total sales" value={money(total)} hint="All channels incl. catering" />
-        <Tile label="Orders" value={String(data?.totals.orders ?? 0)} hint="Delivery and POS orders" />
-        <Tile label="Tips" value={money(data?.totals.tips ?? 0)} hint="Collected across channels" />
-        <Tile
-          label="Catering"
-          value={money(data?.catering.gross ?? 0)}
-          hint={`${data?.catering.orders ?? 0} event${(data?.catering.orders ?? 0) === 1 ? "" : "s"}`}
-        />
-      </div>
-
-      <Card className="overflow-hidden">
-        <CardHeader className="border-b bg-surface-subtle/60">
-          <CardTitle>Revenue by channel</CardTitle>
-          <CardDescription>Compare where sales are coming from in this period.</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="chart-enter h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[...(data?.channels ?? []), { label: "Catering", gross: data?.catering.gross ?? 0 }]} margin={{ left: -12, right: 8 }}>
-                <CartesianGrid vertical={false} stroke="var(--color-border)" strokeDasharray="3 3" />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={11} />
-                <YAxis tickLine={false} axisLine={false} fontSize={11} tickFormatter={(value) => `$${value}`} />
-                <Tooltip formatter={(value: number) => money(value)} cursor={{ fill: "var(--color-muted)" }} />
-                <Bar dataKey="gross" fill="var(--color-chart-1)" radius={[5, 5, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+      {query.isError ? (
+        <ErrorState title="Sales didn't load" error={query.error} onRetry={() => void query.refetch()} />
+      ) : !data ? (
+        <LoadingState rows={4} />
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard label="Total sales" value={money(total)} icon={<Receipt />} note="All channels, including catering" />
+            <StatCard label="Orders" value={data.totals.orders.toLocaleString("en-US")} icon={<ConciergeBell />} note="POS and delivery" />
+            <StatCard label="Tips" value={money(data.totals.tips)} icon={<HandCoins />} note="Across channels" />
+            <StatCard
+              label="Catering"
+              value={money(data.catering.gross)}
+              icon={<UtensilsCrossed />}
+              note={`${data.catering.orders} event${data.catering.orders === 1 ? "" : "s"}`}
+            />
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Breakdown by channel</CardTitle>
-          <CardDescription>
-            {isLoading ? "Loading…" : "Open a channel to see its individual orders."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {(data?.channels ?? []).map((channel) => {
-            const share = total > 0 ? (channel.gross / total) * 100 : 0;
-            return (
-              <Link
-                key={channel.slug}
-                to="/sales/$slug"
-                params={{ slug: channel.slug }}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 hover:bg-accent"
-              >
-                <div className="min-w-0">
-                  <p className="flex items-center gap-2 text-sm font-medium">
-                    {channel.label}
-                    <Badge variant={channel.connected ? "default" : "secondary"}>
-                      {channel.connected ? "Connected" : "Not connected"}
-                    </Badge>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {channel.orders} orders · {money(channel.tips)} tips
-                    {channel.failed > 0 ? ` · ${channel.failed} cancelled/refunded` : ""}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold">{money(channel.gross)}</p>
-                  <p className="text-xs text-muted-foreground">{share.toFixed(0)}% of sales</p>
-                </div>
-              </Link>
-            );
-          })}
-
-          <Link
-            to="/sales/catering"
-            className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 hover:bg-accent"
-          >
-            <div>
-              <p className="text-sm font-medium">Catering</p>
-              <p className="text-xs text-muted-foreground">
-                {data?.catering.orders ?? 0} events booked in this period
-              </p>
+          <section className="surface p-5 sm:p-6" aria-labelledby="by-channel-chart">
+            <SectionHeader title={<span id="by-channel-chart">Sales by channel</span>} description={`${data.from} to ${data.to}`} />
+            <div className="mt-5">
+              {total === 0 ? (
+                <EmptyState
+                  title="No sales in this period"
+                  description="Upload a Toast sales summary or an Uber Eats report from a channel's page."
+                />
+              ) : (
+                <ChartContainer config={chartConfig} className="chart-enter h-72 w-full">
+                  <BarChart data={[...data.channels, { label: "Catering", gross: data.catering.gross }]} margin={{ left: 4, right: 4, top: 4 }}>
+                    <CartesianGrid vertical={false} stroke="var(--color-border)" />
+                    <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis
+                      width={56}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(v: number) => (v >= 1000 ? `$${Math.round(v / 100) / 10}k` : `$${v}`)}
+                    />
+                    <ChartTooltip cursor={{ fill: "var(--color-muted)" }} content={<ChartTooltipContent formatter={(v) => money(Number(v))} />} />
+                    <Bar dataKey="gross" fill="var(--color-gross)" radius={[4, 4, 0, 0]} maxBarSize={56} />
+                  </BarChart>
+                </ChartContainer>
+              )}
             </div>
-            <div className="text-right">
-              <p className="text-sm font-semibold">{money(data?.catering.gross ?? 0)}</p>
-              <p className="text-xs text-muted-foreground">
-                {total > 0 ? (((data?.catering.gross ?? 0) / total) * 100).toFixed(0) : 0}% of sales
-              </p>
-            </div>
-          </Link>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+          </section>
 
-function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div className="bg-card p-5">
-      <div className="pb-2">
-        <CardDescription>{label}</CardDescription>
-        <p className="font-display text-2xl font-bold">{value}</p>
-      </div>
-      <div>
-        <p className="text-xs text-muted-foreground">{hint}</p>
-        <div className="mt-4 h-1 overflow-hidden rounded-full bg-muted"><div className="h-full w-2/3 rounded-full bg-primary" /></div>
-      </div>
+          <section className="surface overflow-hidden" aria-labelledby="channel-list">
+            <div className="p-5 pb-2 sm:p-6 sm:pb-2">
+              <SectionHeader title={<span id="channel-list">Channels</span>} description="Open a channel to see its orders, fees and payouts." />
+            </div>
+            <ul className="divide-y">
+              {data.channels.map((channel) => {
+                const share = total > 0 ? Math.round((channel.gross / total) * 100) : 0;
+                const detail = [
+                  `${channel.orders.toLocaleString("en-US")} orders`,
+                  `${money(channel.tips)} in tips`,
+                  channel.failed > 0 ? `${channel.failed} cancelled or refunded` : null,
+                ]
+                  .filter(Boolean)
+                  .join(", ");
+                return (
+                  <li key={channel.slug}>
+                    <Link
+                      to="/sales/$slug"
+                      params={{ slug: channel.slug }}
+                      className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/60 sm:px-6"
+                    >
+                      <div className="min-w-0">
+                        <p className="flex flex-wrap items-center gap-2 font-semibold">
+                          {channel.label}
+                          {channel.connected ? <Badge variant="success">Connected</Badge> : null}
+                        </p>
+                        <p className="text-sm text-muted-foreground">{detail}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-3 text-right">
+                        <div>
+                          <p className="font-semibold tabular-nums">{money(channel.gross)}</p>
+                          <p className="text-sm text-muted-foreground">{share}% of sales</p>
+                        </div>
+                        <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+              <li>
+                <Link to="/sales/catering" className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/60 sm:px-6">
+                  <div>
+                    <p className="font-semibold">Catering</p>
+                    <p className="text-sm text-muted-foreground">
+                      {data.catering.orders} event{data.catering.orders === 1 ? "" : "s"} in this period
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3 text-right">
+                    <div>
+                      <p className="font-semibold tabular-nums">{money(data.catering.gross)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {total > 0 ? Math.round((data.catering.gross / total) * 100) : 0}% of sales
+                      </p>
+                    </div>
+                    <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                </Link>
+              </li>
+            </ul>
+          </section>
+        </>
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { RANGES, rangeDates } from "@/lib/date-ranges";
 import { useRestaurantClock } from "@/lib/workspace";
+import { ErrorState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,10 +38,8 @@ export const Route = createFileRoute("/_authenticated/sales/$slug")({
     const label = channelBySlug(params.slug)?.label ?? "Sales channel";
     return {
       meta: [
-        { title: `${label} sales — Restaurant CRM` },
+        { title: `${label} sales · Restrolytics` },
         { name: "description", content: `Orders, tips and totals for ${label}.` },
-        { property: "og:title", content: `${label} sales — Restaurant CRM` },
-        { property: "og:description", content: `Orders, tips and totals for ${label}.` },
       ],
     };
   },
@@ -61,14 +60,7 @@ function ChannelSales() {
   });
 
   if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Channel not found</CardTitle>
-          <CardDescription>{(error as Error).message}</CardDescription>
-        </CardHeader>
-      </Card>
-    );
+    return <ErrorState title="This channel didn't load" error={error} />;
   }
 
   const connected = data?.connection?.status === "connected";
@@ -90,6 +82,7 @@ function ChannelSales() {
             <Button
               key={r.id}
               size="sm"
+              aria-pressed={preset === r.id}
               variant={preset === r.id ? "default" : "outline"}
               onClick={() => setPreset(r.id)}
             >
@@ -119,23 +112,23 @@ function ChannelSales() {
       </div>
 
       {slug === "toast" ? <ToastSummaryPanel from={range.from} to={range.to} /> : (<>
-      <ReportImport slug={slug} label={data?.channel.label ?? ""} />
-
-      {!connected && !hasImports && data && slug === "toast" ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Not connected yet</CardTitle>
-            <CardDescription>
-              Add this account under Settings → Integrations and its orders will fill in here
-              automatically.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild size="sm">
-              <Link to="/settings/integrations">Go to Integrations</Link>
+      {slug === "ubereats" ? (
+        <ReportImport slug={slug} label={data?.channel.label ?? ""} />
+      ) : !hasImports && data ? (
+        <div className="surface flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold">{data.channel.label} report import is coming</p>
+            <p className="text-sm text-muted-foreground">
+              Right now Restrolytics reads Uber Eats reports and Toast exports. Orders entered for {data.channel.label} still
+              show here.
+            </p>
+          </div>
+          {!connected ? (
+            <Button asChild size="sm" variant="outline" className="shrink-0">
+              <Link to="/settings/integrations">Integrations</Link>
             </Button>
-          </CardContent>
-        </Card>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -187,7 +180,14 @@ function ChannelSales() {
               <TableBody>
                 {(data?.days_breakdown ?? []).map((day) => (
                   <TableRow key={day.date}>
-                    <TableCell>{day.date}</TableCell>
+                    <TableCell>
+                      {new Date(`${day.date}T12:00:00Z`).toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        timeZone: "UTC",
+                      })}
+                    </TableCell>
                     <TableCell className="text-right">{day.orders}</TableCell>
                     <TableCell className="text-right">{money(day.gross)}</TableCell>
                   </TableRow>
@@ -201,7 +201,11 @@ function ChannelSales() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Individual orders</CardTitle>
-          <CardDescription>Most recent first, up to 200 orders.</CardDescription>
+          <CardDescription>
+            {data?.ordersTruncated
+              ? `Showing the newest ${data.ordersShown} orders. Totals above include every order in the period.`
+              : "Newest first."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {(data?.orders.length ?? 0) === 0 ? (
@@ -270,7 +274,7 @@ function FeesTile({
               <CardDescription>Fees & commission</CardDescription>
               <CardTitle className="text-2xl">{money(fees)}</CardTitle>
               <p className="text-xs text-muted-foreground">
-                {promotions > 0 ? `Plus ${money(promotions)} in promotions · ` : ""}Tap for breakdown
+                {promotions > 0 ? `Plus ${money(promotions)} in promotions. ` : ""}Tap for the breakdown
               </p>
             </CardHeader>
           </Card>
@@ -283,7 +287,7 @@ function FeesTile({
         </DialogHeader>
         {breakdown.length === 0 && promotions === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No fee details yet — import a payment details report to see the breakdown.
+            No fee details yet. Import a payment details report to see the breakdown.
           </p>
         ) : (
           <div className="space-y-2 text-sm">

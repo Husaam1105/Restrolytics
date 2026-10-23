@@ -99,7 +99,7 @@ export function ChatPane({ threadId, me, draft, onDraftUsed }: { threadId: strin
     if (body && !send.isPending) send.mutate(body);
   };
   return (
-    <div className="flex h-[calc(100dvh-20rem)] min-h-[360px] min-h-[380px] flex-col rounded-lg border bg-card">
+    <div className="flex h-[calc(100dvh-20rem)] min-h-[380px] flex-col rounded-lg border bg-card">
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : null}
         {!isLoading && data.length === 0 ? <p className="text-sm text-muted-foreground">No messages yet. Say hello.</p> : null}

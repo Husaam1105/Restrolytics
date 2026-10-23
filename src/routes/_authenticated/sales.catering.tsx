@@ -32,6 +32,7 @@ import {
   money,
   statusLabel,
 } from "@/lib/sales";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/sales/catering")({
   component: CateringPage,
@@ -60,6 +61,7 @@ const emptyOrder = {
 };
 
 function CateringPage() {
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const fetchCatering = useServerFn(getCatering);
   const saveOrder = useServerFn(saveCateringOrder);
@@ -299,15 +301,26 @@ function CateringPage() {
                   {order.payments.map((p) => (
                     <div key={p.id} className="flex items-center justify-between gap-2 text-xs">
                       <span>
-                        {p.paidAt} · {methodLabel(p.method)} · {money(p.amount)}
+                        {money(p.amount)} by {methodLabel(p.method).toLowerCase()} on {p.paidAt}
                         {p.note ? ` · ${p.note}` : ""}
                       </span>
                       {canManage && (
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6"
-                          onClick={() => deletePaymentMutation.mutate(p.id)}
+                          aria-label={`Delete ${money(p.amount)} payment`}
+                          onClick={async () => {
+                            if (
+                              await confirm({
+                                title: `Delete this ${money(p.amount)} payment?`,
+                                description: "The order's balance goes back up by this amount.",
+                                confirmLabel: "Delete payment",
+                                destructive: true,
+                              })
+                            ) {
+                              deletePaymentMutation.mutate(p.id);
+                            }
+                          }}
                         >
                           <Trash2 className="h-3.5 w-3.5 text-destructive" />
                         </Button>
@@ -349,7 +362,18 @@ function CateringPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => deleteOrderMutation.mutate(order.id)}
+                    onClick={async () => {
+                      if (
+                        await confirm({
+                          title: `Remove the ${order.customerName} catering order?`,
+                          description: "The order and every payment recorded against it are deleted.",
+                          confirmLabel: "Remove order",
+                          destructive: true,
+                        })
+                      ) {
+                        deleteOrderMutation.mutate(order.id);
+                      }
+                    }}
                   >
                     <Trash2 className="mr-1.5 h-4 w-4 text-destructive" /> Remove
                   </Button>
