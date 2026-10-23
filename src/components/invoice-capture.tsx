@@ -240,6 +240,7 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
                           <Button
                             variant="ghost"
                             size="icon"
+                            aria-label={`Remove ${line.name || "this line"}`}
                             onClick={() => setLines(lines.filter((_, i) => i !== index))}
                           >
                             <Trash2 className="h-4 w-4" />

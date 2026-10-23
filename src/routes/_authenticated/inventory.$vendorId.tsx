@@ -31,6 +31,7 @@ import {
 import { DAY_LABELS, describeSchedule, formatDate, nextOrderDate, orderUrgency, type VendorItem } from "@/lib/vendors";
 import { InvoiceCapture } from "@/components/invoice-capture";
 import { requireManagerRoute } from "@/lib/workspace";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/inventory/$vendorId")({
   beforeLoad: requireManagerRoute,
@@ -74,6 +75,7 @@ const emptyItem: ItemForm = {
 };
 
 function VendorPage() {
+  const confirm = useConfirm();
   const { vendorId } = Route.useParams();
   const queryClient = useQueryClient();
   const fetchDetail = useServerFn(getVendorDetail);
@@ -354,6 +356,7 @@ function VendorPage() {
                             <Button
                               variant="ghost"
                               size="icon"
+                              aria-label={`Edit ${item.name}`}
                               onClick={() => {
                                 setItemForm({
                                   id: item.id,
@@ -373,8 +376,24 @@ function VendorPage() {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => removeItem.mutate(item.id)}>
-                              <Trash2 className="h-4 w-4" />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Delete ${item.name}`}
+                              onClick={async () => {
+                                if (
+                                  await confirm({
+                                    title: `Delete ${item.name}?`,
+                                    description: "It's removed from inventory, storage areas and future counts. Past invoices keep their lines.",
+                                    confirmLabel: "Delete item",
+                                    destructive: true,
+                                  })
+                                ) {
+                                  removeItem.mutate(item.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </TableCell>
                         </TableRow>
