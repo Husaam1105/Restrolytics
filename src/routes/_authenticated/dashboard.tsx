@@ -30,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertTriangle, ArrowUpRight, Package } from "lucide-react";
+import { AlertTriangle, Package } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { DayReport } from "@/components/day-report";
 
@@ -87,28 +87,18 @@ function DashboardPage() {
   const { data: chartData } = useSuspenseQuery(chartQueryOptions());
   const { data: platformData } = useSuspenseQuery(platformQueryOptions());
 
-  const chartRows = chartData.labels.map((label, i) => ({
-    name: label,
-    total: chartData.values[i],
-  }));
+  const chartRows = chartData.points.map((p) => ({ name: p.label, total: p.total }));
 
   const platformColors = ["var(--color-chart-1)", "var(--color-chart-2)", "var(--color-chart-3)", "var(--color-chart-4)", "var(--color-chart-5)"];
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 lg:px-8 lg:py-8">
-      {stats.isDemo && (
-        <div className="flex items-center justify-between rounded-md border bg-card p-3 text-sm">
-          <span className="text-muted-foreground">You are viewing demo data.</span>
-          <Badge variant="secondary">Demo</Badge>
-        </div>
-      )}
-
       <DayReport />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <SummaryCard
-          title="Orders in the last 24 hours"
-          value={String(stats.activeOrders)}
+          title="Orders today"
+          value={String(stats.todayOrders)}
           icon={<Package className="h-4 w-4" />}
         />
         <SummaryCard
@@ -138,9 +128,9 @@ function DashboardPage() {
                   />
                   <Tooltip
                     formatter={(value: number) => [formatCurrency(value), "Revenue"]}
-                    cursor={{ fill: "hsl(var(--muted))" }}
+                    cursor={{ fill: "var(--color-muted)" }}
                   />
-                  <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="total" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -159,7 +149,7 @@ function DashboardPage() {
                   <Pie
                     data={platformData.data}
                     dataKey="total"
-                    nameKey="platform"
+                    nameKey="label"
                     innerRadius={60}
                     outerRadius={90}
                     paddingAngle={2}
@@ -180,7 +170,7 @@ function DashboardPage() {
                       className="inline-block h-2 w-2 rounded-full"
                       style={{ backgroundColor: platformColors[index % platformColors.length] }}
                     />
-                    <span className="capitalize">{item.platform}</span>
+                    <span>{item.label}</span>
                   </div>
                   <span className="font-medium">{formatCurrency(item.total)}</span>
                 </div>
@@ -273,13 +263,11 @@ function SummaryCard({
   title,
   value,
   icon,
-  trend,
   alert,
 }: {
   title: string;
   value: string;
   icon: React.ReactNode;
-  trend?: string;
   alert?: boolean;
 }) {
   return (
@@ -290,12 +278,6 @@ function SummaryCard({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        {trend && (
-          <p className="mt-1 flex items-center text-xs text-emerald-600">
-            <ArrowUpRight className="mr-1 h-3 w-3" />
-            {trend}
-          </p>
-        )}
       </CardContent>
     </Card>
   );
@@ -310,7 +292,7 @@ function platformBadgeVariant(platform: string) {
     case "ubereats":
       return "outline";
     case "grubhub":
-      return "destructive";
+      return "outline";
     default:
       return "secondary";
   }

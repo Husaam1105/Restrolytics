@@ -39,9 +39,19 @@ export async function handleCopilot(request: Request) {
   } catch {
     return json(400, "Invalid request");
   }
-  const messages = Array.isArray(body.messages) ? body.messages.slice(-40) : [];
   const threadId = String(body.threadId ?? "");
-  if (!messages.length || !threadId) return json(400, "Missing message");
+  // Only the newest user turn comes from the client. History is loaded from
+  // what we stored, so a client can't inject fake assistant turns.
+  const incoming = Array.isArray(body.messages) ? body.messages[body.messages.length - 1] : undefined;
+  const text = (incoming?.parts ?? [])
+    .map((p) => (p.type === "text" ? p.text : ""))
+    .join("\n")
+    .trim()
+    .slice(0, 8000);
+  if (!threadId || incoming?.role !== "user" || !text || typeof incoming.id !== "string") {
+    return json(400, "Missing message");
+  }
+  const userMessage: UIMessage = { id: incoming.id.slice(0, 100), role: "user", parts: [{ type: "text", text }] };
 
   const { data: thread } = await supabase
     .from("copilot_threads")
@@ -51,24 +61,38 @@ export async function handleCopilot(request: Request) {
     .maybeSingle();
   if (!thread) return json(404, "Conversation not found");
 
-  const { resolveActiveRestaurant } = await import("./tenant.server");
-  const restaurant = await resolveActiveRestaurant(supabase as never, user.id);
+  const { resolveActiveRestaurant, NoRestaurantError } = await import("./tenant.server");
+  let restaurant: Awaited<ReturnType<typeof resolveActiveRestaurant>>;
+  try {
+    restaurant = await resolveActiveRestaurant(supabase as never, user.id);
+  } catch (error) {
+    if (error instanceof NoRestaurantError) return json(403, "Join a restaurant to use IQ.");
+    throw error;
+  }
   if (restaurant.id !== thread.restaurant_id) return json(403, "Switch to this conversation's restaurant first");
+
+  const { data: stored } = await supabase
+    .from("copilot_messages")
+    .select("message_id, role, parts")
+    .eq("thread_id", threadId)
+    .order("created_at", { ascending: false })
+    .limit(40);
+  const history: UIMessage[] = (stored ?? [])
+    .reverse()
+    .filter((m) => (m.role === "user" || m.role === "assistant") && m.message_id !== userMessage.id)
+    .map((m) => ({ id: m.message_id, role: m.role as "user" | "assistant", parts: m.parts as UIMessage["parts"] }));
+  const messages = [...history, userMessage];
+
   const { buildCopilotContext } = await import("./copilot-context.server");
   const { data, alerts } = await buildCopilotContext(supabase as never, user.id, restaurant);
 
-  // Save the latest user message
-  const last = messages[messages.length - 1]!;
-  if (last.role === "user") {
-    const { error } = await supabase.from("copilot_messages").upsert(
-      { thread_id: threadId, user_id: user.id, message_id: last.id, role: "user", parts: last.parts as never },
-      { onConflict: "thread_id,message_id" },
-    );
-    if (error) console.error("copilot save user msg", error.message);
-    if (thread.title === "New chat") {
-      const text = last.parts.map((p) => (p.type === "text" ? p.text : "")).join(" ").trim();
-      if (text) await supabase.from("copilot_threads").update({ title: text.slice(0, 60) }).eq("id", threadId);
-    }
+  const { error: saveError } = await supabase.from("copilot_messages").upsert(
+    { thread_id: threadId, user_id: user.id, message_id: userMessage.id, role: "user", parts: userMessage.parts as never },
+    { onConflict: "thread_id,message_id" },
+  );
+  if (saveError) console.error("copilot save user msg", saveError.message);
+  if (thread.title === "New chat") {
+    await supabase.from("copilot_threads").update({ title: text.slice(0, 60) }).eq("id", threadId);
   }
 
   const system = `You are "IQ", the virtual manager and copilot for ${restaurant.name}, a restaurant using Restrolytics.

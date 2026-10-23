@@ -69,6 +69,6 @@ export const getCopilotAlerts = createServerFn({ method: "GET" })
     const { resolveActiveRestaurant } = await import("./tenant.server");
     const restaurant = await resolveActiveRestaurant(context.supabase, context.userId);
     const { buildCopilotContext } = await import("./copilot-context.server");
-    const { alerts } = await buildCopilotContext(context.supabase, context.userId, restaurant);
+    const { alerts } = await buildCopilotContext(context.supabase, context.userId, restaurant, { alertsOnly: true });
     return { alerts, role: restaurant.role, restaurant: restaurant.name };
   });

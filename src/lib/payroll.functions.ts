@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
 
 import {
   addDays,
@@ -13,7 +14,7 @@ import {
   type PayMethod,
   type PoolArea,
 } from "./payroll";
-import { localNow, parseShiftSettings } from "./operating-day";
+import { localNow, operatingDate, parseShiftSettings } from "./operating-day";
 
 type EmployeeInput = {
   id?: string | null;
@@ -50,6 +51,35 @@ type PayrollLineRow = {
 function today(settings: unknown) {
   return localNow(parseShiftSettings(settings).timezone).date;
 }
+
+/** Throws when the pay week containing `date` has been closed as paid. */
+async function assertWeekOpen(supabase: SupabaseClient, restaurantId: string, date: string) {
+  const { data, error } = await supabase
+    .from("payroll_periods")
+    .select("id")
+    .eq("restaurant_id", restaurantId)
+    .eq("status", "paid")
+    .lte("start_date", date)
+    .gte("end_date", date)
+    .limit(1);
+  if (error) throw error;
+  if (data?.length) throw new Error("That pay week is closed. Reopen it to make changes.");
+}
+
+async function assertLineWeekOpen(supabase: SupabaseClient, restaurantId: string, lineId: string) {
+  const { data, error } = await supabase
+    .from("payroll_lines")
+    .select("id, payroll_periods(status)")
+    .eq("id", lineId)
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Pay row not found.");
+  const status = (data.payroll_periods as { status?: string } | null)?.status;
+  if (status === "paid") throw new Error("That pay week is closed. Reopen it to make changes.");
+}
+
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a YYYY-MM-DD date.");
 
 export const getEmployees = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -94,54 +124,71 @@ export const getEmployees = createServerFn({ method: "GET" })
     };
   });
 
+const employeeSchema = z.object({
+  id: z.string().uuid().nullish(),
+  fullName: z.string().trim().min(1, "Employee name is required.").max(120),
+  area: z.enum(["foh", "boh", "both"]),
+  position: z.string().trim().max(80).nullish(),
+  hourlyRate: z.coerce.number().min(0, "Hourly rate can't be negative.").max(1000),
+  payMethod: z.enum(["cash", "check", "transfer"]),
+  tipEligible: z.boolean(),
+  active: z.boolean(),
+  phone: z.string().trim().max(40).nullish(),
+  notes: z.string().trim().max(2000).nullish(),
+  // undefined = leave the current login link alone; "" or null = unlink.
+  loginEmail: z.string().trim().toLowerCase().max(254).nullish(),
+});
+
 export const saveEmployee = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: EmployeeInput) => input)
+  .inputValidator((input: EmployeeInput) => employeeSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
 
-    const fullName = data.fullName.trim();
-    if (!fullName) throw new Error("Employee name is required.");
-
-    let userId: string | null = null;
-    const loginEmail = data.loginEmail?.trim().toLowerCase();
-    if (loginEmail) {
+    let userId: string | null | undefined;
+    if (data.loginEmail) {
       const { data: member } = await context.supabase
         .from("restaurant_members")
         .select("user_id")
         .eq("restaurant_id", restaurant.id)
-        .eq("email", loginEmail)
+        .eq("email", data.loginEmail)
         .maybeSingle();
       if (!member) {
         throw new Error(
-          `${loginEmail} isn't on your team yet. Invite them on the Team page first, then link them here.`,
+          `${data.loginEmail} isn't on your team yet. Invite them on the Team page first, then link them here.`,
         );
       }
       userId = member.user_id;
+    } else if (data.loginEmail !== undefined) {
+      userId = null;
     }
 
+    // Only write fields the caller sent, so a form that doesn't show notes
+    // (or the login link) can't wipe them.
     const row = {
       restaurant_id: restaurant.id,
-      user_id: userId,
-      full_name: fullName,
+      full_name: data.fullName,
       area: data.area,
-      position: data.position?.trim() || null,
-      hourly_rate: Number.isFinite(data.hourlyRate) ? Math.max(0, data.hourlyRate) : 0,
+      hourly_rate: data.hourlyRate,
       pay_method: data.payMethod,
       tip_eligible: data.tipEligible,
       active: data.active,
-      phone: data.phone?.trim() || null,
-      notes: data.notes?.trim() || null,
+      ...(data.position !== undefined && { position: data.position || null }),
+      ...(data.phone !== undefined && { phone: data.phone || null }),
+      ...(data.notes !== undefined && { notes: data.notes || null }),
+      ...(userId !== undefined && { user_id: userId }),
     };
 
     if (data.id) {
-      const { error } = await context.supabase
+      const { data: updated, error } = await context.supabase
         .from("employees")
         .update(row)
         .eq("id", data.id)
-        .eq("restaurant_id", restaurant.id);
+        .eq("restaurant_id", restaurant.id)
+        .select("id");
       if (error) throw error;
+      if (!updated?.length) throw new Error("That employee no longer exists.");
       return { id: data.id };
     }
 
@@ -157,7 +204,9 @@ export const saveEmployee = createServerFn({ method: "POST" })
 /** Everything the manager payroll screen needs for one week or a combined date range. */
 export const getPayrollWeek = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { weekStart?: string | null; rangeStart?: string | null; rangeEnd?: string | null }) => input)
+  .inputValidator((input: { weekStart?: string | null; rangeStart?: string | null; rangeEnd?: string | null }) =>
+    z.object({ weekStart: isoDate.nullish(), rangeStart: isoDate.nullish(), rangeEnd: isoDate.nullish() }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -180,44 +229,55 @@ export const getPayrollWeek = createServerFn({ method: "POST" })
       if (days.length > 366) throw new Error("Choose a date range of one year or less.");
     }
 
-    const { data: employees } = await context.supabase
-      .from("employees")
-      .select("id, full_name, area, hourly_rate, pay_method, tip_eligible, active, position")
-      .eq("restaurant_id", restaurant.id)
-      .order("full_name");
+    const [employeesRes, entriesRes, poolsRes, periodsRes] = await Promise.all([
+      context.supabase
+        .from("employees")
+        .select("id, full_name, area, hourly_rate, pay_method, tip_eligible, active, position")
+        .eq("restaurant_id", restaurant.id)
+        .order("full_name"),
+      context.supabase
+        .from("time_entries")
+        .select("id, employee_id, work_date, clock_in, clock_out, minutes, source, note")
+        .eq("restaurant_id", restaurant.id)
+        .gte("work_date", weekStart)
+        .lte("work_date", weekEnd),
+      context.supabase
+        .from("tip_pools")
+        .select("id, pool_date, area, amount, note")
+        .eq("restaurant_id", restaurant.id)
+        .gte("pool_date", weekStart)
+        .lte("pool_date", weekEnd),
+      context.supabase
+        .from("payroll_periods")
+        .select("id, start_date, end_date, status, paid_at, note")
+        .eq("restaurant_id", restaurant.id)
+        .lte("start_date", weekEnd)
+        .gte("end_date", weekStart)
+        .order("start_date"),
+    ]);
+    for (const res of [employeesRes, entriesRes, poolsRes, periodsRes]) if (res.error) throw res.error;
+    const employees = employeesRes.data;
+    const entries = entriesRes.data;
+    const pools = poolsRes.data;
+    // A combined range sums whole pay sheets only; a week that sticks out of
+    // the range is left out (and reported) rather than counted in full.
+    const overlapping = periodsRes.data ?? [];
+    const periods = isCombined
+      ? overlapping.filter((p) => p.start_date >= weekStart && p.end_date <= weekEnd)
+      : overlapping;
+    const partialPeriods = overlapping.length - periods.length;
 
-    const { data: entries } = await context.supabase
-      .from("time_entries")
-      .select("id, employee_id, work_date, clock_in, clock_out, minutes, source, note")
-      .eq("restaurant_id", restaurant.id)
-      .gte("work_date", weekStart)
-      .lte("work_date", weekEnd);
-
-    const { data: pools } = await context.supabase
-      .from("tip_pools")
-      .select("id, pool_date, area, amount, note")
-      .eq("restaurant_id", restaurant.id)
-      .gte("pool_date", weekStart)
-      .lte("pool_date", weekEnd);
-
-    const { data: periods } = await context.supabase
-      .from("payroll_periods")
-      .select("id, start_date, end_date, status, paid_at, note")
-      .eq("restaurant_id", restaurant.id)
-      .lte("start_date", weekEnd)
-      .gte("end_date", weekStart)
-      .order("start_date");
-
-    const period = !isCombined && periods?.length === 1 ? periods[0] : null;
-    const periodIds = (periods ?? []).map((item) => item.id);
-    const { data: rawLines } = periodIds.length
+    const period = !isCombined && periods.length === 1 ? periods[0] : null;
+    const periodIds = periods.map((item) => item.id);
+    const { data: rawLines, error: linesError } = periodIds.length
       ? await context.supabase
           .from("payroll_lines")
           .select(
             "id, period_id, employee_id, hours, hourly_rate, wages, tips, adjustments, total, pay_method, paid, paid_at, acknowledged_at, note",
           )
           .in("period_id", periodIds)
-      : { data: [] };
+      : { data: [], error: null };
+    if (linesError) throw linesError;
 
     const lines = isCombined
       ? Object.values(
@@ -280,7 +340,8 @@ export const getPayrollWeek = createServerFn({ method: "POST" })
       weekStart,
       weekEnd,
       isCombined,
-      periodCount: periods?.length ?? 0,
+      periodCount: periods.length,
+      partialPeriods,
       days,
       employees: staff.map((s) => ({
         ...s,
@@ -346,51 +407,83 @@ function computeTipShares(
   return shares;
 }
 
-/** Manager typing in hours for one person on one day (replaces what was there). */
+/**
+ * Manager setting the total hours for one person on one day. Clock records
+ * are never touched (they're the audit trail); the difference is stored as a
+ * single manual adjustment row for that day.
+ */
 export const saveHours = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { employeeId: string; workDate: string; hours: number }) => input)
+  .inputValidator((input: { employeeId: string; workDate: string; hours: number }) =>
+    z
+      .object({
+        employeeId: z.string().uuid(),
+        workDate: isoDate,
+        hours: z.coerce.number().min(0, "Hours can't be negative.").max(24, "A day has at most 24 hours."),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
+    await assertWeekOpen(context.supabase, restaurant.id, data.workDate);
 
-    await context.supabase
+    const { data: entries, error } = await context.supabase
       .from("time_entries")
-      .delete()
+      .select("id, minutes, source")
       .eq("restaurant_id", restaurant.id)
       .eq("employee_id", data.employeeId)
       .eq("work_date", data.workDate);
+    if (error) throw error;
 
-    const minutes = hoursToMinutes(Number(data.hours) || 0);
-    if (minutes > 0) {
-      const { error } = await context.supabase.from("time_entries").insert({
+    const clocked = (entries ?? []).filter((e) => e.source === "clock").reduce((sum, e) => sum + (e.minutes ?? 0), 0);
+    const manualIds = (entries ?? []).filter((e) => e.source === "manual").map((e) => e.id);
+    const adjustment = hoursToMinutes(data.hours) - clocked;
+
+    if (manualIds.length) {
+      const { error: deleteError } = await context.supabase.from("time_entries").delete().in("id", manualIds);
+      if (deleteError) throw deleteError;
+    }
+    if (adjustment !== 0) {
+      const { error: insertError } = await context.supabase.from("time_entries").insert({
         restaurant_id: restaurant.id,
         employee_id: data.employeeId,
         work_date: data.workDate,
-        minutes,
+        minutes: adjustment,
         source: "manual",
+        note: clocked > 0 ? "Manager adjustment to clocked hours" : "Hours entered by manager",
         entered_by: context.userId,
       });
-      if (error) throw error;
+      if (insertError) throw insertError;
     }
     return { ok: true };
   });
 
 export const saveTipPool = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { poolDate: string; area: PoolArea; amount: number }) => input)
+  .inputValidator((input: { poolDate: string; area: PoolArea; amount: number }) =>
+    z
+      .object({
+        poolDate: isoDate,
+        area: z.enum(["foh", "boh", "all"]),
+        amount: z.coerce.number().min(0, "Tips can't be negative.").max(100000),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
+    await assertWeekOpen(context.supabase, restaurant.id, data.poolDate);
 
-    const amount = Math.max(0, Number(data.amount) || 0);
+    const amount = Math.round(data.amount * 100) / 100;
     if (amount === 0) {
-      await context.supabase
+      const { error } = await context.supabase
         .from("tip_pools")
         .delete()
         .eq("restaurant_id", restaurant.id)
         .eq("pool_date", data.poolDate)
         .eq("area", data.area);
+      if (error) throw error;
       return { ok: true };
     }
 
@@ -404,7 +497,9 @@ export const saveTipPool = createServerFn({ method: "POST" })
 
 export const savePayrollSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { weekStartsOn: number }) => input)
+  .inputValidator((input: { weekStartsOn: number }) =>
+    z.object({ weekStartsOn: z.coerce.number().int().min(0).max(6) }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -413,7 +508,7 @@ export const savePayrollSettings = createServerFn({ method: "POST" })
     const { error } = await context.supabase
       .from("restaurants")
       .update({
-        settings: { ...current, payroll: { weekStartsOn: Number(data.weekStartsOn) || 0 } },
+        settings: { ...current, payroll: { weekStartsOn: data.weekStartsOn } },
       })
       .eq("id", restaurant.id);
     if (error) throw error;
@@ -432,24 +527,28 @@ export const buildPayrollWeek = createServerFn({ method: "POST" })
     const days = weekDays(weekStart);
     const weekEnd = days[6]!;
 
-    const { data: employees } = await context.supabase
-      .from("employees")
-      .select("id, area, hourly_rate, pay_method, tip_eligible, active")
-      .eq("restaurant_id", restaurant.id);
-
-    const { data: entries } = await context.supabase
-      .from("time_entries")
-      .select("employee_id, work_date, minutes")
-      .eq("restaurant_id", restaurant.id)
-      .gte("work_date", weekStart)
-      .lte("work_date", weekEnd);
-
-    const { data: pools } = await context.supabase
-      .from("tip_pools")
-      .select("pool_date, area, amount")
-      .eq("restaurant_id", restaurant.id)
-      .gte("pool_date", weekStart)
-      .lte("pool_date", weekEnd);
+    const [employeesRes, entriesRes, poolsRes] = await Promise.all([
+      context.supabase
+        .from("employees")
+        .select("id, area, hourly_rate, pay_method, tip_eligible, active")
+        .eq("restaurant_id", restaurant.id),
+      context.supabase
+        .from("time_entries")
+        .select("employee_id, work_date, minutes")
+        .eq("restaurant_id", restaurant.id)
+        .gte("work_date", weekStart)
+        .lte("work_date", weekEnd),
+      context.supabase
+        .from("tip_pools")
+        .select("pool_date, area, amount")
+        .eq("restaurant_id", restaurant.id)
+        .gte("pool_date", weekStart)
+        .lte("pool_date", weekEnd),
+    ]);
+    for (const res of [employeesRes, entriesRes, poolsRes]) if (res.error) throw res.error;
+    const employees = employeesRes.data;
+    const entries = entriesRes.data;
+    const pools = poolsRes.data;
 
     const minutesByEmployeeDay: Record<string, number> = {};
     for (const entry of entries ?? []) {
@@ -495,10 +594,11 @@ export const buildPayrollWeek = createServerFn({ method: "POST" })
       periodId = created.id;
     }
 
-    const { data: existingLines } = await context.supabase
+    const { data: existingLines, error: existingError } = await context.supabase
       .from("payroll_lines")
       .select("id, employee_id, adjustments, paid, note")
       .eq("period_id", periodId);
+    if (existingError) throw existingError;
 
     const rows = staff
       .map((person) => {
@@ -538,11 +638,19 @@ export const updatePayrollLine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     (input: { lineId: string; adjustments?: number; note?: string | null; payMethod?: PayMethod }) =>
-      input,
+      z
+        .object({
+          lineId: z.string().uuid(),
+          adjustments: z.coerce.number().min(-100000).max(100000).optional(),
+          note: z.string().max(500).nullish(),
+          payMethod: z.enum(["cash", "check", "transfer"]).optional(),
+        })
+        .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
+    await assertLineWeekOpen(context.supabase, restaurant.id, data.lineId);
 
     const { data: line } = await context.supabase
       .from("payroll_lines")
@@ -553,7 +661,7 @@ export const updatePayrollLine = createServerFn({ method: "POST" })
     if (!line) throw new Error("Pay row not found.");
 
     const adjustments =
-      data.adjustments === undefined ? Number(line.adjustments ?? 0) : Number(data.adjustments) || 0;
+      data.adjustments === undefined ? Number(line.adjustments ?? 0) : Math.round(data.adjustments * 100) / 100;
 
     const update: {
       adjustments: number;
@@ -571,7 +679,8 @@ export const updatePayrollLine = createServerFn({ method: "POST" })
     const { error } = await context.supabase
       .from("payroll_lines")
       .update(update)
-      .eq("id", data.lineId);
+      .eq("id", data.lineId)
+      .eq("restaurant_id", restaurant.id);
     if (error) throw error;
     return { ok: true };
   });
@@ -579,10 +688,13 @@ export const updatePayrollLine = createServerFn({ method: "POST" })
 /** Marking cash as handed over — this is the payout record. */
 export const markPayoutPaid = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { lineId: string; paid: boolean }) => input)
+  .inputValidator((input: { lineId: string; paid: boolean }) =>
+    z.object({ lineId: z.string().uuid(), paid: z.boolean() }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
+    await assertLineWeekOpen(context.supabase, restaurant.id, data.lineId);
 
     const update: {
       paid: boolean;
@@ -607,7 +719,9 @@ export const markPayoutPaid = createServerFn({ method: "POST" })
 
 export const closePayrollWeek = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { periodId: string; status: "draft" | "paid" }) => input)
+  .inputValidator((input: { periodId: string; status: "draft" | "paid" }) =>
+    z.object({ periodId: z.string().uuid(), status: z.enum(["draft", "paid"]) }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { requireManager } = await import("./tenant.server");
     const restaurant = await requireManager(context.supabase, context.userId);
@@ -742,25 +856,28 @@ export const clockIn = createServerFn({ method: "POST" })
       canManage(restaurant.role),
     );
 
-    const { data: open } = await context.supabase
+    const { data: open, error: openError } = await context.supabase
       .from("time_entries")
       .select("id")
       .eq("employee_id", employeeId)
       .is("clock_out", null)
       .not("clock_in", "is", null)
-      .maybeSingle();
-    if (open) throw new Error("Already clocked in.");
+      .limit(1);
+    if (openError) throw openError;
+    if (open?.length) throw new Error("Already clocked in.");
 
-    const now = new Date().toISOString();
+    // A shift that starts after midnight during late service belongs to the
+    // business day that's still open, not the new calendar date.
     const { error } = await context.supabase.from("time_entries").insert({
       restaurant_id: restaurant.id,
       employee_id: employeeId,
-      work_date: localNow(parseShiftSettings(restaurant.settings).timezone).date,
-      clock_in: now,
+      work_date: operatingDate(parseShiftSettings(restaurant.settings)),
+      clock_in: new Date().toISOString(),
       minutes: 0,
       source: "clock",
       entered_by: context.userId,
     });
+    if (error?.code === "23505") throw new Error("Already clocked in.");
     if (error) throw error;
     return { ok: true };
   });
@@ -807,13 +924,11 @@ export const clockOut = createServerFn({ method: "POST" })
 
 export const acknowledgePay = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { lineId: string }) => input)
+  .inputValidator((input: { lineId: string }) => z.object({ lineId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
-      .from("payroll_lines")
-      .update({ acknowledged_at: new Date().toISOString() })
-      .eq("id", data.lineId);
+    const { data: ok, error } = await context.supabase.rpc("acknowledge_pay", { _line_id: data.lineId });
     if (error) throw error;
+    if (!ok) throw new Error("This payout isn't marked as paid yet, or it's already confirmed.");
     return { ok: true };
   });
 
@@ -826,7 +941,15 @@ async function resolveEmployeeId(
 ) {
   if (requestedId) {
     if (!isManager) throw new Error("Only owners and managers can clock in someone else.");
-    return requestedId;
+    const { data: employee, error } = await supabase
+      .from("employees")
+      .select("id")
+      .eq("id", requestedId)
+      .eq("restaurant_id", restaurantId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!employee) throw new Error("That employee isn't on this restaurant's team.");
+    return employee.id as string;
   }
   const { data: employee } = await supabase
     .from("employees")

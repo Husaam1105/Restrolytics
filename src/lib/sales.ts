@@ -17,6 +17,12 @@ export function channelBySlug(slug: string): SalesChannel | undefined {
   return SALES_CHANNELS.find((c) => c.slug === slug);
 }
 
+/** Display name for a value stored in sales.platform. */
+export function platformLabel(platformKey: string) {
+  if (platformKey === "manual") return "Manual";
+  return SALES_CHANNELS.find((c) => c.platformKey === platformKey)?.label ?? platformKey;
+}
+
 export const CATERING_STATUSES = [
   { id: "quoted", label: "Quoted" },
   { id: "confirmed", label: "Confirmed" },

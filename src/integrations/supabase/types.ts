@@ -509,56 +509,13 @@ export type Database = {
           },
         ]
       }
-      inventory_transactions: {
-        Row: {
-          created_at: string
-          id: string
-          inventory_item_id: string
-          quantity: number
-          reason: string | null
-          restaurant_id: string
-          type: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          inventory_item_id: string
-          quantity: number
-          reason?: string | null
-          restaurant_id: string
-          type: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          inventory_item_id?: string
-          quantity?: number
-          reason?: string | null
-          restaurant_id?: string
-          type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "inventory_transactions_inventory_item_id_fkey"
-            columns: ["inventory_item_id"]
-            isOneToOne: false
-            referencedRelation: "inventory_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inventory_transactions_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       item_locations: {
         Row: {
           created_at: string
           id: string
           inventory_item_id: string
+          last_count: number | null
+          last_counted_at: string | null
           location_id: string
           restaurant_id: string
           sort_order: number
@@ -567,6 +524,8 @@ export type Database = {
           created_at?: string
           id?: string
           inventory_item_id: string
+          last_count?: number | null
+          last_counted_at?: string | null
           location_id: string
           restaurant_id: string
           sort_order?: number
@@ -575,6 +534,8 @@ export type Database = {
           created_at?: string
           id?: string
           inventory_item_id?: string
+          last_count?: number | null
+          last_counted_at?: string | null
           location_id?: string
           restaurant_id?: string
           sort_order?: number
@@ -1771,55 +1732,6 @@ export type Database = {
           },
         ]
       }
-      usage_logs: {
-        Row: {
-          id: string
-          inventory_item_id: string
-          logged_at: string
-          quantity: number
-          restaurant_id: string
-          sale_id: string | null
-        }
-        Insert: {
-          id?: string
-          inventory_item_id: string
-          logged_at?: string
-          quantity: number
-          restaurant_id: string
-          sale_id?: string | null
-        }
-        Update: {
-          id?: string
-          inventory_item_id?: string
-          logged_at?: string
-          quantity?: number
-          restaurant_id?: string
-          sale_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "usage_logs_inventory_item_id_fkey"
-            columns: ["inventory_item_id"]
-            isOneToOne: false
-            referencedRelation: "inventory_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "usage_logs_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "usage_logs_sale_id_fkey"
-            columns: ["sale_id"]
-            isOneToOne: false
-            referencedRelation: "sales"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       vendor_credentials: {
         Row: {
           created_at: string
@@ -2031,11 +1943,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acknowledge_pay: { Args: { _line_id: string }; Returns: boolean }
       can_manage_restaurant: {
         Args: { _restaurant_id: string }
         Returns: boolean
       }
       can_see_manager_thread: { Args: { _thread_id: string }; Returns: boolean }
+      complete_inventory_count: { Args: { _count_id: string }; Returns: number }
       is_platform_staff: { Args: never; Returns: boolean }
       is_restaurant_member: {
         Args: { _restaurant_id: string }
@@ -2045,10 +1959,33 @@ export type Database = {
         Args: { _restaurant_id: string }
         Returns: boolean
       }
+      low_stock_items: {
+        Args: { _limit?: number; _restaurant_id: string }
+        Returns: {
+          current_stock: number
+          id: string
+          name: string
+          par_level: number
+          reorder_level: number
+          unit: string
+        }[]
+      }
       my_employee_ids: { Args: never; Returns: string[] }
       restaurant_role: {
         Args: { _restaurant_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      sales_daily: {
+        Args: { _from: string; _restaurant_id: string; _to: string; _tz?: string }
+        Returns: {
+          day: string
+          fees: number
+          gross: number
+          orders: number
+          payout: number
+          platform: string
+          tips: number
+        }[]
       }
     }
     Enums: {

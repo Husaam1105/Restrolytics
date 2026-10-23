@@ -28,6 +28,7 @@ export async function buildCopilotContext(
   supabase: SupabaseClient,
   userId: string,
   restaurant: ActiveRestaurant,
+  options: { alertsOnly?: boolean } = {},
 ) {
   const { parseShiftSettings } = await import("./operating-day");
   const tz = parseShiftSettings(restaurant.settings).timezone;
@@ -55,10 +56,19 @@ export async function buildCopilotContext(
   };
   const alerts: CopilotAlert[] = [];
 
+  // Staff only ever see their own records. A staff login that isn't linked to
+  // an employee yet has no personal data, never the whole team's.
+  if (!isManager && !me) {
+    data.note = "This login isn't linked to an employee record yet, so there are no hours, pay or schedule to show. Ask a manager to link it on the Employees page.";
+    return { data, alerts };
+  }
+  const own = !isManager && me ? me : null;
+
+  if (!options.alertsOnly) {
   // Tasks for today (everyone; staff limited to own area)
   const tasksQ = supabase.from("shift_tasks").select("id, area, shift, title").eq("restaurant_id", rid).eq("active", true);
   const [{ data: tasks }, { data: done }] = await Promise.all([
-    me && !isManager ? tasksQ.eq("area", me.area) : tasksQ,
+    own && own.area !== "both" ? tasksQ.eq("area", own.area) : tasksQ,
     supabase.from("shift_task_completions").select("task_id, completed_by_email, value").eq("restaurant_id", rid).eq("task_date", today),
   ]);
   const doneMap = new Map((done ?? []).map((c: Any) => [c.task_id, c]));
@@ -77,10 +87,11 @@ export async function buildCopilotContext(
     .gte("shift_date", addDays(today, -7))
     .lte("shift_date", next7)
     .order("shift_date");
-  const { data: sched } = await (me && !isManager ? schedQ.eq("employee_id", me.id) : schedQ);
+  const { data: sched } = await (own ? schedQ.eq("employee_id", own.id) : schedQ);
   data.schedule = (sched ?? []).map((s: Any) => ({
     date: s.shift_date, who: s.employees?.full_name, area: s.area, shift: s.shift, time: [s.start_time, s.end_time].filter(Boolean).join("-"),
   }));
+  }
 
   // Hours (last 14 days)
   const teQ = supabase
@@ -88,7 +99,7 @@ export async function buildCopilotContext(
     .select("work_date, minutes, employee_id, employees(full_name, hourly_rate, area)")
     .eq("restaurant_id", rid)
     .gte("work_date", d14);
-  const { data: te } = await (me && !isManager ? teQ.eq("employee_id", me.id) : teQ);
+  const { data: te } = await (own ? teQ.eq("employee_id", own.id) : teQ);
   const hoursByPerson: Record<string, { hours: number; estWages: number; area: string }> = {};
   const laborByDay: Record<string, number> = {};
   for (const t of (te ?? []) as Any[]) {
@@ -103,6 +114,7 @@ export async function buildCopilotContext(
   data.hoursLast14Days = hoursByPerson;
 
   // Payroll
+  if (!options.alertsOnly) {
   const { data: periods } = await supabase
     .from("payroll_periods")
     .select("id, start_date, end_date, status")
@@ -115,7 +127,7 @@ export async function buildCopilotContext(
       .from("payroll_lines")
       .select("period_id, hours, wages, tips, total, pay_method, paid, employees(full_name)")
       .in("period_id", periodIds);
-    const { data: lines } = await (me && !isManager ? plQ.eq("employee_id", me.id) : plQ);
+    const { data: lines } = await (own ? plQ.eq("employee_id", own.id) : plQ);
     data.payroll = (periods ?? []).map((p: Any) => ({
       week: `${p.start_date} to ${p.end_date}`,
       status: p.status,
@@ -125,13 +137,15 @@ export async function buildCopilotContext(
     }));
   }
 
+  }
+
   if (!isManager) {
     data.note = "Staff account: sales, costs, inventory values and other employees' pay are not available.";
     return { data, alerts };
   }
 
   const [salesRes, toastRes, issuesRes, outagesRes, invRes, ratingsRes, payoutsRes, empRes, cateringRes] = await Promise.all([
-    supabase.from("sales").select("platform, total, tax, tip, payout, fees, promotions, status, created_at").eq("restaurant_id", rid).gte("created_at", `${d30}T00:00:00Z`).limit(5000),
+    supabase.rpc("sales_daily", { _restaurant_id: rid, _from: d30, _to: today, _tz: tz }),
     supabase.from("pos_sales_summaries").select("data").eq("restaurant_id", rid).gte("end_date", d60).order("start_date", { ascending: false }).limit(8),
     supabase.from("day_issues").select("business_date, category, amount, description, platform").eq("restaurant_id", rid).gte("business_date", d14).order("business_date", { ascending: false }).limit(100),
     supabase.from("item_outages").select("item_name, outage_date, note, reported_by_email, back_at, platform").eq("restaurant_id", rid).gte("outage_date", d30).order("outage_date", { ascending: false }).limit(100),
@@ -145,14 +159,8 @@ export async function buildCopilotContext(
   // Delivery / imported sales aggregated by local day and platform
   const byDay: Record<string, Record<string, { orders: number; sales: number; payout: number; fees: number }>> = {};
   for (const s of (salesRes.data ?? []) as Any[]) {
-    if (s.status && !["completed", "paid", "closed"].includes(String(s.status).toLowerCase())) continue;
-    const day = localDate(tz, new Date(s.created_at));
-    byDay[day] ??= {};
-    const b = (byDay[day][s.platform] ??= { orders: 0, sales: 0, payout: 0, fees: 0 });
-    b.orders += 1;
-    b.sales = r2(b.sales + Number(s.total ?? 0));
-    b.payout = r2(b.payout + Number(s.payout ?? 0));
-    b.fees = r2(b.fees + Number(s.fees ?? 0));
+    byDay[s.day] ??= {};
+    byDay[s.day]![s.platform] = { orders: Number(s.orders), sales: r2(Number(s.gross)), payout: r2(Number(s.payout)), fees: r2(Number(s.fees)) };
   }
   data.platformSalesByDay = byDay;
   data.platformPayouts = payoutsRes.data ?? [];
