@@ -204,7 +204,7 @@ function VendorPage() {
   const dueItems = items.filter((item) => orderUrgency(item, orderDays) !== "ok");
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
         <Link to="/inventory/vendors">
           <ArrowLeft className="mr-2 h-4 w-4" /> All vendors
@@ -213,7 +213,7 @@ function VendorPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{vendor.name}</h1>
+          <h1 className="text-title">{vendor.name}</h1>
           <p className="text-sm text-muted-foreground">
             {vendor.website_url ? (
               <a className="underline" href={vendor.website_url} target="_blank" rel="noreferrer">

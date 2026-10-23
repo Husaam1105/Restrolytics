@@ -3,6 +3,7 @@ import { IdCard, Plug, Users } from "lucide-react";
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireManagerRoute } from "@/lib/workspace";
+import { PageContainer, PageHeader } from "@/components/page";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   beforeLoad: requireManagerRoute,
@@ -41,13 +42,8 @@ const items = [
 
 function SettingsHome() {
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Everything about people and connected accounts for this restaurant.
-        </p>
-      </div>
+    <PageContainer size="narrow">
+      <PageHeader title="Settings" description={<>Everything about people and connected accounts for this restaurant.</>} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {items.map((item) => (
@@ -64,6 +60,6 @@ function SettingsHome() {
           </Link>
         ))}
       </div>
-    </div>
+    </PageContainer>
   );
 }

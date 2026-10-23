@@ -133,16 +133,13 @@ export function DayReport() {
         : isSingle
           ? formatDayLabel(range.from)
           : formatDateRange(range.from, range.to);
-  const subtitle = isSingle ? longDate(range.from) : `${shortDate(range.from)} – ${shortDate(range.to)}, ${range.to.slice(0, 4)}`;
+  const subtitle = isSingle ? longDate(range.from) : `${shortDate(range.from)} to ${shortDate(range.to)}, ${range.to.slice(0, 4)}`;
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 border-b pb-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-        <div className="min-w-0">
-          <p className="mb-1 text-xs font-bold uppercase text-coral">Operating report</p>
-          <h2 className="font-display text-3xl font-bold">{title}</h2>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
-        </div>
+      <div className="border-t pt-6">
+        <h2 className="text-title">{title}</h2>
+        <p className="text-sm text-muted-foreground">Operating report, {subtitle}</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -482,7 +479,7 @@ function Tile({
   alert?: boolean;
 }) {
   return (
-    <Card className={alert ? "border-coral/60" : "hover:-translate-y-0.5 hover:border-primary/35"}>
+    <Card className={alert ? "bg-warning-soft" : undefined}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         {icon && <span className={alert ? "text-destructive" : "text-muted-foreground"}>{icon}</span>}

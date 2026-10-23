@@ -107,15 +107,15 @@ function LocationPage() {
   const filtered = (data?.items ?? []).filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <Link to="/inventory/storage" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Storage areas
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight">{loc.name}</h1>
+          <h1 className="text-title mt-2">{loc.name}</h1>
           <p className="text-sm text-muted-foreground">
-            {rows.length} items · ${value.toFixed(2)} on hand · Last counted{" "}
+            {rows.length} items, ${value.toFixed(2)} on hand, last counted{" "}
             {lastCount?.completed_at ? new Date(lastCount.completed_at).toLocaleDateString() : "never"}
           </p>
         </div>

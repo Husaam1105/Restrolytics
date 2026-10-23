@@ -26,6 +26,7 @@ import {
   syncPlatform,
 } from "@/lib/integrations.functions";
 import { requireManagerRoute } from "@/lib/workspace";
+import { PageContainer, PageHeader } from "@/components/page";
 
 export const Route = createFileRoute("/_authenticated/settings/integrations")({
   beforeLoad: requireManagerRoute,
@@ -110,13 +111,8 @@ function IntegrationsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
-        <p className="text-sm text-muted-foreground">
-          Connect your POS and delivery accounts so every order lands in Sales automatically.
-        </p>
-      </div>
+    <PageContainer size="narrow">
+      <PageHeader title="Integrations" description={<>Connect your POS and delivery accounts so every order lands in Sales automatically.</>} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {PLATFORMS.map((platform) => {
@@ -248,6 +244,6 @@ function IntegrationsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

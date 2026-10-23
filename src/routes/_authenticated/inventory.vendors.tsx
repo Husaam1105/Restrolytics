@@ -23,6 +23,7 @@ import { listVendors, saveVendor, syncVendor } from "@/lib/inventory.functions";
 import { InventoryNav } from "@/components/inventory-overview";
 import { DAY_LABELS, VENDOR_PRESETS, describeSchedule, formatDate } from "@/lib/vendors";
 import { requireManagerRoute } from "@/lib/workspace";
+import { PageContainer, PageHeader } from "@/components/page";
 
 export const Route = createFileRoute("/_authenticated/inventory/vendors")({
   beforeLoad: requireManagerRoute,
@@ -86,18 +87,18 @@ function InventoryPage() {
   const vendors = data?.vendors ?? [];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Vendors</h1>
-          <p className="text-sm text-muted-foreground">
-            Everyone you buy from, their order schedule and the items they supply.
-          </p>
-        </div>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add vendor
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        context="Inventory"
+        title="Vendors"
+        description="Everyone you buy from, their order days and the items they supply."
+        actions={
+          <Button onClick={() => setOpen(true)}>
+            <Plus />
+            Add vendor
+          </Button>
+        }
+      />
 
       <InventoryNav />
 
@@ -348,6 +349,6 @@ function InventoryPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

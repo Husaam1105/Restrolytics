@@ -30,6 +30,7 @@ import {
   type ScheduleRange,
 } from "@/lib/schedule";
 import { AREA_LABELS, addDays, formatDateRange, formatDayLabel } from "@/lib/payroll";
+import { StatCard } from "@/components/stat-card";
 
 const emptyForm = {
   employeeId: "",
@@ -111,13 +112,14 @@ export function StaffSchedule() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 overflow-hidden rounded-lg border bg-border lg:grid-cols-4 lg:gap-px">
-        {[{ label: "Scheduled shifts", value: scheduledPeople }, { label: "Covered days", value: coveredDays }, { label: "Front of house", value: (data?.shifts ?? []).filter((s) => s.area === "foh" || s.area === "both").length }, { label: "Kitchen", value: (data?.shifts ?? []).filter((s) => s.area === "boh" || s.area === "both").length }].map((stat, index) => (
-          <div key={stat.label} className="bg-card p-5">
-            <p className="text-xs font-bold uppercase text-muted-foreground">{stat.label}</p>
-            <p className="mt-2 font-display text-3xl font-bold">{stat.value}</p>
-            <div className="mt-4 h-1 overflow-hidden rounded-full bg-muted"><div className={index === 3 ? "h-full w-3/5 bg-coral" : "h-full w-2/3 bg-primary"} /></div>
-          </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[
+          { label: "Scheduled shifts", value: scheduledPeople },
+          { label: "Days covered", value: coveredDays },
+          { label: "Front of house", value: (data?.shifts ?? []).filter((s) => s.area === "foh" || s.area === "both").length },
+          { label: "Kitchen", value: (data?.shifts ?? []).filter((s) => s.area === "boh" || s.area === "both").length },
+        ].map((stat) => (
+          <StatCard key={stat.label} label={stat.label} value={stat.value} />
         ))}
       </div>
       <Card>
@@ -306,7 +308,7 @@ export function StaffSchedule() {
                           <p className="px-1 py-4 text-center text-xs text-muted-foreground">No one scheduled</p>
                         ) : (
                           shifts.map((s) => (
-                            <div key={s.id} className="rounded-md border bg-card p-3 text-sm shadow-xs">
+                            <div key={s.id} className="surface p-3 text-sm">
                               <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
                                   <p className="truncate font-medium">{s.name}</p>
@@ -330,7 +332,7 @@ export function StaffSchedule() {
                                 <Badge variant="secondary">{AREA_LABELS[s.area as "foh"]}</Badge>
                                 <Badge variant="outline">{SHIFT_LABELS[s.shift] ?? s.shift}</Badge>
                               </div>
-                              <p className="mt-2 font-mono text-xs text-muted-foreground">
+                              <p className="mt-2 text-xs tabular-nums text-muted-foreground">
                                 {s.startTime || s.endTime
                                   ? `${s.startTime?.slice(0, 5) ?? "—"} – ${s.endTime?.slice(0, 5) ?? "—"}`
                                   : "Time not set"}

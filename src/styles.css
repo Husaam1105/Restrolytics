@@ -89,10 +89,6 @@
   --color-highlight: var(--highlight);
   --color-surface-subtle: var(--surface-subtle);
 
-  /* Deprecated aliases while pages migrate; remove once unused. */
-  --color-brand-bright: var(--brand);
-  --color-coral: var(--link);
-  --color-coral-soft: var(--brand-soft);
 
 }
 
@@ -349,13 +345,6 @@
   background: var(--color-card);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-ring), var(--shadow-lg);
-}
-
-/* Deprecated: replaced by `surface`. Kept until pages migrate. */
-@utility premium-panel {
-  background: var(--color-card);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-ring), var(--shadow-sm);
 }
 
 @utility data-grid {

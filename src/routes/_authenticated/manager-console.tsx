@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { getManagerContext, iqManagerAssist } from "@/lib/manager.functions";
 import { cn } from "@/lib/utils";
+import { PageContainer, PageHeader } from "@/components/page";
+import { EmptyState } from "@/components/states";
 
 export const Route = createFileRoute("/_authenticated/manager-console")({
   head: () => ({
@@ -71,16 +73,19 @@ function Console() {
   const clearDraft = useCallback(() => setDraft(undefined), []);
 
   if (ctx.isLoading) return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
-  if (!ctx.data?.isPlatformStaff) return <p className="text-sm text-muted-foreground">This console is only for Restrolytics staff.</p>;
+  if (!ctx.data?.isPlatformStaff) {
+    return (
+      <PageContainer>
+        <EmptyState title="This console is for Restrolytics staff" description="If you need help, open Live manager under IQ Copilot." />
+      </PageContainer>
+    );
+  }
   const me = { userId: ctx.data.userId, name: "Restrolytics Manager", isPlatformStaff: true };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Manager console</h1>
-          <p className="text-sm text-muted-foreground">Chat with teams, assign tasks and review notes.</p>
-        </div>
+    <PageContainer>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <PageHeader context="Restrolytics" title="Manager console" description="Chat with teams, assign tasks and review notes." />
         <div className="flex gap-2">
           <Select value={restaurantId} onValueChange={(v) => { setRestaurantId(v); setThreadId(""); setSummary(undefined); }}>
             <SelectTrigger className="w-56"><SelectValue placeholder="Pick a restaurant" /></SelectTrigger>
@@ -137,6 +142,6 @@ function Console() {
           <TabsContent value="notes"><NotesPanel key={restaurantId} restaurantId={restaurantId} me={me} canReview /></TabsContent>
         </Tabs>
       ) : null}
-    </div>
+    </PageContainer>
   );
 }

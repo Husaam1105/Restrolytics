@@ -16,6 +16,7 @@ import { AreaChecklists } from "@/components/area-checklists";
 import { getShiftProgress, saveShiftSettings } from "@/lib/shift-tasks.functions";
 import { formatTime } from "@/lib/operating-day";
 import { BarChart3, CalendarDays, CheckCircle2, Clock3 } from "lucide-react";
+import { PageContainer, PageHeader } from "@/components/page";
 
 export const Route = createFileRoute("/_authenticated/shifts")({
   component: ShiftsPage,
@@ -66,15 +67,8 @@ function ShiftsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 lg:px-8 lg:py-8">
-      <div className="border-b pb-5">
-        <p className="mb-1 text-xs font-bold uppercase text-coral">Team operations</p>
-        <h1 className="font-display text-3xl font-bold">Shifts</h1>
-        <p className="text-sm text-muted-foreground">
-          Set your service hours and track today&apos;s checklists. Everything resets once you close
-          for the night.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader title="Shifts" description={<>Set your service hours and track today&apos;s checklists. Everything resets once you close for the night.</>} />
 
       <Tabs defaultValue="schedule" className="space-y-6">
         <div className="overflow-x-auto">
@@ -194,6 +188,6 @@ function ShiftsPage() {
       </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

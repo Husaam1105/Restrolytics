@@ -90,13 +90,13 @@ function CountPage() {
   if (!data) return <p className="p-6 text-sm text-muted-foreground">Count not found.</p>;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-6 pb-28">
+    <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div>
         <Link to="/inventory" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Inventory
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-title">
             {data.count.location_id ? `${locations[0]?.name ?? "Location"} count` : "Full inventory count"}
           </h1>
           <Badge variant={done ? "secondary" : "outline"}>{done ? "Completed" : "In progress"}</Badge>
