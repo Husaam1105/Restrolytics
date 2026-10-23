@@ -1,51 +1,244 @@
-import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { CalendarDays, CheckCircle2, Clock3, LogIn, LogOut, Receipt, UserRoundCheck } from "lucide-react";
+import { CheckCircle2, Clock3, LogIn, LogOut, Receipt, Wallet } from "lucide-react";
 
+import { MyDetails } from "@/components/my-details";
+import { PageContainer, PageHeader, SectionHeader } from "@/components/page";
+import { StatCard } from "@/components/stat-card";
+import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MyDetails } from "@/components/my-details";
 import { acknowledgePay, clockIn, clockOut, getMyTimeclock } from "@/lib/payroll.functions";
-import { AREA_LABELS, PAY_METHOD_LABELS, formatClockTime, formatDateRange, formatDayLabel, hoursLabel, minutesToHours, money } from "@/lib/payroll";
+import {
+  AREA_LABELS,
+  PAY_METHOD_LABELS,
+  formatClockTime,
+  formatDateRange,
+  formatDayLabel,
+  hoursLabel,
+  minutesToHours,
+  money,
+} from "@/lib/payroll";
+
+/** Staff time clock: clock in/out, this week's timecard, pay receipts, own details. */
 export function TimeclockPanel() {
   const queryClient = useQueryClient();
   const fetchClock = useServerFn(getMyTimeclock);
   const start = useServerFn(clockIn);
   const stop = useServerFn(clockOut);
   const confirmPay = useServerFn(acknowledgePay);
-  const { data } = useQuery({ queryKey: ["timeclock"], queryFn: () => fetchClock() });
-  const refresh = () => { queryClient.invalidateQueries({ queryKey: ["timeclock"] }); queryClient.invalidateQueries({ queryKey: ["payroll-week"] }); };
-  const clockInMutation = useMutation({ mutationFn: () => start({ data: {} }), onSuccess: () => { toast.success("Clocked in"); refresh(); }, onError: (e: Error) => toast.error(e.message) });
-  const clockOutMutation = useMutation({ mutationFn: () => stop({ data: {} }), onSuccess: () => { toast.success("Clocked out"); refresh(); }, onError: (e: Error) => toast.error(e.message) });
-  const acknowledge = useMutation({ mutationFn: (lineId: string) => confirmPay({ data: { lineId } }), onSuccess: () => { toast.success("Payment confirmed"); refresh(); }, onError: (e: Error) => toast.error(e.message) });
+  const query = useQuery({ queryKey: ["timeclock"], queryFn: () => fetchClock() });
 
-  if (data && !data.employee) return <div className="mx-auto max-w-3xl px-4 py-12"><div className="rounded-lg border bg-card p-8 text-center shadow-xs"><UserRoundCheck className="mx-auto size-8 text-muted-foreground" /><h1 className="mt-4 text-xl font-bold">Connect your employee login</h1><p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">A manager needs to link this login to your employee record before you can clock in and see your hours or pay.</p><Button asChild className="mt-5" variant="outline"><Link to="/settings/access">Open employee access</Link></Button></div></div>;
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["timeclock"] });
+    queryClient.invalidateQueries({ queryKey: ["timeclock", "me"] });
+    queryClient.invalidateQueries({ queryKey: ["payroll-week"] });
+  };
+  const onError = (e: Error) => toast.error(e.message);
+  const clockInMutation = useMutation({
+    mutationFn: () => start({ data: {} }),
+    onSuccess: () => {
+      toast.success("Clocked in. Have a good shift.");
+      refresh();
+    },
+    onError,
+  });
+  const clockOutMutation = useMutation({
+    mutationFn: () => stop({ data: {} }),
+    onSuccess: () => {
+      toast.success("Clocked out");
+      refresh();
+    },
+    onError,
+  });
+  const acknowledge = useMutation({
+    mutationFn: (lineId: string) => confirmPay({ data: { lineId } }),
+    onSuccess: () => {
+      toast.success("Thanks. Your manager can see you received it.");
+      refresh();
+    },
+    onError,
+  });
 
-  const timezone = data?.timezone ?? "UTC";
-  const paid = (data?.pay ?? []).filter((line) => line.paid).reduce((sum, line) => sum + line.total, 0);
-  return <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 lg:px-6">
-    <header><p className="text-xs font-semibold uppercase text-muted-foreground">My workspace</p><h1 className="text-3xl font-bold">My hours & pay</h1><p className="mt-1 text-sm text-muted-foreground">{data?.employee ? `${data.employee.fullName} · ${AREA_LABELS[data.employee.area]}${data.employee.position ? ` · ${data.employee.position}` : ""}` : "Loading your employee record…"}</p></header>
+  const header = <PageHeader title="My hours and pay" />;
 
-    <section className="grid overflow-hidden rounded-lg border bg-primary text-primary-foreground shadow-sm lg:grid-cols-[minmax(0,1fr)_280px]">
-      <div className="p-6 lg:p-8"><div className="flex items-center gap-2 text-sm text-primary-foreground/70"><span className={`size-2 rounded-full ${data?.openEntry ? "bg-success" : "bg-primary-foreground/40"}`} />{data?.openEntry ? "On the clock" : "Ready for your shift"}</div><h2 className="mt-3 text-3xl font-bold">{data?.openEntry ? `Started ${formatClockTime(data.openEntry.clockIn, timezone)}` : "Clocked out"}</h2><p className="mt-2 text-sm text-primary-foreground/70">{data ? `${formatDateRange(data.weekStart, data.weekEnd)} · ${hoursLabel(data.weekHours)} recorded` : "Loading…"}</p></div>
-      <div className="grid place-items-center border-t border-primary-foreground/15 p-6 lg:border-l lg:border-t-0">{data?.openEntry ? <Button size="lg" variant="secondary" className="w-full" onClick={() => clockOutMutation.mutate()} disabled={clockOutMutation.isPending}><LogOut className="mr-2 size-5" />Clock out</Button> : <Button size="lg" variant="secondary" className="w-full" onClick={() => clockInMutation.mutate()} disabled={clockInMutation.isPending}><LogIn className="mr-2 size-5" />Clock in</Button>}</div>
-    </section>
+  if (query.isPending) {
+    return (
+      <PageContainer size="narrow">
+        {header}
+        <LoadingState rows={4} />
+      </PageContainer>
+    );
+  }
+  if (query.isError) {
+    return (
+      <PageContainer size="narrow">
+        {header}
+        <ErrorState title="Your time clock didn't load" error={query.error} onRetry={() => void query.refetch()} />
+      </PageContainer>
+    );
+  }
 
-    <section className="grid gap-3 sm:grid-cols-3"><Metric icon={Clock3} label="This week" value={hoursLabel(data?.weekHours ?? 0)} /><Metric icon={Receipt} label="Recent paid" value={money(paid)} /><Metric icon={CalendarDays} label="Pay method" value={data?.employee ? PAY_METHOD_LABELS[data.employee.payMethod] : "—"} /></section>
+  const data = query.data;
+  if (!data.employee) {
+    return (
+      <PageContainer size="narrow">
+        {header}
+        <EmptyState
+          title="Your login isn't linked to an employee yet"
+          description="Ask your manager to link it on the Employees page. Once that's done you can clock in and see your hours and pay here."
+        />
+        <MyDetails />
+      </PageContainer>
+    );
+  }
 
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
-      <Card className="overflow-hidden rounded-lg shadow-xs"><CardHeader><CardTitle>My timecard</CardTitle><CardDescription>Every shift recorded for this pay week.</CardDescription></CardHeader><CardContent className="px-0"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Day</TableHead><TableHead>In</TableHead><TableHead>Out</TableHead><TableHead>Entry</TableHead><TableHead className="text-right">Hours</TableHead></TableRow></TableHeader><TableBody>{(data?.entries ?? []).length === 0 ? <TableRow><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">No shifts recorded this week.</TableCell></TableRow> : (data?.entries ?? []).map((entry) => <TableRow key={entry.id}><TableCell className="font-medium">{formatDayLabel(entry.workDate)}</TableCell><TableCell className="font-mono text-xs">{formatClockTime(entry.clockIn, timezone)}</TableCell><TableCell className="font-mono text-xs">{formatClockTime(entry.clockOut, timezone)}</TableCell><TableCell><Badge variant="outline">{entry.source === "clock" ? "Time clock" : "Manager entry"}</Badge></TableCell><TableCell className="text-right font-mono font-semibold">{hoursLabel(minutesToHours(entry.minutes))}</TableCell></TableRow>)}</TableBody></Table></div></CardContent></Card>
+  const timezone = data.timezone;
+  const employee = data.employee;
+  const paid = data.pay.filter((line) => line.paid).reduce((sum, line) => sum + line.total, 0);
+  const onClock = Boolean(data.openEntry);
+  const busy = clockInMutation.isPending || clockOutMutation.isPending;
 
-      <Card className="rounded-lg shadow-xs"><CardHeader><CardTitle>Pay receipts</CardTitle><CardDescription>Confirm when your payment is received.</CardDescription></CardHeader><CardContent className="space-y-3">{(data?.pay ?? []).length === 0 ? <p className="text-sm text-muted-foreground">No payroll records yet.</p> : (data?.pay ?? []).map((line) => <div key={line.id} className="rounded-md border p-4"><div className="flex items-start justify-between gap-3"><div><p className="text-xs text-muted-foreground">{line.startDate && line.endDate ? formatDateRange(line.startDate, line.endDate) : "Pay week"}</p><p className="mt-1 font-mono text-xl font-bold">{money(line.total)}</p></div>{line.acknowledgedAt ? <Badge className="bg-success text-success-foreground"><CheckCircle2 className="mr-1 size-3" />Received</Badge> : line.paid ? <Button size="sm" variant="outline" onClick={() => acknowledge.mutate(line.id)}>I got it</Button> : <Badge variant="secondary">Pending</Badge>}</div><div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground"><span>{hoursLabel(line.hours)} worked</span><span>{PAY_METHOD_LABELS[line.payMethod]}</span><span>Wages {money(line.wages)}</span><span>Tips {money(line.tips)}</span></div></div>)}</CardContent></Card>
-    </div>
-    <MyDetails />
-  </div>;
-}
+  return (
+    <PageContainer size="narrow">
+      <PageHeader
+        title="My hours and pay"
+        description={[employee.fullName, AREA_LABELS[employee.area], employee.position].filter(Boolean).join(", ")}
+      />
 
-function Metric({ icon: Icon, label, value }: { icon: typeof Clock3; label: string; value: string }) {
-  return <div className="rounded-lg border bg-card p-4 shadow-xs"><div className="flex items-center gap-2 text-sm text-muted-foreground"><Icon className="size-4" />{label}</div><p className="mt-2 font-mono text-xl font-bold">{value}</p></div>;
+      <section
+        className={`surface-raised flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8 ${onClock ? "bg-success-soft" : ""}`}
+        aria-live="polite"
+      >
+        <div>
+          <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <span className={`size-2.5 rounded-full ${onClock ? "bg-success" : "bg-muted-foreground/40"}`} aria-hidden="true" />
+            {onClock ? "On the clock" : "Off the clock"}
+          </p>
+          <p className="text-figure mt-2 text-4xl">
+            {onClock && data.openEntry ? `Since ${formatClockTime(data.openEntry.clockIn, timezone)}` : "Ready when you are"}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {hoursLabel(data.weekHours)} this pay week ({formatDateRange(data.weekStart, data.weekEnd)})
+          </p>
+        </div>
+        {onClock ? (
+          <Button size="lg" variant="outline" className="h-14 px-8 text-base sm:w-56" onClick={() => clockOutMutation.mutate()} disabled={busy}>
+            <LogOut className="size-5" />
+            {clockOutMutation.isPending ? "Clocking out…" : "Clock out"}
+          </Button>
+        ) : (
+          <Button size="lg" className="h-14 px-8 text-base sm:w-56" onClick={() => clockInMutation.mutate()} disabled={busy}>
+            <LogIn className="size-5" />
+            {clockInMutation.isPending ? "Clocking in…" : "Clock in"}
+          </Button>
+        )}
+      </section>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="This week" value={hoursLabel(data.weekHours)} icon={<Clock3 />} />
+        <StatCard label="Recently paid" value={money(paid)} icon={<Receipt />} />
+        <StatCard label="Paid by" value={PAY_METHOD_LABELS[employee.payMethod]} icon={<Wallet />} />
+      </div>
+
+      <section className="surface overflow-hidden" aria-labelledby="timecard-heading">
+        <div className="p-5 pb-3 sm:p-6 sm:pb-3">
+          <SectionHeader title={<span id="timecard-heading">My timecard</span>} description="Every shift recorded this pay week." />
+        </div>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-6">Day</TableHead>
+                <TableHead>In</TableHead>
+                <TableHead>Out</TableHead>
+                <TableHead>Recorded by</TableHead>
+                <TableHead className="pr-6 text-right">Hours</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.entries.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                    No shifts yet this week.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                data.entries.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell className="pl-6 font-medium">{formatDayLabel(entry.workDate)}</TableCell>
+                    <TableCell className="tabular-nums">{formatClockTime(entry.clockIn, timezone)}</TableCell>
+                    <TableCell className="tabular-nums">{formatClockTime(entry.clockOut, timezone)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{entry.source === "clock" ? "Time clock" : "Manager"}</Badge>
+                    </TableCell>
+                    <TableCell className="pr-6 text-right font-semibold tabular-nums">{hoursLabel(minutesToHours(entry.minutes))}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </section>
+
+      <section className="surface space-y-4 p-5 sm:p-6" aria-labelledby="pay-heading">
+        <SectionHeader
+          title={<span id="pay-heading">Pay</span>}
+          description="When your manager marks a payout paid, confirm here once you have it."
+        />
+        {data.pay.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No pay sheets yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {data.pay.map((line) => (
+              <li key={line.id} className="rounded-xl bg-muted/60 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {line.startDate && line.endDate ? formatDateRange(line.startDate, line.endDate) : "Pay week"}
+                    </p>
+                    <p className="text-figure mt-1 text-2xl">{money(line.total)}</p>
+                  </div>
+                  {line.acknowledgedAt ? (
+                    <Badge variant="success">
+                      <CheckCircle2 aria-hidden="true" />
+                      Received
+                    </Badge>
+                  ) : line.paid ? (
+                    <Button size="sm" onClick={() => acknowledge.mutate(line.id)} disabled={acknowledge.isPending}>
+                      I&apos;ve received it
+                    </Button>
+                  ) : (
+                    <Badge variant="secondary">Not paid yet</Badge>
+                  )}
+                </div>
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-muted-foreground sm:grid-cols-4">
+                  <div>
+                    <dt className="sr-only">Hours</dt>
+                    <dd>{hoursLabel(line.hours)} worked</dd>
+                  </div>
+                  <div>
+                    <dt className="sr-only">Wages</dt>
+                    <dd>Wages {money(line.wages)}</dd>
+                  </div>
+                  <div>
+                    <dt className="sr-only">Tips</dt>
+                    <dd>Tips {money(line.tips)}</dd>
+                  </div>
+                  <div>
+                    <dt className="sr-only">Paid by</dt>
+                    <dd>{PAY_METHOD_LABELS[line.payMethod]}</dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <MyDetails />
+    </PageContainer>
+  );
 }
