@@ -13,6 +13,7 @@ import {
   type IssueCategory,
 } from "@/lib/daily.functions";
 import { RANGES, rangeDates } from "@/lib/date-ranges";
+import { useRestaurantClock } from "@/lib/workspace";
 import {
   AREA_LABELS,
   PAY_METHOD_LABELS,
@@ -49,8 +50,9 @@ const CATEGORY_LABELS = Object.fromEntries(ISSUE_CATEGORIES.map((c) => [c.id, c.
 
 export function DayReport() {
   const [preset, setPreset] = useState("today");
-  const [custom, setCustom] = useState(() => rangeDates("today"));
-  const range = preset === "custom" ? custom : rangeDates(preset);
+  const clock = useRestaurantClock();
+  const [custom, setCustom] = useState(() => rangeDates("today", clock.today, clock.weekStartsOn));
+  const range = preset === "custom" ? custom : rangeDates(preset, clock.today, clock.weekStartsOn);
   const queryClient = useQueryClient();
   const fetchReport = useServerFn(getDayReport);
   const addIssue = useServerFn(logDayIssue);

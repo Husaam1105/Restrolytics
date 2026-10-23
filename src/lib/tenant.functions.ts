@@ -39,6 +39,9 @@ export const getWorkspace = createServerFn({ method: "GET" })
 
     const active =
       restaurants.find((r) => r.id === profile?.active_restaurant_id) ?? restaurants[0] ?? null;
+    const activeSettings = memberships.find((m) => m.restaurants!.id === active?.id)?.restaurants?.settings;
+    const { parseShiftSettings } = await import("./operating-day");
+    const { parsePayrollSettings } = await import("./payroll");
 
     return {
       email: email ?? null,
@@ -47,6 +50,8 @@ export const getWorkspace = createServerFn({ method: "GET" })
       activeId: active?.id ?? null,
       activeName: active?.name ?? null,
       role: active?.role ?? null,
+      timezone: parseShiftSettings(activeSettings).timezone,
+      weekStartsOn: parsePayrollSettings(activeSettings).weekStartsOn,
       canCreateRestaurant: canCreate === true,
       isPlatformStaff: platformStaff === true,
     };

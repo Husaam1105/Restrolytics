@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 import { RANGES, rangeDates } from "@/lib/date-ranges";
+import { useRestaurantClock } from "@/lib/workspace";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,8 +53,9 @@ function ChannelSales() {
   const { slug } = Route.useParams();
   const fetchChannel = useServerFn(getChannelSales);
   const [preset, setPreset] = useState("this_week");
-  const [custom, setCustom] = useState(() => rangeDates("this_week"));
-  const range = preset === "custom" ? custom : rangeDates(preset);
+  const clock = useRestaurantClock();
+  const [custom, setCustom] = useState(() => rangeDates("this_week", clock.today, clock.weekStartsOn));
+  const range = preset === "custom" ? custom : rangeDates(preset, clock.today, clock.weekStartsOn);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["channel-sales", slug, range.from, range.to],

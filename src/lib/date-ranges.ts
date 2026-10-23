@@ -1,5 +1,16 @@
-/** Shared date-range presets. Weeks run Monday to Sunday (see AGENTS.md). */
-export const RANGES = [
+/**
+ * Shared date-range presets for every reporting page (see AGENTS.md).
+ *
+ * All math is on plain YYYY-MM-DD strings, relative to a `today` that the
+ * caller supplies in the restaurant's own timezone (useRestaurantClock), so a
+ * manager in another timezone, or a server render, never shifts the day.
+ * Weeks start on the restaurant's configured pay-week day (Monday by default).
+ */
+import { addDays, weekStartDate } from "./payroll";
+
+export type RangeId = "today" | "yesterday" | "this_week" | "last_week" | "this_month" | "last_month" | "custom";
+
+export const RANGES: { id: RangeId; label: string }[] = [
   { id: "today", label: "Today" },
   { id: "yesterday", label: "Yesterday" },
   { id: "this_week", label: "This week" },
@@ -9,38 +20,36 @@ export const RANGES = [
   { id: "custom", label: "Custom" },
 ];
 
-const fmtDate = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function monthStart(date: string) {
+  return `${date.slice(0, 7)}-01`;
+}
 
-export function rangeDates(id: string): { from: string; to: string } {
-  const today = new Date();
-  const t = fmtDate(today);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const daysSinceMonday = (today.getDay() + 6) % 7;
-  const weekStart = new Date(today);
-  weekStart.setDate(weekStart.getDate() - daysSinceMonday);
-  const lastWeekStart = new Date(weekStart);
-  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-  const lastWeekEnd = new Date(weekStart);
-  lastWeekEnd.setDate(lastWeekEnd.getDate() - 1);
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-  const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+function addMonths(monthFirst: string, months: number) {
+  const d = new Date(`${monthFirst}T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + months, 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Inclusive from/to dates for a preset. "custom" falls back to today. */
+export function rangeDates(id: string, today: string, weekStartsOn = 1): { from: string; to: string } {
   switch (id) {
-    case "today":
-      return { from: t, to: t };
-    case "yesterday":
-      return { from: fmtDate(yesterday), to: fmtDate(yesterday) };
+    case "yesterday": {
+      const d = addDays(today, -1);
+      return { from: d, to: d };
+    }
     case "this_week":
-      return { from: fmtDate(weekStart), to: t };
-    case "last_week":
-      return { from: fmtDate(lastWeekStart), to: fmtDate(lastWeekEnd) };
+      return { from: weekStartDate(today, weekStartsOn), to: today };
+    case "last_week": {
+      const from = addDays(weekStartDate(today, weekStartsOn), -7);
+      return { from, to: addDays(from, 6) };
+    }
     case "this_month":
-      return { from: fmtDate(monthStart), to: t };
-    case "last_month":
-      return { from: fmtDate(lastMonthStart), to: fmtDate(lastMonthEnd) };
+      return { from: monthStart(today), to: today };
+    case "last_month": {
+      const from = addMonths(monthStart(today), -1);
+      return { from, to: addDays(monthStart(today), -1) };
+    }
     default:
-      return { from: t, to: t };
+      return { from: today, to: today };
   }
 }

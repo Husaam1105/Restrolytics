@@ -154,12 +154,14 @@
   --border: oklch(0.915 0.014 350);
   --input: oklch(0.885 0.018 350);
 
-  /* Charts: hue and lightness both differ, so series survive grayscale and CVD. */
-  --chart-1: oklch(0.58 0.21 352);
-  --chart-2: oklch(0.36 0.08 340);
-  --chart-3: oklch(0.65 0.13 50);
-  --chart-4: oklch(0.58 0.1 195);
-  --chart-5: oklch(0.64 0.02 300);
+  /* Charts: categorical, fixed order (magenta, ultramarine, amber, teal, violet).
+     Validated with the dataviz palette validator (lightness band, chroma floor,
+     CVD and normal-vision separation, 3:1 on the card) in both modes. */
+  --chart-1: oklch(0.55 0.21 352);
+  --chart-2: oklch(0.5 0.16 255);
+  --chart-3: oklch(0.66 0.14 62);
+  --chart-4: oklch(0.58 0.11 180);
+  --chart-5: oklch(0.45 0.14 315);
 
   /* App sidebar: light, with a magenta active marker */
   --sidebar: oklch(0.982 0.008 350);
@@ -215,11 +217,11 @@
   --border: oklch(0.31 0.022 340);
   --input: oklch(0.37 0.025 340);
 
-  --chart-1: oklch(0.74 0.16 352);
-  --chart-2: oklch(0.86 0.04 340);
-  --chart-3: oklch(0.78 0.12 55);
-  --chart-4: oklch(0.72 0.1 195);
-  --chart-5: oklch(0.62 0.02 300);
+  --chart-1: oklch(0.66 0.19 352);
+  --chart-2: oklch(0.6 0.15 255);
+  --chart-3: oklch(0.67 0.13 62);
+  --chart-4: oklch(0.63 0.11 180);
+  --chart-5: oklch(0.56 0.14 315);
 
   --sidebar: oklch(0.15 0.018 340);
   --sidebar-foreground: oklch(0.94 0.01 350);
