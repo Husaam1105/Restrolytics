@@ -128,7 +128,7 @@ export function StaffSchedule() {
             <div>
               <CardTitle>Who&apos;s working</CardTitle>
               <CardDescription>
-                {data ? `${RANGE_LABELS[range]} · ${formatDateRange(data.start, data.end)}` : "Loading…"}
+                {data ? `${RANGE_LABELS[range]}, ${formatDateRange(data.start, data.end)}` : "Loading…"}
               </CardDescription>
             </div>
             {data?.canManage ? (
@@ -271,7 +271,7 @@ export function StaffSchedule() {
             </div>
             {data.employees.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No staff yet — add people on the Employees page first.
+                No staff yet. Add people on the Employees page first.
               </p>
             ) : null}
           </CardContent>
@@ -299,7 +299,7 @@ export function StaffSchedule() {
                       <div className="flex items-center justify-between border-b px-3 py-2 text-sm font-medium">
                         <span className={isToday ? "text-primary" : ""}>
                           {formatDayLabel(date)}
-                          {isToday ? " · Today" : ""}
+                          {isToday ? " (today)" : ""}
                         </span>
                         <Badge variant="secondary">{shifts.length}</Badge>
                       </div>

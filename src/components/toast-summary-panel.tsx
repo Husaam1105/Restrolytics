@@ -205,7 +205,7 @@ function SummaryView({ s }: { s: ToastSummary }) {
                     <span className="inline-block h-2 w-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
                     {d.option}
                   </span>
-                  <span className="text-muted-foreground">{d.orders} ord · <span className="font-medium text-foreground">{money(d.netSales)}</span></span>
+                  <span className="text-muted-foreground">{d.orders} orders, <span className="font-medium text-foreground">{money(d.netSales)}</span></span>
                 </div>
               ))}
             </div>
@@ -266,7 +266,7 @@ function ProductMixView({ p }: { p: ToastProductMix }) {
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold">
-        Product mix · {fmtDate(p.startDate)} – {fmtDate(p.endDate)}
+        Product mix, {fmtDate(p.startDate)} to {fmtDate(p.endDate)}
       </h3>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Items sold" value={p.totals.qty.toLocaleString()} />
@@ -300,7 +300,7 @@ function ProductMixView({ p }: { p: ToastProductMix }) {
                     <span className="inline-block h-2 w-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
                     {g.name}
                   </span>
-                  <span className="text-muted-foreground">{g.qty} sold · <span className="font-medium text-foreground">{money(g.net)}</span></span>
+                  <span className="text-muted-foreground">{g.qty} sold, <span className="font-medium text-foreground">{money(g.net)}</span></span>
                 </div>
               ))}
             </div>
@@ -376,7 +376,7 @@ function RemovedItemsView({ r, from, to }: { r: ToastRemovedItems; from: string;
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold">
-        Removed items · {rows.length} removed, {money(amount)}
+        Removed items: {rows.length} removed, {money(amount)}
         <span className="ml-2 text-sm font-normal text-muted-foreground">from report {fmtDate(r.startDate)} – {fmtDate(r.endDate)}</span>
       </h3>
       <div className="grid gap-4 lg:grid-cols-2">

@@ -61,7 +61,8 @@ Then sign in, create the first restaurant, and invite its owner from **Settings 
 
 ## Hosting notes
 
-- **Outbound requests:** the vendor-sync scraper only fetches public `https://` hostnames (no IP literals or internal names, redirects re-checked and capped). A hostname that resolves to a private IP can't be detected that way, so if your host allows it, block outbound traffic from the app server to private address ranges (10/8, 172.16/12, 192.168/16, 169.254/16, 127/8).
+- **Outbound requests:** the vendor-sync scraper only fetches public `https://` hostnames, and on the Node server each connection is pinned to an address checked as public (no private, loopback, link-local, CGNAT or non-global IPv6), including every redirect hop. Blocking private egress at the host is still a good second layer.
+- **Cloudflare Workers:** vendor sync uses `node:dns` and the `undici` dispatcher for that pinning, which Workers don't provide. On Workers, vendor sync will refuse to run; keep it on a Node host or move it to a separate Node worker.
 
 ## Moving data from the old Lovable Cloud project
 

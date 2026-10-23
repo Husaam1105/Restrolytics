@@ -30,10 +30,14 @@ describe("isPublicHttpsUrl", () => {
 
 describe("isPrivateAddress", () => {
   it("flags internal ranges and allows public ones", () => {
-    for (const ip of ["10.1.2.3", "127.0.0.1", "169.254.169.254", "172.20.0.1", "192.168.1.1", "100.64.0.1", "0.0.0.0", "::1", "fd00::1", "fe80::1", "::ffff:10.0.0.1"]) {
+    for (const ip of [
+      "10.1.2.3", "127.0.0.1", "169.254.169.254", "172.20.0.1", "192.168.1.1", "100.64.0.1", "0.0.0.0",
+      "::1", "::", "fd00::1", "fe80::1", "::ffff:10.0.0.1", "::ffff:7f00:1", "::127.0.0.1",
+      "2002:0a00:0001::1", "64:ff9b::a00:1", "2001:db8::1", "ff02::1", "not-an-ip",
+    ]) {
       expect(isPrivateAddress(ip), ip).toBe(true);
     }
-    for (const ip of ["8.8.8.8", "104.18.2.3", "2606:4700::1111"]) {
+    for (const ip of ["8.8.8.8", "104.18.2.3", "2606:4700::1111", "2002:0808:0808::1", "::ffff:8.8.8.8"]) {
       expect(isPrivateAddress(ip), ip).toBe(false);
     }
   });

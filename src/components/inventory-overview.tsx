@@ -223,7 +223,7 @@ export function InventoryOverview({
                   <div className="min-w-0">
                     <p className="truncate font-medium">{locName(c.location_id)}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(c.completed_at ?? c.created_at).toLocaleDateString()} · {c.counted_by_email?.split("@")[0] ?? "—"}
+                      {new Date(c.completed_at ?? c.created_at).toLocaleDateString()}{c.counted_by_email ? `, by ${c.counted_by_email.split("@")[0]}` : ""}
                     </p>
                   </div>
                   <div className="text-right">

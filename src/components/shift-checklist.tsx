@@ -143,7 +143,7 @@ export function ShiftChecklist({
           </CardTitle>
           <CardDescription>
             {data
-              ? `Business day ${data.date} · resets after closing at ${formatTime(data.settings.closeTime)} (${data.settings.timezone})`
+              ? `Business day ${data.date}. Resets after closing at ${formatTime(data.settings.closeTime)} (${data.settings.timezone}).`
               : "Loading…"}
           </CardDescription>
         </CardHeader>
@@ -337,7 +337,7 @@ export function ShiftChecklist({
               ))}
               {tasks.length === 0 && (
                 <li className="py-3 text-sm text-muted-foreground">
-                  No tasks yet — add your first one below.
+                  No tasks yet. Add the first one below.
                 </li>
               )}
             </ul>

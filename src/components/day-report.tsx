@@ -187,18 +187,18 @@ export function DayReport() {
         <Tile
           title="Total taken"
           value={money(data.totals.gross)}
-          note={`${data.totals.orders} orders · avg ${money(data.totals.averageTicket)}`}
+          note={`${data.totals.orders} orders, ${money(data.totals.averageTicket)} average ticket`}
           icon={<DollarSign className="h-4 w-4" />}
         />
         <Tile
           title="Sales after tax & tips"
           value={money(data.totals.netSales)}
-          note={`tax ${money(data.totals.tax)} · tips ${money(data.totals.tips)}`}
+          note={`After ${money(data.totals.tax)} tax and ${money(data.totals.tips)} tips`}
         />
         <Tile
           title="Labour"
           value={money(data.totals.labourCost)}
-          note={`${hoursLabel(data.totals.labourHours)} · ${data.totals.labourPercent}% of sales`}
+          note={`${hoursLabel(data.totals.labourHours)}, ${data.totals.labourPercent}% of sales`}
           icon={<Clock className="h-4 w-4" />}
         />
         <Tile
@@ -291,7 +291,7 @@ export function DayReport() {
           <CardHeader>
             <CardTitle>What went wrong {isSingle ? "on this day" : "in this period"}</CardTitle>
             <CardDescription>
-              Voids, refunds, remakes, waste and complaints — plus anything the apps cancelled.
+              Voids, refunds, remakes, waste and complaints, plus anything the delivery apps cancelled.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -342,7 +342,7 @@ export function DayReport() {
 
             <div className="space-y-3">
               {data.issues.length === 0 && data.failedSales.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nothing logged — clean day so far.</p>
+                <p className="text-sm text-muted-foreground">Nothing logged yet today.</p>
               )}
               {data.issues.map((issue) => (
                 <div key={issue.id} className="flex items-start justify-between gap-3 border-b pb-3">
@@ -350,7 +350,7 @@ export function DayReport() {
                     <p className="text-sm font-medium">{issue.description}</p>
                     <p className="text-xs text-muted-foreground">
                       {CATEGORY_LABELS[issue.category]}
-                      {issue.by ? ` · ${issue.by}` : ""} ·{" "}
+                      {issue.by ? `, logged by ${issue.by.split("@")[0]}` : ""} at{" "}
                       {new Date(issue.at).toLocaleTimeString("en-US", {
                         hour: "numeric",
                         minute: "2-digit",

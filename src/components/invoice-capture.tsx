@@ -78,7 +78,7 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
       }),
     onSuccess: (result) => {
       toast.success(
-        `Invoice saved · ${result.newItems} new item${result.newItems === 1 ? "" : "s"}, ${result.updatedItems} updated`,
+        `Invoice saved. ${result.newItems} new item${result.newItems === 1 ? "" : "s"}, ${result.updatedItems} updated.`,
       );
       setOpen(false);
       reset();
@@ -112,7 +112,7 @@ export function InvoiceCapture({ vendorId, vendorName, onSaved }: Props) {
           <DialogHeader>
             <DialogTitle>Capture an invoice from {vendorName}</DialogTitle>
             <DialogDescription>
-              Take a photo of the invoice or pick a PDF. The items, quantities and prices are read for you — check them,
+              Take a photo of the invoice or pick a PDF. The items, quantities and prices are read for you. Check them,
               then save.
             </DialogDescription>
           </DialogHeader>

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { itemNameKey } from "./item-match";
 import { isPublicHttpsUrl } from "./safe-url";
-import { assertPublicDns } from "./safe-url.server";
+import { publicOnlyFetch } from "./safe-url.server";
 
 type Cookies = Map<string, string>;
 
@@ -36,11 +36,11 @@ const MAX_REDIRECTS = 5;
  * private network, and redirect chains are capped.
  */
 async function jarFetch(url: string, jar: Cookies, init?: RequestInit, hops = 0): Promise<Response> {
-  await assertPublicDns(url);
   if (hops > MAX_REDIRECTS) {
     throw new Error("The vendor site redirected too many times.");
   }
-  const response = await fetch(url, {
+  // publicOnlyFetch checks the URL and pins the connection to a vetted public IP.
+  const response = await publicOnlyFetch(url, {
     ...init,
     redirect: "manual",
     headers: {

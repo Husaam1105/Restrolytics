@@ -109,7 +109,7 @@ export function ChatPane({ threadId, me, draft, onDraftUsed }: { threadId: strin
             <div key={m.id} className={cn("flex flex-col", mine ? "items-end" : "items-start")}>
               <span className="mb-1 text-xs text-muted-foreground">
                 {m.author_name ?? "Someone"}
-                {m.from_manager ? " · Manager" : ""} · {new Date(m.created_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                {m.from_manager ? ", Restrolytics manager" : ""}, {new Date(m.created_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
               </span>
               <div
                 className={cn(
@@ -378,7 +378,7 @@ export function NotesPanel({ restaurantId, me, canReview }: { restaurantId: stri
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge variant="outline" className="capitalize">{n.category}</Badge>
               <Badge variant={n.status === "open" ? "default" : "secondary"} className="capitalize">{n.status}</Badge>
-              <span>{n.author_name ?? "Team member"} · {new Date(n.created_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+              <span>{n.author_name ?? "Team member"}, {new Date(n.created_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
             </div>
             <p className="mt-2 whitespace-pre-wrap text-sm">{n.body}</p>
             {n.review_note ? <p className="mt-2 text-sm text-muted-foreground">Manager: {n.review_note}</p> : null}
