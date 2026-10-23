@@ -35,3 +35,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Superdesign local context (copies of source) and temp files
+.superdesign/init/
+.superdesign/tmp/

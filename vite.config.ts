@@ -31,7 +31,9 @@ export default defineConfig(({ command }) => ({
         client: { files: ["**/server/**"], specifiers: ["server-only"] },
       },
     }),
-    ...(command === "build" ? [nitro({ defaultPreset: "node-server" })] : []),
+    // inlineDynamicImports keeps the server in one bundle: split SSR chunks
+    // import each other and crash at startup ("createCsrfMiddleware is not a function").
+    ...(command === "build" ? [nitro({ defaultPreset: "node-server", inlineDynamicImports: true })] : []),
     viteReact(),
   ],
 }));
