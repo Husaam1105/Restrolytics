@@ -206,17 +206,15 @@ export const inviteMember = createServerFn({ method: "POST" })
 
     // People without an account get Supabase's invite email, which brings them
     // to /auth/reset to set a password; the invite is claimed on first sign-in.
-    // Existing accounts just see the restaurant next time they sign in.
-    let emailSent = false;
+    // Existing accounts just see the restaurant next time they sign in. The
+    // response is the same either way so it can't reveal who has an account.
     try {
-      const { getRequest } = await import("@tanstack/react-start/server");
-      const origin = new URL(getRequest().url).origin;
+      const { siteUrl } = await import("./site-url.server");
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        redirectTo: `${origin}/auth/reset`,
+        redirectTo: `${siteUrl()}/auth/reset`,
         data: { invited_to: restaurant.name },
       });
-      emailSent = !inviteError;
       if (inviteError && !inviteError.message.toLowerCase().includes("already")) {
         console.error("inviteMember: invite email failed", inviteError.message);
       }
@@ -224,7 +222,7 @@ export const inviteMember = createServerFn({ method: "POST" })
       console.error("inviteMember: invite email failed", sendError);
     }
 
-    return { ok: true, email, emailSent };
+    return { ok: true, email };
   });
 
 export const cancelInvite = createServerFn({ method: "POST" })

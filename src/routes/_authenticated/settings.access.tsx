@@ -74,9 +74,7 @@ function TeamPage() {
       setEmail("");
       await refresh();
       toast.success(
-        result.emailSent
-          ? `Invite sent to ${result.email}. They'll set a password from the email.`
-          : `${result.email} is invited. If they already have an account, they'll see this restaurant next time they sign in.`,
+        `${result.email} is invited. New people get an email to set a password; anyone with an account sees this restaurant next time they sign in.`,
       );
     },
     onError: (error: Error) => toast.error(error.message),

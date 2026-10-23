@@ -32,7 +32,8 @@ npm test           # also runs the row-level security tests
 In **Authentication → URL Configuration**:
 
 - **Site URL:** your production URL, e.g. `https://app.restrolytics.com`
-- **Redirect URLs:** add `http://localhost:8080/**` for local work and `https://<your-domain>/**`
+- **Redirect URLs:** add exact URLs, not wildcards: `http://localhost:8080/auth/reset`, `http://localhost:8080/dashboard`, `https://<your-domain>/auth/reset` and `https://<your-domain>/dashboard`.
+- Set `SITE_URL` in the server environment to your public URL; invite and reset emails link to it.
 
 In **Authentication → Providers**:
 
